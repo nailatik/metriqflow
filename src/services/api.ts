@@ -9,6 +9,14 @@ export const api = axios.create({
   },
 });
 
+export const apiMethods = {
+  get: api.get,
+  post: api.post,
+  put: api.put,
+  delete: api.delete,
+  patch: api.patch,
+};
+
 api.interceptors.request.use(
   (config) => {
     store.dispatch(setLoading(true));
