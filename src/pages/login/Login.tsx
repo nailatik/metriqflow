@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAppDispatch } from "../../app/hooks";
 import { loginSuccess } from "../../store/userSlice";
 import type { LoginPayload } from "../../types/user";
+import { authService } from "../../services/authService";
 
 const Login = () => {
   const dispatch = useAppDispatch();
@@ -20,22 +21,18 @@ const Login = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // mock
-    const fakeResponse = {
-      user: {
-        id: "1",
-        email: form.email,
-      },
-      token: "fake-jwt-token",
-    };
-
-    dispatch(loginSuccess(fakeResponse));
-
-    // редирект
-    navigate("/app");
+  
+    try {
+      const response = await authService.login(form);
+  
+      dispatch(loginSuccess(response.data));
+  
+      navigate("/app");
+    } catch (error) {
+      console.error("Login error", error);
+    }
   };
 
   return (

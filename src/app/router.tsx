@@ -4,7 +4,11 @@ import Landing from "../pages/landing/Landing";
 import Register from "../pages/register/Register";
 import Dashboard from "../pages/dashboard/DashBoard";
 import NotFound from "../pages/notfound/NotFound";
-
+import AuthWrapper from "../wrappers/AuthWrapper";
+import AppLayout from "../layouts/AppLayout";
+import Reports from "../pages/reports/Reports";
+import Settings from "../pages/settings/Settings";
+import Integrations from "../pages/integrations/Integrations";
 
 export const router = createBrowserRouter([
   {
@@ -21,7 +25,18 @@ export const router = createBrowserRouter([
   },
   {
     path: "/app",
-    element: <Dashboard />,
+    element: <AuthWrapper />,
+    children: [
+      {
+        element: <AppLayout />,
+        children: [
+          { index: true, element: <Dashboard /> },
+          { path: "reports", element: <Reports /> },
+          { path: "settings", element: <Settings /> },
+          { path: "integrations", element: <Integrations /> },
+        ],
+      },
+    ],
   },
   {
     path: "*",
