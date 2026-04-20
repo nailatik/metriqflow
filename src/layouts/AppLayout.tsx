@@ -1,10 +1,13 @@
 import { Outlet } from "react-router-dom";
+import Loader from "../components/Loader/Loader";
+import ErrorModal from "../components/ErrorModal/ErrorModal";
 
 const AppLayout = () => {
   return (
     <div>
-      <h2>App Layout</h2>
-      <hr />
+      <Loader />
+      <ErrorModal />
+
       <Outlet />
     </div>
   );
