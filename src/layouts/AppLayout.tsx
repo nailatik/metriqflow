@@ -1,9 +1,19 @@
 import { Outlet, Link } from "react-router-dom";
 import Loader from "../components/Loader/Loader";
 import ErrorModal from "../components/ErrorModal/ErrorModal";
-import { useAppSelector } from "../app/hooks";
+import { useAppDispatch, useAppSelector } from "../app/hooks";
+import { useEffect } from "react";
+import { fetchMe } from "../store/userSlice";
 
 const AppLayout = () => {
+  const dispatch = useAppDispatch();
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+  
+    if (token) {
+      dispatch(fetchMe());
+    }
+  }, []);
   const loading = useAppSelector((state) => state.settings.loading);
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
@@ -15,7 +25,7 @@ const AppLayout = () => {
           borderRight: "1px solid #eee",
         }}
       >
-        <h2>MetriqFlow</h2>
+        <h2>Metriq Flow</h2>
 
         <nav style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <Link to="/app">Dashboard</Link>

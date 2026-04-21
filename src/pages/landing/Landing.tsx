@@ -1,33 +1,11 @@
+import Header from "../../components/Header/Header";
+import Button from "../../ui/Button/Button"
 import { Link } from "react-router-dom";
 
 const Landing = () => {
   return (
     <div className="bg-bg text-textMain min-h-screen">
-
-      {/* HEADER */}
-      <header className="flex justify-between items-center px-8 py-6 border-b border-border">
-        <h1 className="text-xl font-semibold tracking-tight">
-          Metriq Flow
-        </h1>
-
-        <nav className="flex gap-6 text-textSecondary">
-          <a href="#features" className="hover:text-textMain">Features</a>
-          <a href="#how" className="hover:text-textMain">How it works</a>
-        </nav>
-
-        <div className="flex gap-3">
-          <Link to="/login" className="text-textSecondary hover:text-textMain">
-            Login
-          </Link>
-          <Link
-            to="/register"
-            className="bg-primary text-white px-4 py-2 rounded-xl hover:bg-indigo-700"
-          >
-            Get Started
-          </Link>
-        </div>
-      </header>
-
+      <Header/>
       {/* HERO */}
       <section className="text-center px-6 py-24 max-w-4xl mx-auto">
         <h2 className="text-5xl font-bold tracking-tight leading-tight">
@@ -40,28 +18,23 @@ const Landing = () => {
         </p>
 
         <div className="mt-8 flex justify-center gap-4">
-          <Link
-            to="/register"
-            className="bg-primary text-white px-6 py-3 rounded-xl hover:bg-indigo-700"
-          >
-            Start free
-          </Link>
+        <Link to="/register">
+          <Button variant="primary">Start free</Button>
+        </Link>
 
-          <a
-            href="#features"
-            className="border border-border px-6 py-3 rounded-xl hover:bg-gray-50"
-          >
+        <a href="#features">
+          <Button variant="secondary">
             Learn more
-          </a>
+          </Button>
+        </a>
+          
         </div>
       </section>
 
-      {/* SOCIAL PROOF */}
       <section className="px-8 py-10 border-y border-border text-center text-textSecondary">
         Trusted by developers and marketing teams
       </section>
 
-      {/* FEATURES */}
       <section id="features" className="px-8 py-20 max-w-6xl mx-auto">
         <h3 className="text-2xl font-semibold mb-10 text-center">
           Everything you need for analytics
@@ -91,7 +64,6 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* HOW IT WORKS */}
       <section id="how" className="px-8 py-20 bg-gray-50">
         <div className="max-w-4xl mx-auto text-center">
           <h3 className="text-2xl font-semibold mb-10">
@@ -106,7 +78,6 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* CTA */}
       <section className="px-8 py-24 text-center">
         <h3 className="text-3xl font-bold">
           Start using Metriq Flow today
@@ -115,13 +86,11 @@ const Landing = () => {
         <p className="text-textSecondary mt-4">
           No credit card required
         </p>
-
-        <Link
-          to="/register"
-          className="inline-block mt-8 bg-primary text-white px-8 py-4 rounded-xl hover:bg-indigo-700"
-        >
-          Create account
-        </Link>
+        <div className="text-textSecondary mt-4"> 
+          <Link to="/register">
+            <Button variant="primary">Create account</Button>
+          </Link>
+        </div>
       </section>
 
     </div>

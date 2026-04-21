@@ -1,29 +1,39 @@
 import { useNavigate } from "react-router-dom";
+import Button from "../../ui/Button/Button";
 
 const NotFound = () => {
   const navigate = useNavigate();
 
   return (
-    <div style={styles.container}>
-      <h1>404</h1>
-      <p>Страница не найдена</p>
+    <div className="min-h-screen flex items-center justify-center bg-bg px-4">
 
-      <button onClick={() => navigate("/")}>
-        Вернуться на главную
-      </button>
+      <div className="text-center max-w-md">
+
+        <h1 className="text-6xl font-bold text-textMain tracking-tight">
+          404
+        </h1>
+
+        <h2 className="text-xl font-semibold mt-4 text-textMain">
+          Page not found
+        </h2>
+
+        <p className="text-textSecondary mt-2">
+          The page you’re looking for doesn’t exist or has been moved.
+        </p>
+
+        <div className="mt-6">
+          <Button
+            variant="primary"
+            onClick={() => navigate("/")}
+            className="px-6 py-3"
+          >
+            Go to homepage
+          </Button>
+        </div>
+
+      </div>
     </div>
   );
-};
-
-const styles = {
-  container: {
-    height: "100vh",
-    display: "flex",
-    flexDirection: "column" as const,
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 10,
-  },
 };
 
 export default NotFound;
