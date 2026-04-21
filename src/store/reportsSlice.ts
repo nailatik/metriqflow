@@ -1,9 +1,10 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { reportsService, type Report } from "../services/reportsService";
+import { setLoading, setError } from "./settingsSlice";
 
 interface ReportsState {
   list: Report[];
-  error: string | null;
+ "error": string | null;
 }
 
 const initialState: ReportsState = {
@@ -15,12 +16,17 @@ export const fetchReports = createAsyncThunk<
   Report[],
   void,
   { rejectValue: string }
->("reports/fetchReports", async (_, { rejectWithValue }) => {
+>("reports/fetchReports", async (_, { dispatch, rejectWithValue }) => {
+  dispatch(setLoading(true));
   try {
     const res = await reportsService.getReports();
+    dispatch(setLoading(false));
     return res.data;
-  } catch {
-    return rejectWithValue("Ошибка загрузки отчетов");
+  } catch (error) {
+    const message = "Ошибка загрузки отчетов";
+    dispatch(setLoading(false));
+    dispatch(setError(message));
+    return rejectWithValue(message);
   }
 });
 

@@ -1,10 +1,15 @@
-import { http } from "./http";
-import type { AuthResponse, LoginPayload } from "../types/user";
+import { api } from "./api";
+
+export interface AuthResponse {
+  token: string;
+}
 
 export const authService = {
-  login: (data: LoginPayload) =>
-    http.post<AuthResponse, LoginPayload>("/auth/login", data),
+  login: (email: string, password: string) =>
+    api.post<AuthResponse>("/auth/login", { email, password }),
 
-  register: (data: LoginPayload) =>
-    http.post<AuthResponse, LoginPayload>("/auth/register", data),
+  register: (email: string, password: string) =>
+    api.post("/auth/register", { email, password }),
+
+  me: () => api.get("/auth/me"),
 };

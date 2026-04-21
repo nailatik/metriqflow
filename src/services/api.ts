@@ -4,9 +4,6 @@ import { setLoading, setError } from "../store/settingsSlice";
 
 export const api = axios.create({
   baseURL: "http://localhost:8000",
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
 
 export const apiMethods = {
@@ -17,16 +14,15 @@ export const apiMethods = {
   patch: api.patch,
 };
 
-api.interceptors.request.use(
-  (config) => {
-    store.dispatch(setLoading(true));
-    return config;
-  },
-  (error) => {
-    store.dispatch(setLoading(false));
-    return Promise.reject(error);
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
-);
+
+  return config;
+});
 
 api.interceptors.response.use(
   (response) => {
