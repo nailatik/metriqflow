@@ -15,29 +15,16 @@ const Button: React.FC<ButtonProps> = ({
   disabled = false,
   variant = "primary",
 }) => {
-  const baseStyles = {
-    padding: "10px 20px",
-    borderRadius: "4px",
-    border: "none",
-    cursor: disabled ? "not-allowed" : "pointer",
-    fontSize: "14px",
-    fontWeight: 500,
-    transition: "background-color 0.2s",
-  };
+  const base =
+    "px-4 py-2 rounded-xl font-medium transition-all duration-200 focus:outline-none";
 
   const variants = {
-    primary: {
-      backgroundColor: "#3b82f6",
-      color: "#fff",
-    },
-    secondary: {
-      backgroundColor: "#6b7280",
-      color: "#fff",
-    },
-    danger: {
-      backgroundColor: "#ef4444",
-      color: "#fff",
-    },
+    primary:
+      "bg-primary text-white hover:bg-indigo-700 shadow-sm",
+    secondary:
+      "bg-gray-100 text-textMain hover:bg-gray-200",
+    danger:
+      "bg-red-500 text-white hover:bg-red-600",
   };
 
   return (
@@ -45,11 +32,11 @@ const Button: React.FC<ButtonProps> = ({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      style={{
-        ...baseStyles,
-        ...variants[variant],
-        opacity: disabled ? 0.6 : 1,
-      }}
+      className={`
+        ${base}
+        ${variants[variant]}
+        ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+      `}
     >
       {children}
     </button>

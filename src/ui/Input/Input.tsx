@@ -1,50 +1,48 @@
 import React from "react";
 
 interface InputProps {
-  placeholder?: string;
   value: string;
   onChange: (value: string) => void;
+  placeholder?: string;
   type?: "text" | "password" | "email";
   label?: string;
 }
 
 const Input: React.FC<InputProps> = ({
-  placeholder,
   value,
   onChange,
+  placeholder,
   type = "text",
   label,
 }) => {
-  const inputStyle = {
-    width: "100%",
-    padding: "10px",
-    borderRadius: "4px",
-    border: "1px solid #d1d5db",
-    fontSize: "14px",
-    marginBottom: label ? "8px" : "0",
-  };
-
   return (
-    <div style={{ width: "100%" }}>
+    <div className="w-full flex flex-col gap-1">
+      
       {label && (
-        <label
-          style={{
-            display: "block",
-            marginBottom: "4px",
-            fontSize: "14px",
-            fontWeight: 500,
-            color: "#374151",
-          }}
-        >
+        <label className="text-sm text-textSecondary font-medium">
           {label}
         </label>
       )}
+
       <input
         type={type}
-        placeholder={placeholder}
         value={value}
+        placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        style={inputStyle}
+        className="
+          w-full
+          px-3 py-2
+          rounded-xl
+          border border-border
+          bg-white
+          text-textMain
+          placeholder:text-gray-400
+          focus:outline-none
+          focus:ring-2
+          focus:ring-primary/30
+          focus:border-primary
+          transition-all
+        "
       />
     </div>
   );
