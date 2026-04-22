@@ -1,18 +1,18 @@
-import { Outlet } from "react-router-dom";
-import { useAppSelector } from "../app/hooks";
-import Loader from "../components/Loader/Loader";
-import ErrorModal from "../components/ErrorModal/ErrorModal";
+// wrappers/CommonWrapper.tsx
+import { useAppSelector } from '../app/hooks';
+import Loader from '../components/Loader/Loader';
+import ErrorModal from '../components/ErrorModal/ErrorModal';
 
-const CommonWrapper = () => {
-  const loading = useAppSelector(
+const CommonWrapper = ({ children }: { children: React.ReactNode }) => {
+  const { loading } = useAppSelector(
     (state) => state.settings
   );
 
   return (
     <>
       {loading && <Loader />}
-      <ErrorModal/>
-      <Outlet />
+      <ErrorModal />
+      {children}
     </>
   );
 };
