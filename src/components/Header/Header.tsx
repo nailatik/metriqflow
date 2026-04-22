@@ -8,7 +8,7 @@ const Header = () => {
           Metriq Flow
         </h1>
 
-        <nav className="flex gap-6 text-textSecondary">
+        <nav className="flex items-center gap-6 text-textSecondary ml-[87px]">
           <a href="#features" className="hover:text-textMain">Features</a>
           <a href="#how" className="hover:text-textMain">How it works</a>
         </nav>

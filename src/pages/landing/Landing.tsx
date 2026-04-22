@@ -4,11 +4,11 @@ import { Link } from "react-router-dom";
 
 const Landing = () => {
   return (
-    <div className="relative bg-bg text-textMain min-h-screen">
+    <div className="relative text-textMain min-h-screen">
 
       {/* subtle background */}
       <div className="absolute inset-0 -z-10">
-        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-purple-500/10 blur-3xl rounded-full" />
+      <div className="absolute top-[100px] left-[-100px] w-[600px] h-[600px] bg-purple-500/10 blur-3xl rounded-full" />
         <div className="absolute bottom-[-200px] right-[-100px] w-[500px] h-[500px] bg-indigo-500/10 blur-3xl rounded-full" />
       </div>
 
@@ -79,7 +79,7 @@ const Landing = () => {
       </section>
 
       {/* HOW IT WORKS */}
-      <section id="how" className="px-8 py-20 bg-gray-50">
+      <section id="how" className="px-8 py-20">
 
         <div className="max-w-4xl mx-auto text-center">
 
