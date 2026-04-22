@@ -1,6 +1,7 @@
 import axios from "axios";
 import { store } from "../app/store";
 import { setLoading, setError } from "../store/settingsSlice";
+import { logout } from "../store/userSlice"; 
 
 export const api = axios.create({
   baseURL: "http://localhost:8000",
@@ -31,6 +32,13 @@ api.interceptors.response.use(
   },
   (error) => {
     store.dispatch(setLoading(false));
+
+    if (error.response?.status === 401) {
+      localStorage.removeItem("token");
+      store.dispatch(logout());
+      window.location.href = "/login";
+      return Promise.reject(error);
+    }
 
     store.dispatch(
       setError(
