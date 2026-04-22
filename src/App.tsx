@@ -10,9 +10,20 @@ import Reports from './pages/reports/Reports';
 import Settings from './pages/settings/Settings';
 import Integrations from './pages/integrations/Integrations';
 import NotFound from './pages/notfound/NotFound';
-
+import { useAppDispatch } from "./app/hooks";
+import { useEffect } from "react";
+import { fetchMe } from "./store/userSlice";
 
 function App() {
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      dispatch(fetchMe());
+    }
+  }, [dispatch]);
   return (
     <BrowserRouter>
       <CommonWrapper>
