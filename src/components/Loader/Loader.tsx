@@ -6,33 +6,21 @@ const Loader = () => {
   if (!loading) return null;
 
   return (
-    <div style={styles.overlay}>
-      <div style={styles.spinner}></div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+
+      <div className="absolute inset-0 bg-black/10 backdrop-blur-sm" />
+
+      <div className="relative z-10 bg-white border border-border rounded-2xl px-6 py-5 shadow-lg flex flex-col items-center gap-3">
+
+        <div className="w-8 h-8 border-2 border-gray-300 border-t-primary rounded-full animate-spin" />
+
+        <p className="text-sm text-textSecondary">
+          Loading...
+        </p>
+
+      </div>
     </div>
   );
-};
-
-const styles = {
-  overlay: {
-    position: "fixed" as const,
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    background: "rgba(0,0,0,0.3)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 9999,
-  },
-  spinner: {
-    width: 50,
-    height: 50,
-    border: "5px solid #ccc",
-    borderTop: "5px solid #333",
-    borderRadius: "50%",
-    animation: "spin 1s linear infinite",
-  },
 };
 
 export default Loader;

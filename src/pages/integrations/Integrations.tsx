@@ -12,7 +12,6 @@ const Integrations = () => {
   return (
     <div className="space-y-8">
 
-      {/* HEADER */}
       <h1 className="text-2xl font-semibold">
         Integrations
       </h1>

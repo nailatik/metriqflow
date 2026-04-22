@@ -58,12 +58,12 @@ const Dashboard = () => {
 
         <div className="bg-white border border-border rounded-xl p-5">
           <p className="text-textSecondary text-sm">Reports</p>
-          <p className="text-2xl font-semibold mt-2">12</p>
+          <p className="text-2xl font-semibold mt-2">-</p>
         </div>
 
         <div className="bg-white border border-border rounded-xl p-5">
           <p className="text-textSecondary text-sm">Integrations</p>
-          <p className="text-2xl font-semibold mt-2">3</p>
+          <p className="text-2xl font-semibold mt-2">-</p>
         </div>
 
         <div className="bg-white border border-border rounded-xl p-5">
