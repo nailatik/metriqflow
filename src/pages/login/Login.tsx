@@ -22,27 +22,20 @@ const Login = () => {
   };
 
   return (
-    
-    <div className="min-h-screen flex items-center justify-center bg-bg px-4">
-      <Link to="/">
-        <h1 className="text-xl font-semibold tracking-tight">
-            Metriq Flow
-          </h1>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-bg px-4">
+      <Link to="/" className="mb-8">
+        <h1 className="text-4xl text-primary font-semibold tracking-tight">
+          Metriq Flow
+        </h1>
       </Link>
-      <div className="w-full max-w-md bg-white border border-border rounded-2xl p-8 shadow-sm">
-        
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-semibold text-textMain">
-            Welcome back
-          </h1>
 
-          <p className="text-textSecondary mt-2 text-sm">
-            Sign in to Metriq Flow
-          </p>
+      <div className="w-full max-w-md bg-white border border-border rounded-2xl p-8 shadow-sm">
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-semibold text-textMain">Welcome back</h1>
+          <p className="text-textSecondary mt-2 text-sm">Sign in to Metriq Flow</p>
         </div>
 
         <div className="space-y-4">
-
           <div>
             <label className="text-sm text-textSecondary">Email</label>
             <input
@@ -64,15 +57,9 @@ const Login = () => {
             />
           </div>
 
-          <Button
-            variant="primary"
-            disabled={loading}
-            onClick={handleLogin}
-            className="w-full"
-          >
+          <Button variant="primary" disabled={loading} onClick={handleLogin} className="w-full">
             {loading ? "Signing in..." : "Sign in"}
           </Button>
-
         </div>
 
         <p className="text-center text-sm text-textSecondary mt-6">
@@ -81,7 +68,6 @@ const Login = () => {
             Sign up
           </Link>
         </p>
-
       </div>
     </div>
   );

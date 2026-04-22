@@ -24,7 +24,12 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-bg px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-bg px-4">
+      <Link to="/" className="mb-8">
+        <h1 className="text-4xl text-primary font-semibold tracking-tight">
+          Metriq Flow
+        </h1>
+      </Link>
 
       <div className="w-full max-w-md bg-white border border-border rounded-2xl p-8 shadow-sm">
 
