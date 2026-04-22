@@ -4,17 +4,14 @@ import Loader from "../components/Loader/Loader";
 import ErrorModal from "../components/ErrorModal/ErrorModal";
 
 const CommonWrapper = () => {
-  const { loading, error, isErrorModalOpen } = useAppSelector(
+  const loading = useAppSelector(
     (state) => state.settings
   );
 
   return (
     <>
       {loading && <Loader />}
-      <ErrorModal
-        isOpen={isErrorModalOpen}
-        message={error}
-      />
+      <ErrorModal/>
       <Outlet />
     </>
   );

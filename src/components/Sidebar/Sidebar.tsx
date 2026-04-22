@@ -36,7 +36,7 @@ const Sidebar = () => {
 
       <div className="flex flex-col gap-2 text-sm">
         <button className="text-left px-3 py-2 rounded-lg hover:bg-gray-100">
-          EU
+          EN
         </button>
 
         <button className="text-left px-3 py-2 rounded-lg hover:bg-gray-100">

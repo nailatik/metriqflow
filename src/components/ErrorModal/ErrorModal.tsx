@@ -11,39 +11,29 @@ const ErrorModal = () => {
   if (!isErrorModalOpen || !error) return null;
 
   return (
-    <div style={styles.overlay}>
-      <div style={styles.modal}>
-        <h2>Ошибка</h2>
-        <p>{error}</p>
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 backdrop-blur-sm">
 
-        <button onClick={() => dispatch(clearError())}>
-          Закрыть
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 text-center animate-fadeIn">
+
+        <h2 className="text-xl font-semibold text-red-600">
+          Something went wrong
+        </h2>
+
+        <p className="text-textSecondary mt-3">
+          {error}
+        </p>
+
+        <button
+          onClick={() => dispatch(clearError())}
+          className="mt-6 px-5 py-2 rounded-xl bg-red-500 text-white hover:bg-red-600 transition"
+        >
+          Close
         </button>
+
       </div>
+
     </div>
   );
-};
-
-const styles = {
-  overlay: {
-    position: "fixed" as const,
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    background: "rgba(0,0,0,0.5)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 10000,
-  },
-  modal: {
-    background: "#fff",
-    padding: 20,
-    borderRadius: 10,
-    minWidth: 300,
-    textAlign: "center" as const,
-  },
 };
 
 export default ErrorModal;

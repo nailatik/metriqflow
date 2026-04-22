@@ -13,7 +13,7 @@ import Integrations from "../pages/integrations/Integrations";
 
 export const router = createBrowserRouter([
   {
-    element: <CommonWrapper />,
+    element: <CommonWrapper />, 
     children: [
       {
         path: "/",

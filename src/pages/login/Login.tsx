@@ -22,10 +22,15 @@ const Login = () => {
   };
 
   return (
+    
     <div className="min-h-screen flex items-center justify-center bg-bg px-4">
-
+      <Link to="/">
+        <h1 className="text-xl font-semibold tracking-tight">
+            Metriq Flow
+          </h1>
+      </Link>
       <div className="w-full max-w-md bg-white border border-border rounded-2xl p-8 shadow-sm">
-
+        
         <div className="text-center mb-8">
           <h1 className="text-2xl font-semibold text-textMain">
             Welcome back
