@@ -1,9 +1,12 @@
 import { api } from "./api";
 
 export interface AuthResponse {
-  token: string;
+  user: {
+    id: number;
+    email: string;
+  };
+  accessToken: string;
 }
-
 export const authService = {
   login: (email: string, password: string) =>
     api.post<AuthResponse>("/auth/login", { email, password }),

@@ -1,10 +1,15 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { authService } from "../services/authService";
 
+interface User {
+  id: number;
+  email: string;
+}
+
 interface UserState {
   token: string | null;
   isAuth: boolean;
-  user: { id: number; email: string } | null;
+  user: User | null;
 }
 
 const initialState: UserState = {
@@ -12,35 +17,43 @@ const initialState: UserState = {
   isAuth: !!localStorage.getItem("token"),
   user: null,
 };
-type MeResponse = {
-  id: number;
-  email: string;
+
+type AuthResponse = {
+  user: User;
+  accessToken: string;
 };
 
-export const fetchMe = createAsyncThunk<MeResponse>(
-  "user/me",
-  async () => {
-    const res = await authService.me();
-    return res.data;
-  }
-);
-
 export const loginUser = createAsyncThunk<
-  string,
+  AuthResponse,
   { email: string; password: string }
 >("user/login", async ({ email, password }) => {
   const res = await authService.login(email, password);
 
-  const token = res.data.token;
-  localStorage.setItem("token", token);
+  const { accessToken, user } = res.data;
 
-  return token;
+  localStorage.setItem("token", accessToken);
+
+  return { accessToken, user };
 });
 
-export const registerUser = createAsyncThunk(
-  "user/register",
-  async ({ email, password }: { email: string; password: string }) => {
-    await authService.register(email, password);
+export const registerUser = createAsyncThunk<
+  AuthResponse,
+  { email: string; password: string }
+>("user/register", async ({ email, password }) => {
+  const res = await authService.register(email, password);
+
+  const { accessToken, user } = res.data;
+
+  localStorage.setItem("token", accessToken);
+
+  return { accessToken, user };
+});
+
+export const fetchMe = createAsyncThunk<User>(
+  "user/me",
+  async () => {
+    const res = await authService.me();
+    return res.data;
   }
 );
 
@@ -58,22 +71,30 @@ const userSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(loginUser.fulfilled, (state, action) => {
-        state.token = action.payload;
+        state.token = action.payload.accessToken;
+        state.user = action.payload.user;
         state.isAuth = true;
-        localStorage.setItem("token", action.payload);
       })
       .addCase(loginUser.rejected, (state) => {
         state.isAuth = false;
         state.token = null;
+        state.user = null;
         localStorage.removeItem("token");
       })
-      .addCase(fetchMe.fulfilled, (state, action) => {
+
+      .addCase(registerUser.fulfilled, (state, action) => {
+        state.token = action.payload.accessToken;
+        state.user = action.payload.user;
         state.isAuth = true;
+      })
+
+      .addCase(fetchMe.fulfilled, (state, action) => {
         state.user = action.payload;
+        state.isAuth = true;
       })
       .addCase(fetchMe.rejected, (state) => {
-        state.isAuth = false;
         state.user = null;
+        state.isAuth = false;
         state.token = null;
         localStorage.removeItem("token");
       });
