@@ -153,6 +153,8 @@ const Register = () => {
               <label className="text-sm text-textSecondary">Phone *</label>
               <div className="mt-1">
                 <PhoneInput
+                  defaultCountry="ru"
+                  placeholder="+7 (999) 123-45-67"
                   value={formData.phone}
                   onChange={(phone) => handleChange("phone", phone)}
                   inputClassName="w-full px-4 py-3 border border-border rounded-xl outline-none focus:border-primary"
