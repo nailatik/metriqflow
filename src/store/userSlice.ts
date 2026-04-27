@@ -1,10 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { authService } from "../services/authService";
-
-interface User {
-  id: number;
-  email: string;
-}
+import { authService, type User, type ProfileData } from "../services/authService";
 
 interface UserState {
   token: string | null;
@@ -49,6 +44,14 @@ export const registerUser = createAsyncThunk<
   return { accessToken, user };
 });
 
+export const completeProfile = createAsyncThunk<
+  User,
+  ProfileData
+>("user/completeProfile", async (data) => {
+  const res = await authService.completeProfile(data);
+  return res.data;
+});
+
 export const fetchMe = createAsyncThunk<User>(
   "user/me",
   async () => {
@@ -86,6 +89,10 @@ const userSlice = createSlice({
         state.token = action.payload.accessToken;
         state.user = action.payload.user;
         state.isAuth = true;
+      })
+
+      .addCase(completeProfile.fulfilled, (state, action) => {
+        state.user = action.payload;
       })
 
       .addCase(fetchMe.fulfilled, (state, action) => {

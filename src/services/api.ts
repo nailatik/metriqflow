@@ -37,37 +37,29 @@ api.interceptors.response.use(
     store.dispatch(setLoading(false));
 
     const originalRequest = error.config;
+    const status = error.response?.status;
+    const message = error.response?.data?.message;
 
-    if (
-      error.response?.status === 401 &&
-      !originalRequest._retry
-    ) {
+    if (status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-
       try {
         const res = await api.post("/auth/refresh");
-
         const newToken = res.data.accessToken;
-
         localStorage.setItem("token", newToken);
-
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
-
         return api(originalRequest);
-      } catch (refreshError) {
-        localStorage.removeItem("token");
+      } catch {
         store.dispatch(logout());
         window.location.href = "/login";
-        return Promise.reject(refreshError);
+        return Promise.reject(error);
       }
     }
 
-    store.dispatch(
-      setError(
-        error?.response?.data?.message ||
-        "Ошибка запроса к серверу"
-      )
-    );
+    if (status === 409) {
+      store.dispatch(setError(message || "User already exists"));
+    } else {
+      store.dispatch(setError(message || "Ошибка запроса к серверу"));
+    }
 
     return Promise.reject(error);
   }

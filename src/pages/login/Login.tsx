@@ -13,7 +13,8 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = async () => {
+  const handleLogin = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     const result = await dispatch(loginUser({ email, password }));
 
     if (loginUser.fulfilled.match(result)) {
@@ -29,7 +30,7 @@ const Login = () => {
         </h1>
       </Link>
 
-      <div className="w-full max-w-md bg-white border border-border rounded-2xl p-8 shadow-sm">
+      <form onSubmit={handleLogin} className="w-full max-w-md bg-white border border-border rounded-2xl p-8 shadow-sm">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-semibold text-textMain">Welcome back</h1>
           <p className="text-textSecondary mt-2 text-sm">Sign in to Metriq Flow</p>
@@ -57,19 +58,20 @@ const Login = () => {
             />
           </div>
 
-          <Button variant="primary" disabled={loading} onClick={handleLogin} className="w-full">
+          <Button variant="primary" disabled={loading} type="submit" className="w-full">
             {loading ? "Signing in..." : "Sign in"}
           </Button>
-        </div>
-
+          </div>
+        
         <p className="text-center text-sm text-textSecondary mt-6">
           Don’t have an account?{" "}
           <Link to="/register" className="text-primary hover:underline">
             Sign up
           </Link>
         </p>
+        </form>
       </div>
-    </div>
+      
   );
 };
 

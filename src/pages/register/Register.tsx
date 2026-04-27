@@ -1,16 +1,17 @@
 import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { loginUser, registerUser } from "../../store/userSlice";
-import { useNavigate, Link } from "react-router-dom";
+import { registerUser } from "../../store/userSlice";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { getPasswordChecks, validateEmail, validatePassword } from "../../utils/validation";
 import Button from "../../ui/Button/Button";
+import RegisterStep2 from "./RegisterStep2";
 
 const Register = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-
   const loading = useAppSelector((s) => s.settings.loading);
-
+  const [searchParams] = useSearchParams();
+  const step = searchParams.get("step") === "2" ? 2 : 1;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -28,19 +29,34 @@ const Register = () => {
   
     setErrors({});
   
-    await dispatch(registerUser({ email, password }));
+    localStorage.setItem("pending_profile", "true");
   
-    const result = await dispatch(loginUser({ email, password }));
+    const result = await dispatch(registerUser({ email, password }));
   
-    if (loginUser.fulfilled.match(result)) {
-      navigate("/app");
+    if (registerUser.fulfilled.match(result)) {
+      navigate("/register?step=2");
     }
   };
+
   const checks = getPasswordChecks(password);
   const [errors, setErrors] = useState<{
     email?: string;
     password?: string;
   }>({});
+
+  if (step === 2) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-bg px-4">
+        <Link to="/" className="mb-8">
+          <h1 className="text-4xl text-primary font-semibold tracking-tight">
+            Metriq Flow
+          </h1>
+        </Link>
+        <RegisterStep2 />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-bg px-4">
       <Link to="/" className="mb-8">
@@ -49,8 +65,7 @@ const Register = () => {
         </h1>
       </Link>
 
-      <div className="w-full max-w-md bg-white border border-border rounded-2xl p-8 shadow-sm">
-
+      <div className="w-full max-w-md bg-white border border-border rounded-2xl p-8 shadow-sm transition-all duration-500 transform preserve-3d">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-semibold text-textMain">
             Create account
