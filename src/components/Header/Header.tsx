@@ -12,6 +12,8 @@ const Header = () => {
     dispatch(logout());
   };
 
+  const userFirstName = user?.full_name?.split(" ")[0] || "";
+
   return (
     <header className="grid grid-cols-[1fr_auto_1fr] items-center px-8 py-6 border-b border-border">
       {/* Логотип — прижат к левому краю */}
@@ -31,7 +33,7 @@ const Header = () => {
           <>
             <Link to="/app">
               <span className="text-textMain font-medium">
-                {user?.id || "User"}
+                {userFirstName || "User"}
               </span>
             </Link>
             <Button variant="secondary" onClick={handleLogout}>

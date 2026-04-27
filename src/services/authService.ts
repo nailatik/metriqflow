@@ -15,11 +15,13 @@ export interface AuthResponse {
   accessToken: string;
 }
 
-export interface ProfileData {
+export interface RegisterData {
+  email: string;
+  password: string;
   fullName: string;
-  birthDate: string | null;
-  organization: string | null;
-  phone: string | null;
+  birthDate: string;
+  organization?: string;
+  phone: string;
   agreedToProcessing: boolean;
 }
 
@@ -27,11 +29,8 @@ export const authService = {
   login: (email: string, password: string) =>
     api.post<AuthResponse>("/auth/login", { email, password }),
 
-  register: (email: string, password: string) =>
-    api.post<AuthResponse>("/auth/register", { email, password }),
-
-  completeProfile: (data: ProfileData) =>
-    api.patch<User>("/auth/profile", data),
+  register: (data: RegisterData) =>
+    api.post<AuthResponse>("/auth/register", data),
 
   me: () => api.get<User>("/auth/me"),
 };

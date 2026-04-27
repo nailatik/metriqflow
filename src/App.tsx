@@ -24,6 +24,7 @@ function App() {
       dispatch(fetchMe());
     }
   }, [dispatch]);
+
   return (
     <BrowserRouter>
       <CommonWrapper>
@@ -45,6 +46,5 @@ function App() {
     </BrowserRouter>
   );
 }
-
 
 export default App;

@@ -14,6 +14,8 @@ const Dashboard = () => {
     navigate("/login");
   };
 
+  const userName = user?.full_name?.split(" ")[0] || "";
+
   return (
     <div className="space-y-8">
 
@@ -25,7 +27,7 @@ const Dashboard = () => {
           </h1>
 
           <p className="text-textSecondary mt-1">
-            Welcome back{user?.email ? `, ${user.email}` : ""}
+            {userName ? `Welcome, ${userName}` : "Welcome back"}
           </p>
         </div>
 
@@ -41,14 +43,26 @@ const Dashboard = () => {
         </h2>
 
         <div className="space-y-2 text-textSecondary">
+          {userName && (
+            <p>
+              <span className="font-medium text-textMain">Name:</span>{" "}
+              {userName}
+            </p>
+          )}
+
           <p>
-            <span className="font-medium text-textMain">ID:</span>{" "}
-            {user?.id ?? "—"}
+            <span className="font-medium text-textMain">Full Name:</span>{" "}
+            {user?.full_name ?? "—"}
           </p>
 
           <p>
             <span className="font-medium text-textMain">Email:</span>{" "}
             {user?.email ?? "—"}
+          </p>
+
+          <p>
+            <span className="font-medium text-textMain">ID:</span>{" "}
+            {user?.id ?? "—"}
           </p>
         </div>
       </div>
