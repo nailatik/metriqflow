@@ -43,15 +43,8 @@ const Dashboard = () => {
         </h2>
 
         <div className="space-y-2 text-textSecondary">
-          {userName && (
-            <p>
-              <span className="font-medium text-textMain">Name:</span>{" "}
-              {userName}
-            </p>
-          )}
-
           <p>
-            <span className="font-medium text-textMain">Full Name:</span>{" "}
+            <span className="font-medium text-textMain">Name:</span>{" "}
             {user?.full_name ?? "—"}
           </p>
 
