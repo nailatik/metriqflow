@@ -8,9 +8,12 @@ const Reports = () => {
 
   const list = useAppSelector((s) => s.reports.list);
   const loading = useAppSelector((s) => s.settings.loading);
+
   useEffect(() => {
-    dispatch(fetchReports());
-  }, [dispatch]);
+    if (list.length === 0) {
+      dispatch(fetchReports());
+    }
+  }, [dispatch, list.length]);
 
   return (
     <div className="space-y-8">

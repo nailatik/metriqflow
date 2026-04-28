@@ -11,7 +11,7 @@ const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/login" replace />;
   }
 
-  if (token && location.pathname === '/login') {
+  if (token && (location.pathname === '/login' || location.pathname === '/register')) {
     return <Navigate to="/app" replace />;
   }
 
