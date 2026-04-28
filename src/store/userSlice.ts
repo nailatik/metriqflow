@@ -28,10 +28,7 @@ export const loginUser = createAsyncThunk<
 
   localStorage.setItem("token", accessToken);
 
-  // Fetch full user data
-  const meRes = await authService.me();
-
-  return { accessToken, user: meRes.data };
+  return { accessToken, user };
 });
 
 export const registerUser = createAsyncThunk<
@@ -44,10 +41,7 @@ export const registerUser = createAsyncThunk<
 
   localStorage.setItem("token", accessToken);
 
-  // Fetch full user data
-  const meRes = await authService.me();
-
-  return { accessToken, user: meRes.data };
+  return { accessToken, user };
 });
 
 export const fetchMe = createAsyncThunk<User>(

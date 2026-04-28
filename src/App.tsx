@@ -10,20 +10,22 @@ import Reports from './pages/reports/Reports';
 import Settings from './pages/settings/Settings';
 import Integrations from './pages/integrations/Integrations';
 import NotFound from './pages/notfound/NotFound';
-import { useAppDispatch } from "./app/hooks";
-import { useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "./app/hooks";
+import { useEffect, useRef } from "react";
 import { fetchMe } from "./store/userSlice";
 
 function App() {
   const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.user.user);
+  const initRef = useRef(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-
-    if (token) {
+    if (token && !user && !initRef.current) {
+      initRef.current = true;
       dispatch(fetchMe());
     }
-  }, [dispatch]);
+  }, [dispatch, user]);
 
   return (
     <BrowserRouter>
