@@ -131,6 +131,7 @@ const Register = () => {
               <label className="text-sm text-textSecondary">Date of Birth *</label>
               <input
                 type="date"
+                max="2100-12-31"
                 className={`w-full mt-1 px-4 py-3 border rounded-xl outline-none 
                   ${errors.birthDate ? "border-red-500" : "border-border"} focus:border-primary`}
                 value={formData.birthDate}

@@ -1,20 +1,12 @@
 import axios from "axios";
 import { store } from "../app/store";
-import { setLoading, setError } from "../store/settingsSlice";
+import { setLoading, setError, clearError } from "../store/settingsSlice";
 import { logout } from "../store/userSlice"; 
 
 export const api = axios.create({
   baseURL: "http://localhost:8000",
   withCredentials: true,
 });
-
-export const apiMethods = {
-  get: api.get,
-  post: api.post,
-  put: api.put,
-  delete: api.delete,
-  patch: api.patch,
-};
 
 api.interceptors.request.use((config) => {
   store.dispatch(setLoading(true));
@@ -50,6 +42,7 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch {
         store.dispatch(logout());
+        store.dispatch(clearError());
         window.location.href = "/login";
         return Promise.reject(error);
       }
@@ -57,7 +50,7 @@ api.interceptors.response.use(
 
     if (status === 409) {
       store.dispatch(setError(message || "User already exists"));
-    } else {
+    } else if (status !== 401) {
       store.dispatch(setError(message || "Ошибка запроса к серверу"));
     }
 

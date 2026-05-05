@@ -24,11 +24,13 @@ export const loginUser = createAsyncThunk<
 >("user/login", async ({ email, password }) => {
   const res = await authService.login(email, password);
 
-  const { accessToken, user } = res.data;
+  const { accessToken } = res.data;
 
   localStorage.setItem("token", accessToken);
 
-  return { accessToken, user };
+  const meRes = await authService.me();
+
+  return { accessToken, user: meRes.data };
 });
 
 export const registerUser = createAsyncThunk<
