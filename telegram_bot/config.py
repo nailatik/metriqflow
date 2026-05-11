@@ -5,6 +5,9 @@ class Settings(BaseSettings):
     BOT_TOKEN: str
     BOT_USERNAME: str = ""
 
+    TELEGRAM_API_ID: int = 0
+    TELEGRAM_API_HASH: str = ""
+
     DB_HOST: str = "localhost"
     DB_PORT: int = 5432
     DB_NAME: str = "metriq"

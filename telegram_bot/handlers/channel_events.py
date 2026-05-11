@@ -1,13 +1,14 @@
 """
-Handles two channel-level events:
-  1. my_chat_member  — bot added/removed as admin in a channel
-  2. channel_post    — new post published in a tracked channel
+Handles channel-level events:
+  1. my_chat_member            — bot added/removed as admin in a channel
+  2. channel_post              — new post published in a tracked channel
+  3. message_reaction_count    — aggregate reaction counts updated (Bot API 7.0)
 """
 import logging
 
 import asyncpg
 from aiogram import Router, F
-from aiogram.types import ChatMemberUpdated, Message
+from aiogram.types import ChatMemberUpdated, Message, MessageReactionCountUpdated
 
 from db import queries
 
@@ -53,12 +54,13 @@ async def handle_channel_post(message: Message, db: asyncpg.Pool) -> None:
     if not channel:
         return
 
-    views    = message.views    or 0
-    forwards = message.forwards or 0
+    views    = getattr(message, "views",    None) or 0
+    forwards = getattr(message, "forwards", None) or 0
 
     reactions_total = 0
-    if message.reactions:
-        reactions_total = sum(r.count for r in message.reactions.reactions)
+    raw_reactions = getattr(message, "reactions", None)
+    if raw_reactions:
+        reactions_total = sum(r.total_count for r in raw_reactions.reactions)
 
     has_media = bool(
         message.photo or message.video or message.document
@@ -78,3 +80,23 @@ async def handle_channel_post(message: Message, db: asyncpg.Pool) -> None:
         posted_at=message.date,
     )
     logger.debug("Post collected: channel=%s msg=%s views=%s", channel_id, message.message_id, views)
+
+
+@router.message_reaction_count()
+async def handle_reaction_count(update: MessageReactionCountUpdated, db: asyncpg.Pool) -> None:
+    channel_id = update.chat.id
+    channel = await queries.get_channel_by_id(db, channel_id)
+    if not channel:
+        return
+
+    total = sum(r.total_count for r in update.reactions)
+    async with db.acquire() as conn:
+        await conn.execute(
+            """
+            UPDATE telegram_posts
+            SET reactions_total = $1, collected_at = NOW()
+            WHERE channel_id = $2 AND message_id = $3
+            """,
+            total, channel_id, update.message_id,
+        )
+    logger.debug("Reactions updated: channel=%s msg=%s total=%s", channel_id, update.message_id, total)

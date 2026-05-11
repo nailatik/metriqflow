@@ -8,8 +8,10 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 from config import settings
 from db.pool import create_pool, close_pool
-from handlers import channel_events, start, menu, account, channels
+from handlers import channel_events, start, menu, account, channels, report
 from middlewares.db import DatabaseMiddleware
+from scheduler import run_scheduler
+from telethon_client import close_client as close_telethon
 
 logging.basicConfig(
     level=logging.INFO,
@@ -34,9 +36,12 @@ async def main() -> None:
     dp.include_router(menu.router)
     dp.include_router(account.router)
     dp.include_router(channels.router)
+    dp.include_router(report.router)
 
     me = await bot.get_me()
     logger.info("Starting @%s (id=%s)", me.username, me.id)
+
+    asyncio.create_task(run_scheduler(bot, pool))
 
     try:
         await dp.start_polling(
@@ -44,6 +49,7 @@ async def main() -> None:
             allowed_updates=dp.resolve_used_update_types(),
         )
     finally:
+        await close_telethon()
         await close_pool()
         await bot.session.close()
         logger.info("Bot stopped")

@@ -1,0 +1,16 @@
+import { Router } from "express";
+import { authMiddleware } from "../middleware/auth.middleware";
+import { generateTelegramToken, getTelegramStatus, unlinkTelegram } from "../controllers/integrations.controller";
+import { getUserChannels, getChannelAnalytics } from "../controllers/analytics.controller";
+
+const router = Router();
+
+router.use(authMiddleware);
+
+router.post("/telegram/token",                           generateTelegramToken);
+router.get("/telegram/status",                           getTelegramStatus);
+router.delete("/telegram/unlink",                        unlinkTelegram);
+router.get("/telegram/channels",                         getUserChannels);
+router.get("/telegram/channels/:channelId/analytics",   getChannelAnalytics);
+
+export default router;

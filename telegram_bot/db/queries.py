@@ -148,6 +148,77 @@ async def get_channel_stats(
 
 # ─── Posts ───────────────────────────────────────────────────────────────────
 
+async def get_posts_for_report(
+    pool: asyncpg.Pool,
+    channel_id: int,
+    period: str,
+) -> list[asyncpg.Record]:
+    interval_map = {
+        "24h": "NOW() - INTERVAL '24 hours'",
+        "7d":  "NOW() - INTERVAL '7 days'",
+        "30d": "NOW() - INTERVAL '30 days'",
+    }
+    where_extra = f"AND posted_at >= {interval_map[period]}" if period in interval_map else ""
+    async with pool.acquire() as conn:
+        return await conn.fetch(
+            f"""
+            SELECT
+                message_id,
+                posted_at,
+                views,
+                reactions_total,
+                forwards,
+                has_media,
+                CASE WHEN views > 0
+                    THEN ROUND((reactions_total + forwards)::numeric / views * 100, 2)
+                    ELSE 0
+                END AS engagement_rate,
+                LEFT(COALESCE(text, ''), 80) AS text_preview
+            FROM telegram_posts
+            WHERE channel_id = $1 {where_extra}
+            ORDER BY posted_at DESC
+            """,
+            channel_id,
+        )
+
+
+async def get_posts_grouped_by_channel(
+    pool: asyncpg.Pool,
+    interval: str,
+) -> dict[int, list[int]]:
+    """Return {tg_channel_id: [message_id, ...]} for posts within interval (e.g. '24 hours')."""
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            f"""
+            SELECT channel_id, message_id
+            FROM telegram_posts
+            WHERE posted_at >= NOW() - INTERVAL '{interval}'
+            ORDER BY channel_id
+            """,
+        )
+    result: dict[int, list[int]] = {}
+    for row in rows:
+        result.setdefault(row["channel_id"], []).append(row["message_id"])
+    return result
+
+
+async def bulk_update_post_stats(
+    pool: asyncpg.Pool,
+    updates: list[tuple[int, int, int, int]],  # (views, forwards, channel_id, message_id)
+) -> None:
+    if not updates:
+        return
+    async with pool.acquire() as conn:
+        await conn.executemany(
+            """
+            UPDATE telegram_posts
+            SET views = $1, forwards = $2, collected_at = NOW()
+            WHERE channel_id = $3 AND message_id = $4
+            """,
+            updates,
+        )
+
+
 async def upsert_post(
     pool: asyncpg.Pool,
     channel_id: int,

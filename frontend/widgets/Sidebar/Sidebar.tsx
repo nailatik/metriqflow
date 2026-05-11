@@ -8,6 +8,7 @@ import type { Locale } from "@/i18n/routing";
 
 const navLinks = [
   { href: "/app",              labelKey: "profile",      exact: true  },
+  { href: "/app/analytics",    labelKey: "analytics",    exact: false },
   { href: "/app/reports",      labelKey: "reports",      exact: false },
   { href: "/app/integrations", labelKey: "integrations", exact: false },
   { href: "/app/settings",     labelKey: "settings",     exact: false },
