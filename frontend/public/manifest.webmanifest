@@ -1,0 +1,17 @@
+{
+  "name": "Metriq Flow",
+  "short_name": "MetriqFlow",
+  "description": "Social analytics platform for modern teams.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F9FAFB",
+  "theme_color": "#4F46E5",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
