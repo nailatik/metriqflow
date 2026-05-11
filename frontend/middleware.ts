@@ -1,30 +1,51 @@
-import { NextRequest, NextResponse } from "next/server";
+import createMiddleware from "next-intl/middleware";
+import { type NextRequest, NextResponse } from "next/server";
+import { routing } from "./i18n/routing";
 
-const protectedPrefixes = ["/app"];
-const authPaths = ["/login", "/register"];
+const intlMiddleware = createMiddleware(routing);
+
+const LOCALES = routing.locales as readonly string[];
+const DEFAULT_LOCALE = routing.defaultLocale;
+
+function getLocale(pathname: string): string {
+  const segment = pathname.split("/")[1];
+  return LOCALES.includes(segment) ? segment : DEFAULT_LOCALE;
+}
+
+function stripLocale(pathname: string, locale: string): string {
+  if (pathname === `/${locale}`) return "/";
+  if (pathname.startsWith(`/${locale}/`)) return pathname.slice(`/${locale}`.length);
+  return pathname;
+}
 
 export function middleware(request: NextRequest) {
-  const token = request.cookies.get("token")?.value;
   const { pathname } = request.nextUrl;
+  const token = request.cookies.get("token")?.value;
+  const locale = getLocale(pathname);
+  const path = stripLocale(pathname, locale);
 
-  const isProtected = protectedPrefixes.some((prefix) => pathname.startsWith(prefix));
-  const isAuthPage = authPaths.some((p) => pathname === p || pathname.startsWith(p + "?"));
+  const isProtected = path.startsWith("/app");
+  const isAuthPage =
+    path === "/login" ||
+    path === "/register" ||
+    path.startsWith("/login?") ||
+    path.startsWith("/register?");
 
   if (isProtected && !token) {
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
+    url.pathname = `/${locale}/login`;
     return NextResponse.redirect(url);
   }
 
   if (isAuthPage && token) {
     const url = request.nextUrl.clone();
-    url.pathname = "/app";
+    url.pathname = `/${locale}/app`;
     return NextResponse.redirect(url);
   }
 
-  return NextResponse.next();
+  return intlMiddleware(request);
 }
 
 export const config = {
-  matcher: ["/app/:path*", "/login", "/register"],
+  matcher: ["/((?!api|_next|.*\\..*).*)"],
 };

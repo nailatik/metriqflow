@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { observer } from "mobx-react-lite";
 import { PhoneInput } from "react-international-phone";
 import "react-international-phone/style.css";
+import { useRouter, Link } from "@/i18n/navigation";
 import { useUserStore, useUiStore } from "@/shared/store/StoreProvider";
 import { Button } from "@/shared/ui/Button/Button";
 import { Input } from "@/shared/ui/Input/Input";
@@ -18,6 +19,7 @@ import {
 type Errors = Partial<Record<"email" | "password" | "fullName" | "birthDate" | "phone" | "agreement", string>>;
 
 export const RegisterForm = observer(() => {
+  const t = useTranslations("Register");
   const router = useRouter();
   const searchParams = useSearchParams();
   const step = searchParams.get("step") === "2" ? 2 : 1;
@@ -63,10 +65,10 @@ export const RegisterForm = observer(() => {
     }
 
     const newErrors: Errors = {};
-    if (!formData.fullName) newErrors.fullName = "Full name is required";
-    if (!formData.birthDate) newErrors.birthDate = "Date of birth is required";
-    if (!formData.phone) newErrors.phone = "Phone is required";
-    if (!formData.agreedToProcessing) newErrors.agreement = "Agreement is required";
+    if (!formData.fullName) newErrors.fullName = t("errors.fullName");
+    if (!formData.birthDate) newErrors.birthDate = t("errors.birthDate");
+    if (!formData.phone) newErrors.phone = t("errors.phone");
+    if (!formData.agreedToProcessing) newErrors.agreement = t("errors.agreement");
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -101,15 +103,15 @@ export const RegisterForm = observer(() => {
     }
 
     return (
-      <div className="w-full max-w-md bg-white border border-border rounded-2xl p-8 shadow-sm">
+      <div className="w-full max-w-md bg-surface border border-border rounded-2xl p-8 shadow-sm">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-semibold text-textMain">Complete your profile</h1>
-          <p className="text-textSecondary mt-2 text-sm">Tell us about yourself</p>
+          <h1 className="text-2xl font-semibold text-textMain">{t("step2.title")}</h1>
+          <p className="text-textSecondary mt-2 text-sm">{t("step2.subtitle")}</p>
         </div>
 
         <div className="space-y-4">
           <Input
-            label="Full Name *"
+            label={`${t("step2.fullName")} *`}
             placeholder="Ivan Ivanov"
             value={formData.fullName}
             onChange={(e) => handleChange("fullName", e.target.value)}
@@ -117,7 +119,7 @@ export const RegisterForm = observer(() => {
           />
 
           <Input
-            label="Date of Birth *"
+            label={`${t("step2.birthDate")} *`}
             type="date"
             max="2100-12-31"
             value={formData.birthDate}
@@ -126,14 +128,14 @@ export const RegisterForm = observer(() => {
           />
 
           <Input
-            label="Organization"
+            label={t("step2.organization")}
             placeholder="Company name"
             value={formData.organization}
             onChange={(e) => handleChange("organization", e.target.value)}
           />
 
           <div>
-            <label className="text-sm text-textSecondary">Phone *</label>
+            <label className="text-sm text-textSecondary">{t("step2.phone")} *</label>
             <div className="mt-1">
               <PhoneInput
                 defaultCountry="ru"
@@ -143,7 +145,7 @@ export const RegisterForm = observer(() => {
                 inputClassName="w-full px-4 py-3 border border-border rounded-xl outline-none focus:border-primary"
               />
             </div>
-            {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+            {errors.phone && <p className="text-error text-sm mt-1">{errors.phone}</p>}
           </div>
 
           <div className="flex items-start gap-3">
@@ -155,13 +157,13 @@ export const RegisterForm = observer(() => {
               className="mt-1"
             />
             <label htmlFor="agreed" className="text-sm text-textSecondary">
-              I agree to the processing of my personal data *
+              {t("step2.agreement")} *
             </label>
           </div>
-          {errors.agreement && <p className="text-red-500 text-sm">{errors.agreement}</p>}
+          {errors.agreement && <p className="text-error text-sm">{errors.agreement}</p>}
 
           <Button variant="primary" disabled={uiStore.loading} onClick={handleStep2} className="w-full">
-            {uiStore.loading ? "Creating account..." : "Complete Registration"}
+            {uiStore.loading ? t("step2.loading") : t("step2.submit")}
           </Button>
         </div>
       </div>
@@ -169,10 +171,10 @@ export const RegisterForm = observer(() => {
   }
 
   return (
-    <div className="w-full max-w-md bg-white border border-border rounded-2xl p-8 shadow-sm">
+    <div className="w-full max-w-md bg-surface border border-border rounded-2xl p-8 shadow-sm">
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-semibold text-textMain">Create account</h1>
-        <p className="text-textSecondary mt-2 text-sm">Start using Metriq Flow</p>
+        <h1 className="text-2xl font-semibold text-textMain">{t("step1.title")}</h1>
+        <p className="text-textSecondary mt-2 text-sm">{t("step1.subtitle")}</p>
       </div>
 
       <div className="space-y-4">
@@ -197,26 +199,26 @@ export const RegisterForm = observer(() => {
           {password && (
             <div className="mt-2 space-y-1 text-sm">
               <p className={checks.minLength ? "text-green-500" : "text-red-400"}>
-                {checks.minLength ? "✔" : "✖"} At least 6 characters
+                {checks.minLength ? "✔" : "✖"} {t("validation.minLength")}
               </p>
               <p className={checks.uppercase ? "text-green-500" : "text-red-400"}>
-                {checks.uppercase ? "✔" : "✖"} One uppercase letter
+                {checks.uppercase ? "✔" : "✖"} {t("validation.uppercase")}
               </p>
               <p className={checks.special ? "text-green-500" : "text-red-400"}>
-                {checks.special ? "✔" : "✖"} One special character
+                {checks.special ? "✔" : "✖"} {t("validation.special")}
               </p>
             </div>
           )}
         </div>
 
         <Button variant="primary" disabled={uiStore.loading} onClick={handleStep1} className="w-full">
-          {uiStore.loading ? "Loading..." : "Next"}
+          {uiStore.loading ? t("step1.loading") : t("step1.next")}
         </Button>
       </div>
 
       <p className="text-center text-sm text-textSecondary mt-6">
-        Already have an account?{" "}
-        <Link href="/login" className="text-primary hover:underline">Sign in</Link>
+        {t("step1.hasAccount")}{" "}
+        <Link href="/login" className="text-primary hover:underline">{t("step1.signIn")}</Link>
       </p>
     </div>
   );

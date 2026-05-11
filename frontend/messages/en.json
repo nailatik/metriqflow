@@ -1,0 +1,171 @@
+{
+  "Header": {
+    "features": "Features",
+    "howItWorks": "How it works",
+    "login": "Login",
+    "createAccount": "Create account",
+    "logout": "Logout"
+  },
+  "Landing": {
+    "hero": {
+      "title": "Social analytics",
+      "titleHighlight": "automated in seconds",
+      "subtitle": "Track performance, generate reports and automate analytics — all in one clean dashboard built for modern teams.",
+      "startFree": "Start free",
+      "learnMore": "Learn more"
+    },
+    "socialProof": "Trusted by developers and marketing teams worldwide",
+    "features": {
+      "title": "Everything you need for analytics",
+      "dashboard": { "title": "Unified Dashboard", "desc": "All your social data in one clean interface." },
+      "reports": { "title": "Automated Reports", "desc": "Generate reports without manual work." },
+      "insights": { "title": "Real-time Insights", "desc": "Track performance as it happens." }
+    },
+    "howItWorks": {
+      "title": "How it works",
+      "step": "Step {n}",
+      "connect": { "title": "Connect accounts", "desc": "Link your social platforms" },
+      "analyze": { "title": "Analyze data", "desc": "We process everything automatically" },
+      "get": { "title": "Get insights", "desc": "Receive reports & analytics" }
+    },
+    "cta": {
+      "title": "Start using Metriq Flow today",
+      "subtitle": "No credit card required",
+      "button": "Create account"
+    }
+  },
+  "Login": {
+    "title": "Welcome back",
+    "subtitle": "Sign in to Metriq Flow",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "loading": "Signing in...",
+    "noAccount": "Don't have an account?",
+    "signUp": "Sign up"
+  },
+  "Register": {
+    "step1": {
+      "title": "Create account",
+      "subtitle": "Start using Metriq Flow",
+      "next": "Next",
+      "loading": "Loading...",
+      "hasAccount": "Already have an account?",
+      "signIn": "Sign in"
+    },
+    "step2": {
+      "title": "Complete your profile",
+      "subtitle": "Tell us about yourself",
+      "fullName": "Full Name",
+      "birthDate": "Date of Birth",
+      "organization": "Organization",
+      "phone": "Phone",
+      "agreement": "I agree to the processing of my personal data",
+      "submit": "Complete Registration",
+      "loading": "Creating account..."
+    },
+    "validation": {
+      "minLength": "At least 6 characters",
+      "uppercase": "One uppercase letter",
+      "special": "One special character"
+    },
+    "errors": {
+      "fullName": "Full name is required",
+      "birthDate": "Date of birth is required",
+      "phone": "Phone is required",
+      "agreement": "Agreement is required"
+    }
+  },
+  "Dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome, {name}",
+    "welcomeBack": "Welcome back",
+    "logout": "Logout",
+    "accountInfo": {
+      "title": "Account info",
+      "name": "Name",
+      "email": "Email",
+      "id": "ID"
+    },
+    "stats": {
+      "reports": "Reports",
+      "integrations": "Integrations",
+      "activity": "Activity",
+      "active": "Active"
+    },
+    "recentActivity": {
+      "title": "Recent activity",
+      "empty": "No recent activity yet"
+    }
+  },
+  "Reports": {
+    "title": "Reports",
+    "create": "+ Create report",
+    "placeholder": "Report title",
+    "save": "Save",
+    "empty": "No reports yet",
+    "reportId": "Report ID: {id}",
+    "delete": "Delete",
+    "confirmDelete": "Delete this report?"
+  },
+  "Integrations": {
+    "title": "Integrations",
+    "connected": "Connected",
+    "notConnected": "Not connected",
+    "manage": "Manage",
+    "connect": "Connect"
+  },
+  "Settings": {
+    "title": "Settings",
+    "account": {
+      "title": "Account",
+      "email": "Email",
+      "fullName": "Full name",
+      "organization": "Organization",
+      "phone": "Phone"
+    },
+    "preferences": {
+      "title": "Preferences",
+      "comingSoon": "Settings management coming soon."
+    }
+  },
+  "Profile": {
+    "title": "Profile",
+    "personalInfo": "Personal information",
+    "fullName": "Full name",
+    "email": "Email",
+    "phone": "Phone",
+    "birthDate": "Date of birth",
+    "organization": "Organization",
+    "accountId": "Account ID"
+  },
+  "Sidebar": {
+    "dashboard": "Dashboard",
+    "reports": "Reports",
+    "integrations": "Integrations",
+    "settings": "Settings",
+    "profile": "Profile",
+    "support": "Support",
+    "logout": "Logout"
+  },
+  "ErrorModal": {
+    "title": "Something went wrong",
+    "close": "Close"
+  },
+  "Common": {
+    "loading": "Loading...",
+    "error": {
+      "title": "Something went wrong",
+      "tryAgain": "Try again",
+      "goHome": "Go home"
+    },
+    "notFound": {
+      "code": "404",
+      "title": "Page not found",
+      "desc": "The page you're looking for doesn't exist or has been moved.",
+      "button": "Go to homepage",
+      "dashboardDesc": "This page doesn't exist in the dashboard.",
+      "dashboardButton": "Back to Dashboard"
+    }
+  }
+}

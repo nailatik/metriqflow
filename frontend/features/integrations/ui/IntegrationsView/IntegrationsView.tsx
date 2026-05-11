@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Button } from "@/shared/ui/Button/Button";
 
 const integrations = [
@@ -11,25 +12,27 @@ const integrations = [
 ] as const;
 
 export function IntegrationsView() {
+  const t = useTranslations("Integrations");
+
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-semibold">Integrations</h1>
+      <h1 className="text-2xl font-semibold text-textMain">{t("title")}</h1>
 
       <div className="grid md:grid-cols-3 gap-4">
         {integrations.map((item) => (
           <div
             key={item.id}
-            className="bg-white border border-border rounded-xl p-6 flex flex-col justify-between"
+            className="bg-surface border border-border rounded-xl p-6 flex flex-col justify-between"
           >
             <div>
-              <h3 className="font-semibold text-lg">{item.name}</h3>
+              <h3 className="font-semibold text-lg text-textMain">{item.name}</h3>
               <p className="text-sm mt-2 text-textSecondary">
-                {item.connected ? "Connected" : "Not connected"}
+                {item.connected ? t("connected") : t("notConnected")}
               </p>
             </div>
             <div className="mt-4">
               <Button variant={item.connected ? "secondary" : "primary"}>
-                {item.connected ? "Manage" : "Connect"}
+                {item.connected ? t("manage") : t("connect")}
               </Button>
             </div>
           </div>

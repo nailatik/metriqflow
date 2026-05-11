@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: [
     "./app/**/*.{ts,tsx}",
     "./features/**/*.{ts,tsx}",
@@ -11,14 +12,14 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: "#4F46E5",
-        accent: "#7C3AED",
-        bg: "#F9FAFB",
-        surface: "#FFFFFF",
-        textMain: "#111827",
-        textSecondary: "#6B7280",
-        border: "#E5E7EB",
-        error: "#EF4444",
+        primary: "var(--color-primary)",
+        accent: "var(--color-accent)",
+        bg: "var(--color-bg)",
+        surface: "var(--color-surface)",
+        textMain: "var(--color-text-main)",
+        textSecondary: "var(--color-text-secondary)",
+        border: "var(--color-border)",
+        error: "var(--color-error)",
       },
       borderRadius: {
         xl: "12px",

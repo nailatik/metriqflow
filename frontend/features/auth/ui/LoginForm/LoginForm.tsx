@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { observer } from "mobx-react-lite";
+import { useRouter, Link } from "@/i18n/navigation";
 import { useUserStore, useUiStore } from "@/shared/store/StoreProvider";
 import { Button } from "@/shared/ui/Button/Button";
 import { Input } from "@/shared/ui/Input/Input";
 
 export const LoginForm = observer(() => {
+  const t = useTranslations("Login");
   const router = useRouter();
   const userStore = useUserStore();
   const uiStore = useUiStore();
@@ -23,15 +24,15 @@ export const LoginForm = observer(() => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-md bg-white border border-border rounded-2xl p-8 shadow-sm">
+    <form onSubmit={handleSubmit} className="w-full max-w-md bg-surface border border-border rounded-2xl p-8 shadow-sm">
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-semibold text-textMain">Welcome back</h1>
-        <p className="text-textSecondary mt-2 text-sm">Sign in to Metriq Flow</p>
+        <h1 className="text-2xl font-semibold text-textMain">{t("title")}</h1>
+        <p className="text-textSecondary mt-2 text-sm">{t("subtitle")}</p>
       </div>
 
       <div className="space-y-4">
         <Input
-          label="Email"
+          label={t("email")}
           type="email"
           placeholder="you@example.com"
           value={email}
@@ -40,7 +41,7 @@ export const LoginForm = observer(() => {
         />
 
         <Input
-          label="Password"
+          label={t("password")}
           type="password"
           placeholder="••••••••"
           value={password}
@@ -49,14 +50,14 @@ export const LoginForm = observer(() => {
         />
 
         <Button variant="primary" disabled={uiStore.loading} type="submit" className="w-full">
-          {uiStore.loading ? "Signing in..." : "Sign in"}
+          {uiStore.loading ? t("loading") : t("submit")}
         </Button>
       </div>
 
       <p className="text-center text-sm text-textSecondary mt-6">
-        Don&apos;t have an account?{" "}
+        {t("noAccount")}{" "}
         <Link href="/register" className="text-primary hover:underline">
-          Sign up
+          {t("signUp")}
         </Link>
       </p>
     </form>

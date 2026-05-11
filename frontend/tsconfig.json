@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2017",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": false,
     "skipLibCheck": true,
     "strict": true,
@@ -18,30 +14,16 @@
     "jsx": "react-jsx",
     "incremental": true,
     "experimentalDecorators": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
+    "plugins": [{ "name": "next" }],
     "paths": {
-      "@/app/*": [
-        "./app/*"
-      ],
-      "@/features/*": [
-        "./features/*"
-      ],
-      "@/widgets/*": [
-        "./widgets/*"
-      ],
-      "@/shared/*": [
-        "./shared/*"
-      ],
-      "@/entities/*": [
-        "./entities/*"
-      ],
-      "@/public/*": [
-        "./public/*"
-      ]
+      "@/app/*": ["./app/*"],
+      "@/features/*": ["./features/*"],
+      "@/widgets/*": ["./widgets/*"],
+      "@/shared/*": ["./shared/*"],
+      "@/entities/*": ["./entities/*"],
+      "@/public/*": ["./public/*"],
+      "@/i18n/*": ["./i18n/*"],
+      "@/messages/*": ["./messages/*"]
     },
     "baseUrl": "."
   },
@@ -52,7 +34,5 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }
