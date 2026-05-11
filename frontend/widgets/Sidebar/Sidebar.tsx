@@ -7,11 +7,10 @@ import { useUserStore } from "@/shared/store/StoreProvider";
 import type { Locale } from "@/i18n/routing";
 
 const navLinks = [
-  { href: "/app",              labelKey: "dashboard",    exact: true  },
+  { href: "/app",              labelKey: "profile",      exact: true  },
   { href: "/app/reports",      labelKey: "reports",      exact: false },
   { href: "/app/integrations", labelKey: "integrations", exact: false },
   { href: "/app/settings",     labelKey: "settings",     exact: false },
-  { href: "/app/profile",      labelKey: "profile",      exact: false },
 ] as const;
 
 export const Sidebar = observer(() => {

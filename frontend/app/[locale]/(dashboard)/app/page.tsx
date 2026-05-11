@@ -1,62 +1,121 @@
 "use client";
 
 import { observer } from "mobx-react-lite";
-import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useUserStore } from "@/shared/store/StoreProvider";
-import { Button } from "@/shared/ui/Button/Button";
 
-export default observer(function DashboardPage() {
-  const router = useRouter();
-  const t = useTranslations("Dashboard");
+function InfoField({ label, value }: { label: string; value?: string | null }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span className="text-xs font-semibold text-textSecondary uppercase tracking-widest">
+        {label}
+      </span>
+      <span className="text-sm font-medium text-textMain">{value ?? "—"}</span>
+    </div>
+  );
+}
+
+function StatCard({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div className="bg-surface border border-border rounded-xl px-6 py-5 flex flex-col gap-2">
+      <span className="text-xs font-semibold text-textSecondary uppercase tracking-widest">
+        {label}
+      </span>
+      <span
+        className={`text-3xl font-bold ${accent ? "text-primary" : "text-textMain"}`}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
+export default observer(function ProfilePage() {
+  const tD = useTranslations("Dashboard");
+  const tP = useTranslations("Profile");
   const userStore = useUserStore();
   const user = userStore.user;
-  const userName = user?.full_name?.split(" ")[0] ?? "";
 
-  const handleLogout = () => {
-    userStore.logout();
-    router.push("/login");
-  };
+  const initials =
+    user?.full_name
+      ?.split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2) ?? "?";
 
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-semibold text-textMain">{t("title")}</h1>
-          <p className="text-textSecondary mt-1">
-            {userName ? t("welcome", { name: userName }) : t("welcomeBack")}
+    <div className="flex flex-col gap-6">
+
+      {/* Hero */}
+      <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-sm">
+        <div className="h-36 bg-gradient-to-br from-primary/25 via-primary/10 to-transparent" />
+        <div className="px-8 pb-8">
+          <div className="-mt-12 flex items-end justify-between gap-6">
+            <div className="flex items-end gap-5">
+              <div className="w-24 h-24 rounded-full bg-primary flex items-center justify-center text-white text-3xl font-bold ring-4 ring-surface flex-shrink-0 shadow-md">
+                {initials}
+              </div>
+              <div className="pb-1 min-w-0">
+                <h1 className="text-2xl font-bold text-textMain leading-tight">
+                  {user?.full_name ?? "—"}
+                </h1>
+                <div className="flex flex-wrap items-center gap-2 mt-1">
+                  <span className="text-sm text-textSecondary">{user?.email ?? "—"}</span>
+                  {user?.organization && (
+                    <>
+                      <span className="text-border select-none">·</span>
+                      <span className="text-sm text-textSecondary">{user.organization}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="pb-1">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block" />
+                {tD("stats.active")}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats row */}
+      <div className="grid grid-cols-3 gap-4">
+        <StatCard label={tD("stats.reports")} value="—" />
+        <StatCard label={tD("stats.integrations")} value="—" />
+        <StatCard label={tD("stats.activity")} value={tD("stats.active")} accent />
+      </div>
+
+      {/* Content grid: personal info + activity */}
+      <div className="grid grid-cols-3 gap-4">
+
+        {/* Personal info — 2 cols */}
+        <div className="col-span-2 bg-surface border border-border rounded-xl p-7 shadow-sm">
+          <h2 className="text-xs font-semibold text-textSecondary uppercase tracking-widest mb-6">
+            {tP("personalInfo")}
+          </h2>
+          <div className="grid grid-cols-2 gap-x-12 gap-y-6">
+            <InfoField label={tP("fullName")} value={user?.full_name} />
+            <InfoField label={tP("email")} value={user?.email} />
+            <InfoField label={tP("phone")} value={user?.phone} />
+            <InfoField label={tP("birthDate")} value={user?.birth_date} />
+            <InfoField label={tP("organization")} value={user?.organization} />
+            <InfoField label={tP("accountId")} value={user?.id} />
+          </div>
+        </div>
+
+        {/* Recent activity — 1 col */}
+        <div className="bg-surface border border-border rounded-xl p-7 shadow-sm">
+          <h2 className="text-xs font-semibold text-textSecondary uppercase tracking-widest mb-4">
+            {tD("recentActivity.title")}
+          </h2>
+          <p className="text-sm text-textSecondary">
+            {tD("recentActivity.empty")}
           </p>
         </div>
-        <Button variant="secondary" onClick={handleLogout}>{t("logout")}</Button>
-      </div>
 
-      <div className="bg-surface border border-border rounded-xl p-6 shadow-sm">
-        <h2 className="text-lg font-semibold mb-4">{t("accountInfo.title")}</h2>
-        <div className="space-y-2 text-textSecondary">
-          <p><span className="font-medium text-textMain">{t("accountInfo.name")}:</span> {user?.full_name ?? "—"}</p>
-          <p><span className="font-medium text-textMain">{t("accountInfo.email")}:</span> {user?.email ?? "—"}</p>
-          <p><span className="font-medium text-textMain">{t("accountInfo.id")}:</span> {user?.id ?? "—"}</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-surface border border-border rounded-xl p-5">
-          <p className="text-textSecondary text-sm">{t("stats.reports")}</p>
-          <p className="text-2xl font-semibold mt-2">-</p>
-        </div>
-        <div className="bg-surface border border-border rounded-xl p-5">
-          <p className="text-textSecondary text-sm">{t("stats.integrations")}</p>
-          <p className="text-2xl font-semibold mt-2">-</p>
-        </div>
-        <div className="bg-surface border border-border rounded-xl p-5">
-          <p className="text-textSecondary text-sm">{t("stats.activity")}</p>
-          <p className="text-2xl font-semibold mt-2">{t("stats.active")}</p>
-        </div>
-      </div>
-
-      <div className="bg-surface border border-border rounded-xl p-6">
-        <h2 className="text-lg font-semibold mb-2">{t("recentActivity.title")}</h2>
-        <p className="text-textSecondary">{t("recentActivity.empty")}</p>
       </div>
     </div>
   );

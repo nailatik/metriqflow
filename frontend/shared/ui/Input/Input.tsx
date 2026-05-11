@@ -16,6 +16,7 @@ export function Input({ label, error, className = "", ...rest }: InputProps) {
       <input
         className={`
           w-full px-4 py-3 border rounded-xl outline-none transition
+          bg-surface text-textMain
           ${error ? "border-red-500" : "border-border"}
           focus:border-primary
           ${className}
