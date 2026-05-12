@@ -8,8 +8,20 @@ export const api = axios.create({
   withCredentials: true,
 });
 
-api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+let pendingRequests = 0;
+
+function incLoading() {
+  pendingRequests++;
   getRootStore().uiStore.setLoading(true);
+}
+
+function decLoading() {
+  pendingRequests = Math.max(0, pendingRequests - 1);
+  if (pendingRequests === 0) getRootStore().uiStore.setLoading(false);
+}
+
+api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  incLoading();
 
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("token");
@@ -23,17 +35,19 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 
 api.interceptors.response.use(
   (response) => {
-    getRootStore().uiStore.setLoading(false);
+    decLoading();
     return response;
   },
   async (error) => {
-    getRootStore().uiStore.setLoading(false);
+    decLoading();
 
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
     const status: number | undefined = error.response?.status;
     const message: string | undefined = error.response?.data?.message;
 
-    if (status === 401 && !originalRequest._retry) {
+    const isRefreshEndpoint = originalRequest?.url?.includes("/auth/refresh");
+
+    if (status === 401 && !originalRequest._retry && !isRefreshEndpoint) {
       originalRequest._retry = true;
       try {
         const res = await api.post<{ accessToken: string }>("/auth/refresh");
@@ -49,9 +63,18 @@ api.interceptors.response.use(
       }
     }
 
+    if (status === 401) {
+      // Refresh itself failed — force logout without showing error modal
+      if (isRefreshEndpoint || originalRequest._retry) {
+        getRootStore().userStore.logout();
+        window.location.href = "/login";
+      }
+      return Promise.reject(error);
+    }
+
     if (status === 409) {
       getRootStore().uiStore.setError(message ?? "User already exists");
-    } else if (status !== 401) {
+    } else if (status) {
       getRootStore().uiStore.setError(message ?? "Request error");
     }
 

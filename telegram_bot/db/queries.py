@@ -291,3 +291,53 @@ async def upsert_member_count_snapshot(
             """,
             channel_id, count,
         )
+
+
+# ─── Auto-report schedules ───────────────────────────────────────────────────
+
+async def get_user_schedules(pool: asyncpg.Pool, user_id: int) -> list[asyncpg.Record]:
+    async with pool.acquire() as conn:
+        return await conn.fetch(
+            """
+            SELECT rs.id, rs.title, rs.source, rs.format, rs.frequency_days,
+                   rs.enabled, rs.paused, rs.next_send_at, rs.last_sent_at, rs.last_status,
+                   sc_tg.enabled   AS tg_enabled,
+                   sc_em.enabled   AS email_enabled,
+                   sc_em.email     AS email_address
+            FROM report_schedules rs
+            LEFT JOIN schedule_channels sc_tg ON sc_tg.schedule_id = rs.id AND sc_tg.channel = 'telegram'
+            LEFT JOIN schedule_channels sc_em ON sc_em.schedule_id = rs.id AND sc_em.channel  = 'email'
+            WHERE rs.user_id = $1
+            ORDER BY rs.created_at DESC
+            """,
+            user_id,
+        )
+
+
+async def toggle_schedule_telegram(pool: asyncpg.Pool, schedule_id: int, user_id: int, enabled: bool) -> bool:
+    """Toggle Telegram channel for a schedule. Returns True if schedule belongs to user."""
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT id FROM report_schedules WHERE id = $1 AND user_id = $2",
+            schedule_id, user_id,
+        )
+        if not row:
+            return False
+        await conn.execute(
+            """
+            INSERT INTO schedule_channels (schedule_id, channel, enabled)
+            VALUES ($1, 'telegram', $2)
+            ON CONFLICT (schedule_id, channel) DO UPDATE SET enabled = $2
+            """,
+            schedule_id, enabled,
+        )
+        return True
+
+
+async def toggle_schedule_enabled(pool: asyncpg.Pool, schedule_id: int, user_id: int, enabled: bool) -> bool:
+    async with pool.acquire() as conn:
+        result = await conn.execute(
+            "UPDATE report_schedules SET enabled = $1 WHERE id = $2 AND user_id = $3",
+            enabled, schedule_id, user_id,
+        )
+        return result != "UPDATE 0"

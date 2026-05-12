@@ -4,9 +4,10 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 def main_menu_kb() -> InlineKeyboardMarkup:
     b = InlineKeyboardBuilder()
-    b.button(text="👤  Account",  callback_data="menu:account")
-    b.button(text="📺  Channels", callback_data="menu:channels")
-    b.button(text="📊  Report",   callback_data="report:start")
+    b.button(text="👤  Account",      callback_data="menu:account")
+    b.button(text="📺  Channels",     callback_data="menu:channels")
+    b.button(text="📊  Report",       callback_data="report:start")
+    b.button(text="🗓  Auto-reports", callback_data="ar:list")
     b.adjust(2)
     return b.as_markup()
 

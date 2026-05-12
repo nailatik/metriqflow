@@ -1,6 +1,6 @@
 import { makeAutoObservable, runInAction } from "mobx";
 import { reportsService } from "../api/reportsService";
-import type { Report, CreateReport, UpdateReport } from "../types";
+import type { Report, CreateReport } from "../types";
 import type { RootStore } from "@/shared/store/RootStore";
 
 export class ReportsStore {
@@ -21,26 +21,16 @@ export class ReportsStore {
     }
   }
 
-  async createReport(data: CreateReport): Promise<void> {
+  async createReport(data: CreateReport): Promise<Report | null> {
     try {
       const res = await reportsService.createReport(data);
       runInAction(() => {
-        this.list.push(res.data);
+        this.list.unshift(res.data);
       });
+      return res.data;
     } catch {
       this.root.uiStore.setError("Failed to create report");
-    }
-  }
-
-  async updateReport(data: UpdateReport): Promise<void> {
-    try {
-      const res = await reportsService.updateReport(data);
-      runInAction(() => {
-        const index = this.list.findIndex((r) => r.id === data.id);
-        if (index !== -1) this.list[index] = res.data;
-      });
-    } catch {
-      this.root.uiStore.setError("Failed to update report");
+      return null;
     }
   }
 

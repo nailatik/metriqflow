@@ -8,7 +8,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 from config import settings
 from db.pool import create_pool, close_pool
-from handlers import channel_events, start, menu, account, channels, report
+from handlers import channel_events, start, menu, account, channels, report, autoreport
 from middlewares.db import DatabaseMiddleware
 from scheduler import run_scheduler
 from telethon_client import close_client as close_telethon
@@ -37,6 +37,7 @@ async def main() -> None:
     dp.include_router(account.router)
     dp.include_router(channels.router)
     dp.include_router(report.router)
+    dp.include_router(autoreport.router)
 
     me = await bot.get_me()
     logger.info("Starting @%s (id=%s)", me.username, me.id)
