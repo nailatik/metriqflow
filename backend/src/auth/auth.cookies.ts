@@ -13,6 +13,6 @@ export const clearRefreshCookie = (res: Response) => {
   res.clearCookie("refreshToken", {
     httpOnly: true,
     sameSite: "strict",
-    secure: false,
+    secure: process.env.NODE_ENV === "production",
   });
 };

@@ -18,7 +18,7 @@ function stripLocale(pathname: string, locale: string): string {
   return pathname;
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get("token")?.value;
   const locale = getLocale(pathname);

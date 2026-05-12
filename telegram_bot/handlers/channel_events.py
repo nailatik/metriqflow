@@ -1,8 +1,8 @@
 """
 Handles channel-level events:
-  1. my_chat_member            — bot added/removed as admin in a channel
-  2. channel_post              — new post published in a tracked channel
-  3. message_reaction_count    — aggregate reaction counts updated (Bot API 7.0)
+  1. my_chat_member         — bot added/removed as admin in a channel
+  2. channel_post           — new post published in a tracked channel
+  3. message_reaction_count — aggregate reaction counts updated (Bot API 7.0)
 """
 import logging
 
@@ -16,6 +16,8 @@ router = Router()
 logger = logging.getLogger(__name__)
 
 
+# ─── Bot added/removed as admin ───────────────────────────────────────────────
+
 @router.my_chat_member(F.chat.type == "channel")
 async def bot_status_in_channel(update: ChatMemberUpdated, db: asyncpg.Pool) -> None:
     new_status = update.new_chat_member.status
@@ -26,7 +28,7 @@ async def bot_status_in_channel(update: ChatMemberUpdated, db: asyncpg.Pool) -> 
         linked = await queries.get_linked_user(db, added_by.id)
         if not linked:
             logger.warning(
-                "Bot added to channel %s (%s) by unlinked Telegram user %s — ignoring",
+                "Bot added to channel %s (%s) by unlinked user %s — ignoring",
                 channel.id, channel.title, added_by.id,
             )
             return
@@ -45,6 +47,8 @@ async def bot_status_in_channel(update: ChatMemberUpdated, db: asyncpg.Pool) -> 
         await queries.deactivate_channel(db, channel.id)
         logger.info("Channel %s deactivated (bot status: %s)", channel.id, new_status)
 
+
+# ─── New post in tracked channel ──────────────────────────────────────────────
 
 @router.channel_post()
 async def handle_channel_post(message: Message, db: asyncpg.Pool) -> None:
@@ -79,8 +83,13 @@ async def handle_channel_post(message: Message, db: asyncpg.Pool) -> None:
         has_media=has_media,
         posted_at=message.date,
     )
-    logger.debug("Post collected: channel=%s msg=%s views=%s", channel_id, message.message_id, views)
+    logger.debug(
+        "Post collected: channel=%s msg=%s views=%s",
+        channel_id, message.message_id, views,
+    )
 
+
+# ─── Reaction count update ────────────────────────────────────────────────────
 
 @router.message_reaction_count()
 async def handle_reaction_count(update: MessageReactionCountUpdated, db: asyncpg.Pool) -> None:
@@ -99,4 +108,7 @@ async def handle_reaction_count(update: MessageReactionCountUpdated, db: asyncpg
             """,
             total, channel_id, update.message_id,
         )
-    logger.debug("Reactions updated: channel=%s msg=%s total=%s", channel_id, update.message_id, total)
+    logger.debug(
+        "Reactions updated: channel=%s msg=%s total=%s",
+        channel_id, update.message_id, total,
+    )

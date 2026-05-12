@@ -178,7 +178,7 @@ export const refresh = async (req: Request, res: Response) => {
     ) as { id: number };
 
     const tokenCheck = await query(
-      "SELECT id, user_id FROM refresh_tokens WHERE token = $1 AND revoked_at IS NULL",
+      "SELECT id, user_id FROM refresh_tokens WHERE token = $1 AND revoked_at IS NULL AND expires_at > NOW()",
       [token]
     );
 

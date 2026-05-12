@@ -148,6 +148,7 @@
     "unlinkConfirm": "Are you sure?",
     "unlinkYes": "Yes, unlink",
     "unlinkNo": "Cancel",
+    "vkDesc": "Connect your VK communities to track analytics",
     "vkCommunities": "communities",
     "vkConnectError": "Failed to connect VK. Please try again."
   },

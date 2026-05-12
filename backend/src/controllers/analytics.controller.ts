@@ -23,12 +23,15 @@ function getPeriodFilter(period: Period): string {
   }
 }
 
-// Returns [current_interval, prev_interval] or null for "all"
-function getGrowthIntervals(period: Period): [string, string] | null {
+const H = 3_600_000;
+const D = 86_400_000;
+
+// Returns [curWindowMs, prevWindowMs] or null for "all"
+function getGrowthIntervals(period: Period): [number, number] | null {
   switch (period) {
-    case "24h": return ["24 hours", "48 hours"];
-    case "7d":  return ["7 days",   "14 days" ];
-    case "30d": return ["30 days",  "60 days" ];
+    case "24h": return [24 * H,  48 * H];
+    case "7d":  return [ 7 * D,  14 * D];
+    case "30d": return [30 * D,  60 * D];
     case "all": return null;
   }
 }
@@ -162,7 +165,9 @@ export const getChannelAnalytics = async (req: Request, res: Response) => {
     };
 
     if (growthIntervals) {
-      const [curInterval, prevInterval] = growthIntervals;
+      const [curMs, prevMs] = growthIntervals;
+      const curFrom  = new Date(Date.now() - curMs);
+      const prevFrom = new Date(Date.now() - prevMs);
 
       const [growthResult, subscriberGrowthResult] = await Promise.all([
         query(
@@ -174,8 +179,7 @@ export const getChannelAnalytics = async (req: Request, res: Response) => {
                  COALESCE(SUM(forwards), 0)::bigint        AS forwards,
                  COALESCE(SUM(comments), 0)::bigint        AS comments
                FROM telegram_posts
-               WHERE channel_id = $1
-                 AND posted_at >= NOW() - INTERVAL '${curInterval}'
+               WHERE channel_id = $1 AND posted_at >= $2
              ),
              prev AS (
                SELECT
@@ -184,9 +188,7 @@ export const getChannelAnalytics = async (req: Request, res: Response) => {
                  COALESCE(SUM(forwards), 0)::bigint        AS forwards,
                  COALESCE(SUM(comments), 0)::bigint        AS comments
                FROM telegram_posts
-               WHERE channel_id = $1
-                 AND posted_at >= NOW() - INTERVAL '${prevInterval}'
-                 AND posted_at <  NOW() - INTERVAL '${curInterval}'
+               WHERE channel_id = $1 AND posted_at >= $3 AND posted_at < $2
              )
            SELECT
              cur.views       AS cur_views,  prev.views       AS prev_views,
@@ -194,7 +196,7 @@ export const getChannelAnalytics = async (req: Request, res: Response) => {
              cur.forwards    AS cur_fwd,    prev.forwards    AS prev_fwd,
              cur.comments    AS cur_cmts,   prev.comments    AS prev_cmts
            FROM cur, prev`,
-          [tgChannelId]
+          [tgChannelId, curFrom, prevFrom]
         ),
         query(
           `WITH

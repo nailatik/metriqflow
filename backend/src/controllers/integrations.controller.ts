@@ -1,12 +1,20 @@
 import { Request, Response } from "express";
-// req.user is available via global Express namespace augmentation in types/express.d.ts
 import crypto from "crypto";
-import { query } from "../db";
+import { query, pool } from "../db";
 
 export const generateTelegramToken = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+    // Block if this MetriqFlow profile is already linked to a Telegram account
+    const linked = await query(
+      "SELECT 1 FROM telegram_users WHERE user_id = $1",
+      [userId]
+    );
+    if (linked.rows.length > 0) {
+      return res.status(400).json({ message: "already_linked" });
+    }
 
     // Return existing valid token if one exists
     const existing = await query(
@@ -21,20 +29,29 @@ export const generateTelegramToken = async (req: Request, res: Response) => {
       return res.json({ token: row.token, expiresAt: row.expires_at });
     }
 
-    // Clean up expired / used tokens for this user
-    await query(
-      `DELETE FROM telegram_link_tokens
-       WHERE user_id = $1 AND (used_at IS NOT NULL OR expires_at <= NOW())`,
-      [userId]
-    );
-
-    const token    = crypto.randomBytes(24).toString("hex");
+    const token     = crypto.randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
-    await query(
-      `INSERT INTO telegram_link_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)`,
-      [userId, token, expiresAt]
-    );
+    // Atomic: delete stale tokens and insert new one
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      await client.query(
+        `DELETE FROM telegram_link_tokens
+         WHERE user_id = $1 AND (used_at IS NOT NULL OR expires_at <= NOW())`,
+        [userId]
+      );
+      await client.query(
+        `INSERT INTO telegram_link_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)`,
+        [userId, token, expiresAt]
+      );
+      await client.query("COMMIT");
+    } catch (txErr) {
+      await client.query("ROLLBACK");
+      throw txErr;
+    } finally {
+      client.release();
+    }
 
     return res.json({ token, expiresAt });
   } catch (err) {

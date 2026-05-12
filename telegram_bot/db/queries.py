@@ -33,10 +33,17 @@ async def validate_and_use_token(
     telegram_id: int,
     username: str | None,
     first_name: str,
-) -> Optional[int]:
-    """Validates linking token, creates telegram_users entry. Returns user_id or None."""
+) -> int | str:
+    """
+    Validates linking token and creates telegram_users entry.
+    Returns user_id (int) on success, or one of:
+      "invalid_token"  — token not found / expired / already used
+      "telegram_taken" — this Telegram account is linked to a different MetriqFlow profile
+      "user_taken"     — this MetriqFlow profile already has a Telegram account linked
+    """
     async with pool.acquire() as conn:
         async with conn.transaction():
+            # 1. Validate token first
             row = await conn.fetchrow(
                 """
                 SELECT user_id FROM telegram_link_tokens
@@ -45,23 +52,40 @@ async def validate_and_use_token(
                 token,
             )
             if not row:
-                return None
+                return "invalid_token"
 
             user_id: int = row["user_id"]
 
+            # 2. Check if this Telegram account is already linked
+            existing_tg = await conn.fetchrow(
+                "SELECT user_id FROM telegram_users WHERE telegram_id = $1",
+                telegram_id,
+            )
+            if existing_tg:
+                if existing_tg["user_id"] == user_id:
+                    # Re-linking same pair — idempotent, just mark token used
+                    await conn.execute(
+                        "UPDATE telegram_link_tokens SET used_at = NOW() WHERE token = $1", token,
+                    )
+                    return user_id
+                return "telegram_taken"
+
+            # 3. Check if this MetriqFlow profile already has a Telegram linked
+            existing_user = await conn.fetchrow(
+                "SELECT telegram_id FROM telegram_users WHERE user_id = $1",
+                user_id,
+            )
+            if existing_user:
+                return "user_taken"
+
+            # 4. All clear — mark token used and insert
             await conn.execute(
-                "UPDATE telegram_link_tokens SET used_at = NOW() WHERE token = $1",
-                token,
+                "UPDATE telegram_link_tokens SET used_at = NOW() WHERE token = $1", token,
             )
             await conn.execute(
                 """
                 INSERT INTO telegram_users (user_id, telegram_id, telegram_username, first_name)
                 VALUES ($1, $2, $3, $4)
-                ON CONFLICT (telegram_id) DO UPDATE
-                    SET user_id = EXCLUDED.user_id,
-                        telegram_username = EXCLUDED.telegram_username,
-                        first_name = EXCLUDED.first_name,
-                        linked_at = NOW()
                 """,
                 user_id, telegram_id, username, first_name,
             )

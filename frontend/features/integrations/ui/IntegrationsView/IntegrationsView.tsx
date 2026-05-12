@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { http } from "@/shared/lib/axios";
 import { Button } from "@/shared/ui/Button/Button";
+import { VKCard } from "@/features/vk/ui/VKCard/VKCard";
 
 const BOT_USERNAME  = process.env.NEXT_PUBLIC_BOT_USERNAME ?? "";
 const LS_KEY        = "metriq_tg_link";
@@ -237,7 +238,7 @@ export function IntegrationsView() {
       <h1 className="text-2xl font-semibold text-textMain">{t("title")}</h1>
       <div className="grid md:grid-cols-3 gap-4">
         <TelegramCard />
-        <StubCard name="VK"        />
+        <VKCard />
         <StubCard name="Instagram" />
         <StubCard name="YouTube"   />
         <StubCard name="TikTok"    />

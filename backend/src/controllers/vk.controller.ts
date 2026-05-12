@@ -8,13 +8,15 @@ const VK_REDIRECT_URI  = process.env.VK_REDIRECT_URI  ?? "http://localhost:8000/
 const FRONTEND_URL     = process.env.FRONTEND_URL     ?? "http://localhost:3000";
 const VK_API_V         = "5.131";
 const VK_BASE          = "https://api.vk.com/method";
+// Separate secret for OAuth state HMAC — keeps JWT_SECRET isolated
+const VK_STATE_SECRET  = process.env.VK_STATE_SECRET ?? process.env.JWT_SECRET!;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function createState(userId: number): string {
   const ts   = Date.now();
   const hmac = crypto
-    .createHmac("sha256", process.env.JWT_SECRET!)
+    .createHmac("sha256", VK_STATE_SECRET)
     .update(`${userId}:${ts}`)
     .digest("hex");
   return Buffer.from(`${userId}:${ts}:${hmac}`).toString("base64url");
@@ -33,7 +35,7 @@ function verifyState(state: string): number | null {
     if (isNaN(userId) || isNaN(ts)) return null;
     if (Date.now() - ts > 15 * 60 * 1000) return null;
     const expected = crypto
-      .createHmac("sha256", process.env.JWT_SECRET!)
+      .createHmac("sha256", VK_STATE_SECRET)
       .update(`${userId}:${ts}`)
       .digest("hex");
     if (hmac !== expected) return null;

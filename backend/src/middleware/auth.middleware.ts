@@ -20,7 +20,9 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
     req.user = decoded;
 
     return next();
-  } catch {
+  } catch (err) {
+    const name = err instanceof Error ? err.name : "UnknownError";
+    console.error("AUTH_MIDDLEWARE:", name);
     return res.status(401).json({ message: "Unauthorized" });
   }
 };

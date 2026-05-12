@@ -1,10 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useTranslations } from "next-intl";
-import { useUserStore } from "@/shared/store/StoreProvider";
+import { Link } from "@/i18n/navigation";
+import { useUserStore, useReportsStore } from "@/shared/store/StoreProvider";
+import { http } from "@/shared/lib/axios";
 
-function InfoField({ label, value }: { label: string; value?: string | null }) {
+function InfoField({ label, value }: { label: string; value?: string | number | null }) {
   return (
     <div className="flex flex-col gap-1.5">
       <span className="text-xs font-semibold text-textSecondary uppercase tracking-widest">
@@ -15,26 +18,56 @@ function InfoField({ label, value }: { label: string; value?: string | null }) {
   );
 }
 
-function StatCard({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
-  return (
-    <div className="bg-surface border border-border rounded-xl px-6 py-5 flex flex-col gap-2">
+interface StatCardProps {
+  label: string;
+  value: string | number;
+  accent?: boolean;
+  href?: string;
+}
+
+function StatCard({ label, value, accent, href }: StatCardProps) {
+  const inner = (
+    <div
+      className={`bg-surface border border-border rounded-xl px-6 py-5 flex flex-col gap-2 transition-all ${
+        href ? "hover:border-primary hover:shadow-sm cursor-pointer" : ""
+      }`}
+    >
       <span className="text-xs font-semibold text-textSecondary uppercase tracking-widest">
         {label}
       </span>
-      <span
-        className={`text-3xl font-bold ${accent ? "text-primary" : "text-textMain"}`}
-      >
+      <span className={`text-3xl font-bold ${accent ? "text-primary" : "text-textMain"}`}>
         {value}
       </span>
     </div>
   );
+
+  if (href) {
+    return <Link href={href}>{inner}</Link>;
+  }
+  return inner;
 }
 
 export default observer(function ProfilePage() {
   const tD = useTranslations("Dashboard");
   const tP = useTranslations("Profile");
   const userStore = useUserStore();
+  const reportsStore = useReportsStore();
   const user = userStore.user;
+
+  const [integrationsCount, setIntegrationsCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (reportsStore.list.length === 0) {
+      reportsStore.fetchReports();
+    }
+  }, [reportsStore]);
+
+  useEffect(() => {
+    http
+      .get<{ linked: boolean }>("/integrations/telegram/status")
+      .then((r) => setIntegrationsCount(r.data.linked ? 1 : 0))
+      .catch(() => setIntegrationsCount(0));
+  }, []);
 
   const initials =
     user?.full_name
@@ -83,9 +116,21 @@ export default observer(function ProfilePage() {
 
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-4">
-        <StatCard label={tD("stats.reports")} value="—" />
-        <StatCard label={tD("stats.integrations")} value="—" />
-        <StatCard label={tD("stats.activity")} value={tD("stats.active")} accent />
+        <StatCard
+          label={tD("stats.reports")}
+          value={reportsStore.list.length}
+          href="/app/reports"
+        />
+        <StatCard
+          label={tD("stats.integrations")}
+          value={integrationsCount ?? "—"}
+          href="/app/integrations"
+        />
+        <StatCard
+          label={tD("stats.activity")}
+          value={tD("stats.active")}
+          accent
+        />
       </div>
 
       {/* Content grid: personal info + activity */}

@@ -1,6 +1,7 @@
 """
 Telethon MTProto client — runs alongside aiogram using the SAME bot token.
-Used only for reading channel message stats (views, forwards) which Bot API doesn't expose.
+Used for reading channel message stats (views, forwards, reactions) which Bot API doesn't expose.
+Note: GetHistoryRequest is restricted for bots — only GetMessages (by ID) works.
 Session file: bot_session.session (auto-created on first start).
 """
 from __future__ import annotations
@@ -55,7 +56,6 @@ async def fetch_message_stats(
 ) -> list[tuple[int, int, int, int]]:
     """
     Fetch (message_id, views, forwards, comments) for given message IDs via MTProto.
-    comments = replies.replies if channel has a linked discussion group, else 0.
     Returns empty list if client unavailable or channel inaccessible.
     """
     client = await get_client()
@@ -81,3 +81,5 @@ async def fetch_message_stats(
         logger.error("fetch_message_stats error for channel %s: %s", channel_id, e)
 
     return results
+
+

@@ -67,19 +67,30 @@ async def _try_link(
     state: FSMContext,
 ) -> None:
     tg = message.from_user
-    user_id = await queries.validate_and_use_token(
+    result = await queries.validate_and_use_token(
         db,
         token=token,
         telegram_id=tg.id,
         username=tg.username,
         first_name=tg.first_name,
     )
-    if user_id:
+
+    if isinstance(result, int):
         await state.clear()
         await message.answer(
             "✅ <b>Account linked!</b>\n\n"
             "Your Metriq Flow account is connected to this Telegram.",
             reply_markup=main_menu_kb(),
+        )
+    elif result == "telegram_taken":
+        await message.answer(
+            "⛔ <b>This Telegram account is already linked to another Metriq Flow profile.</b>\n\n"
+            "Unlink it from that profile first, then try again.",
+        )
+    elif result == "user_taken":
+        await message.answer(
+            "⛔ <b>That Metriq Flow account already has a Telegram linked.</b>\n\n"
+            "Go to <b>Settings → Integrations</b> and unlink the existing account first.",
         )
     else:
         await message.answer(
