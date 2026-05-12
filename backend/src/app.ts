@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.routes";
 import reportsRoutes from "./routes/reports.routes";
 import integrationsRoutes from "./routes/integrations.routes";
+import vkRoutes from "./routes/vk.routes";
 import { globalLimiter, authLimiter, analyticsLimiter } from "./middleware/rateLimit.middleware";
 
 const ALLOWED_ORIGINS = (process.env.FRONTEND_URL ?? "http://localhost:3000")
@@ -26,6 +27,7 @@ app.use(globalLimiter);
 app.use("/auth", authLimiter, authRoutes);
 app.use("/reports", reportsRoutes);
 app.use("/integrations", analyticsLimiter, integrationsRoutes);
+app.use("/vk",          analyticsLimiter, vkRoutes);
 
 app.use((_req: Request, res: Response) => {
   res.status(404).json({ message: "Not found" });

@@ -52,16 +52,17 @@ async def close_client() -> None:
 async def fetch_message_stats(
     channel_id: int,
     message_ids: list[int],
-) -> list[tuple[int, int, int]]:
+) -> list[tuple[int, int, int, int]]:
     """
-    Fetch (message_id, views, forwards) for given message IDs via MTProto.
+    Fetch (message_id, views, forwards, comments) for given message IDs via MTProto.
+    comments = replies.replies if channel has a linked discussion group, else 0.
     Returns empty list if client unavailable or channel inaccessible.
     """
     client = await get_client()
     if client is None:
         return []
 
-    results: list[tuple[int, int, int]] = []
+    results: list[tuple[int, int, int, int]] = []
     try:
         messages = await client.get_messages(channel_id, ids=message_ids)
         for msg in messages:
@@ -69,7 +70,9 @@ async def fetch_message_stats(
                 continue
             views    = getattr(msg, "views",    None) or 0
             forwards = getattr(msg, "forwards", None) or 0
-            results.append((msg.id, views, forwards))
+            replies  = getattr(msg, "replies",  None)
+            comments = (replies.replies if replies else 0) or 0
+            results.append((msg.id, views, forwards, comments))
     except FloodWaitError as e:
         logger.warning("Telethon FloodWait for channel %s: wait %ds", channel_id, e.seconds)
     except (ChannelPrivateError, ChatAdminRequiredError):

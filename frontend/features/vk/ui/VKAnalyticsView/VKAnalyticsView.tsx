@@ -3,71 +3,85 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { http } from "@/shared/lib/axios";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Channel = {
+type Community = {
   id: number;
-  channel_id: string;
-  title: string;
-  username: string | null;
+  community_id: string;
+  name: string;
+  screen_name: string;
+  photo_url: string | null;
   member_count: number | null;
-  post_count: number;
-  total_views: number;
-  added_at: string;
 };
 
 type Summary = {
-  post_count: number;
+  total_reach: number;
   total_views: number;
-  avg_views: number;
-  total_reactions: number;
-  avg_reactions: number;
-  total_forwards: number;
-  avg_forwards: number;
+  total_visitors: number;
+  total_likes: number;
   total_comments: number;
-  avg_comments: number;
+  total_shares: number;
+  member_count: number;
   engagement_rate: number;
 };
 
 type Growth = {
+  reach:       number | null;
   views:       number | null;
-  reactions:   number | null;
-  forwards:    number | null;
+  likes:       number | null;
   comments:    number | null;
+  shares:      number | null;
   subscribers: number | null;
 };
 
-type ViewsByDay = { date: string; views: number; reactions: number; forwards: number; comments: number; posts: number };
-type TopPost    = { message_id: number; text: string | null; views: number; reactions_total: number; forwards: number; comments: number; posted_at: string; has_media: boolean };
-type HeatCell   = { day_of_week: number; hour: number; avg_views: number; post_count: number };
+type StatDay = {
+  date: string;
+  reach: number;
+  reach_subscribers: number;
+  views: number;
+  visitors: number;
+  likes: number;
+  comments: number;
+  shares: number;
+};
+
+type Post = {
+  id: number;
+  text: string | null;
+  date: string;
+  likes: number;
+  reposts: number;
+  comments: number;
+  views: number;
+  has_media: boolean;
+};
+
+type HeatCell = { day_of_week: number; hour: number; avg_views: number; post_count: number };
 
 type Analytics = {
-  channel: Channel;
+  community: Community & { member_count: number };
   period: string;
   summary: Summary;
   growth: Growth;
-  views_by_day: ViewsByDay[];
-  top_posts: TopPost[];
+  stats_by_day: StatDay[];
+  top_posts: Post[];
   heatmap: HeatCell[];
 };
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const PERIODS = [
-  { value: "24h", label: "24h" },
   { value: "7d",  label: "7d"  },
   { value: "30d", label: "30d" },
+  { value: "3m",  label: "3m"  },
   { value: "all", label: "All" },
 ] as const;
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const AUTO_REFRESH_MS  = 10 * 60 * 1000;
-const NEW_CHANNEL_MS   = 30 * 60 * 1000;
 
 const fmt = (n: number) => {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -106,17 +120,17 @@ function StatCard({
   );
 }
 
-function TopPostCard({ post, rank }: { post: TopPost; rank: number }) {
+function PostCard({ post, rank }: { post: Post; rank: number }) {
   const preview = post.text
     ? post.text.slice(0, 80) + (post.text.length > 80 ? "…" : "")
-    : post.has_media ? "📎 Media post" : "—";
+    : post.has_media ? "📎 Media" : "—";
   return (
     <div className="flex gap-3 items-start py-3 border-b border-border last:border-0">
       <span className="text-sm font-bold text-primary w-5 flex-shrink-0">#{rank}</span>
       <div className="flex-1 min-w-0">
         <p className="text-sm text-textMain truncate">{preview}</p>
         <p className="text-xs text-textSecondary mt-0.5">
-          {new Date(post.posted_at).toLocaleDateString()}
+          {new Date(post.date).toLocaleDateString()} · ❤️ {fmt(post.likes)} · 🔁 {fmt(post.reposts)}
         </p>
       </div>
       <div className="text-right flex-shrink-0">
@@ -167,34 +181,33 @@ function Heatmap({ data, hint }: { data: HeatCell[]; hint: string }) {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-export function AnalyticsView() {
-  const t = useTranslations("Analytics");
+export function VKAnalyticsView() {
+  const t = useTranslations("VKAnalytics");
 
-  const [channels, setChannels]               = useState<Channel[]>([]);
-  const [selectedId, setSelectedId]           = useState<number | null>(null);
-  const [period, setPeriod]                   = useState<"24h" | "7d" | "30d" | "all">("7d");
-  const [analytics, setAnalytics]             = useState<Analytics | null>(null);
-  const [loading, setLoading]                 = useState(false);
-  const [channelsLoading, setChannelsLoading] = useState(true);
-  const [lastUpdated, setLastUpdated]         = useState<Date | null>(null);
-  const [minutesAgo, setMinutesAgo]           = useState(0);
+  const [communities,        setCommunities]        = useState<Community[]>([]);
+  const [selectedId,         setSelectedId]         = useState<number | null>(null);
+  const [period,             setPeriod]             = useState<"7d" | "30d" | "3m" | "all">("7d");
+  const [analytics,          setAnalytics]          = useState<Analytics | null>(null);
+  const [loading,            setLoading]            = useState(false);
+  const [communitiesLoading, setCommunitiesLoading] = useState(true);
+  const [lastUpdated,        setLastUpdated]        = useState<Date | null>(null);
+  const [minutesAgo,         setMinutesAgo]         = useState(0);
 
-  const autoRefreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const tickRef        = useRef<ReturnType<typeof setInterval> | null>(null);
+  const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    http.get<Channel[]>("/integrations/telegram/channels")
+    http.get<Community[]>("/vk/communities")
       .then((r) => {
-        setChannels(r.data);
+        setCommunities(r.data);
         if (r.data.length > 0) setSelectedId(r.data[0].id);
       })
-      .finally(() => setChannelsLoading(false));
+      .finally(() => setCommunitiesLoading(false));
   }, []);
 
   const fetchAnalytics = useCallback(() => {
     if (!selectedId) return;
     setLoading(true);
-    http.get<Analytics>(`/integrations/telegram/channels/${selectedId}/analytics?period=${period}`)
+    http.get<Analytics>(`/vk/communities/${selectedId}/analytics?period=${period}`)
       .then((r) => {
         setAnalytics(r.data);
         setLastUpdated(new Date());
@@ -208,14 +221,7 @@ export function AnalyticsView() {
     fetchAnalytics();
   }, [fetchAnalytics]);
 
-  useEffect(() => {
-    if (autoRefreshRef.current) clearInterval(autoRefreshRef.current);
-    if (period === "24h") {
-      autoRefreshRef.current = setInterval(fetchAnalytics, AUTO_REFRESH_MS);
-    }
-    return () => { if (autoRefreshRef.current) clearInterval(autoRefreshRef.current); };
-  }, [period, fetchAnalytics]);
-
+  // "X min ago" ticker
   useEffect(() => {
     if (tickRef.current) clearInterval(tickRef.current);
     tickRef.current = setInterval(() => {
@@ -226,28 +232,24 @@ export function AnalyticsView() {
     return () => { if (tickRef.current) clearInterval(tickRef.current); };
   }, [lastUpdated]);
 
-  // ── Early returns ────────────────────────────────────────────────────────
+  // ── Early returns ─────────────────────────────────────────────────────────
 
-  if (channelsLoading) {
-    return <p className="text-textSecondary text-sm">{t("loadingChannels")}</p>;
+  if (communitiesLoading) {
+    return <p className="text-textSecondary text-sm">{t("loading")}</p>;
   }
 
-  if (channels.length === 0) {
+  if (communities.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] text-center gap-2">
-        <p className="text-3xl">📺</p>
-        <p className="text-textMain font-semibold">{t("noChannels")}</p>
-        <p className="text-sm text-textSecondary max-w-sm">{t("noChannelsDesc")}</p>
+        <p className="text-3xl">🏘️</p>
+        <p className="text-textMain font-semibold">{t("noCommunities")}</p>
+        <p className="text-sm text-textSecondary max-w-sm">{t("noCommunitiesDesc")}</p>
       </div>
     );
   }
 
-  const s            = analytics?.summary;
-  const g            = analytics?.growth;
-  const selectedCh   = channels.find((c) => c.id === selectedId);
-  const isNewChannel = selectedCh
-    ? Date.now() - new Date(selectedCh.added_at).getTime() < NEW_CHANNEL_MS
-    : false;
+  const s = analytics?.summary;
+  const g = analytics?.growth;
 
   return (
     <div className="flex flex-col gap-6">
@@ -261,10 +263,8 @@ export function AnalyticsView() {
             onChange={(e) => setSelectedId(Number(e.target.value))}
             className="text-sm bg-surface border border-border rounded-lg px-3 py-1.5 text-textMain outline-none focus:border-primary"
           >
-            {channels.map((ch) => (
-              <option key={ch.id} value={ch.id}>
-                {ch.username ? `@${ch.username}` : ch.title}
-              </option>
+            {communities.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
         </div>
@@ -300,80 +300,42 @@ export function AnalyticsView() {
         </div>
       </div>
 
-      {period === "24h" && (
-        <div className="flex items-center gap-1.5 text-xs text-textSecondary">
-          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-          {t("autoRefresh")}
-        </div>
-      )}
-
-      {isNewChannel && (
-        <div className="bg-primary/5 border border-primary/20 rounded-xl px-5 py-4">
-          <p className="text-sm font-semibold text-primary">{t("newChannelBanner")}</p>
-          <p className="text-xs text-textSecondary mt-1">{t("newChannelBannerDesc")}</p>
-        </div>
-      )}
-
       {loading && !analytics && (
         <p className="text-textSecondary text-sm">{t("loadingData")}</p>
       )}
 
       {analytics && s && (
         <>
-          {/* Subscriber count */}
-          {analytics.channel.member_count != null && (
-            <div className="bg-primary/5 border border-primary/20 rounded-xl px-5 py-3 flex items-center gap-3">
-              <span className="text-2xl font-bold text-primary">{fmt(analytics.channel.member_count)}</span>
-              <span className="text-sm text-textSecondary">{t("subscribers")}</span>
-              {g?.subscribers !== null && g?.subscribers !== undefined && (
-                <GrowthBadge value={g.subscribers} />
-              )}
-            </div>
-          )}
-
-          {/* Stats cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <StatCard
-              label={t("totalViews")}
-              value={fmt(s.total_views)}
-              sub={t("avgPerPost", { n: fmt(s.avg_views) })}
-              growth={g?.views}
-            />
-            <StatCard
-              label={t("reactions")}
-              value={fmt(s.total_reactions)}
-              sub={t("avgPerPost", { n: fmt(s.avg_reactions) })}
-              growth={g?.reactions}
-            />
-            <StatCard
-              label={t("forwards")}
-              value={fmt(s.total_forwards)}
-              sub={t("avgPerPost", { n: fmt(s.avg_forwards) })}
-              growth={g?.forwards}
-            />
-            <StatCard
-              label={t("engagementRate")}
-              value={`${s.engagement_rate.toFixed(2)}%`}
-              sub={t("postsCount", { n: s.post_count })}
-            />
-            <StatCard
-              label={t("comments")}
-              value={fmt(s.total_comments)}
-              sub={t("avgPerPost", { n: fmt(s.avg_comments) })}
-              growth={g?.comments}
-            />
+          {/* Member count */}
+          <div className="bg-primary/5 border border-primary/20 rounded-xl px-5 py-3 flex items-center gap-3">
+            <span className="text-2xl font-bold text-primary">{fmt(s.member_count)}</span>
+            <span className="text-sm text-textSecondary">{t("subscribers")}</span>
+            {g?.subscribers !== null && g?.subscribers !== undefined && (
+              <GrowthBadge value={g.subscribers} />
+            )}
           </div>
 
-          {/* Views chart */}
-          {analytics.views_by_day.length > 0 && (
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <StatCard label={t("reach")}        value={fmt(s.total_reach)}               growth={g?.reach}    />
+            <StatCard label={t("views")}         value={fmt(s.total_views)}               growth={g?.views}    />
+            <StatCard label={t("likes")}         value={fmt(s.total_likes)}               growth={g?.likes}    />
+            <StatCard label={t("engagementRate")} value={`${s.engagement_rate.toFixed(2)}%`} />
+            <StatCard label={t("visitors")}      value={fmt(s.total_visitors)}            />
+            <StatCard label={t("comments")}      value={fmt(s.total_comments)}            growth={g?.comments} />
+            <StatCard label={t("shares")}        value={fmt(s.total_shares)}              growth={g?.shares}   />
+          </div>
+
+          {/* Reach chart */}
+          {analytics.stats_by_day.length > 0 && (
             <div className="bg-surface border border-border rounded-xl p-6">
               <p className="text-xs font-semibold text-textSecondary uppercase tracking-widest mb-4">
-                {t("viewsChart")}
+                {t("reachChart")}
               </p>
               <ResponsiveContainer width="100%" height={220}>
-                <AreaChart data={analytics.views_by_day} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                <AreaChart data={analytics.stats_by_day} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                   <defs>
-                    <linearGradient id="viewsGrad" x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient id="reachGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%"  stopColor="#4F46E5" stopOpacity={0.15} />
                       <stop offset="95%" stopColor="#4F46E5" stopOpacity={0}    />
                     </linearGradient>
@@ -382,7 +344,7 @@ export function AnalyticsView() {
                   <XAxis
                     dataKey="date"
                     tick={{ fontSize: 11, fill: "var(--color-text-secondary)" }}
-                    tickFormatter={(v) => v.slice(5)}
+                    tickFormatter={(v: string) => v.slice(5)}
                   />
                   <YAxis
                     tick={{ fontSize: 11, fill: "var(--color-text-secondary)" }}
@@ -399,11 +361,12 @@ export function AnalyticsView() {
                   />
                   <Area
                     type="monotone"
-                    dataKey="views"
+                    dataKey="reach"
                     stroke="#4F46E5"
                     strokeWidth={2}
-                    fill="url(#viewsGrad)"
+                    fill="url(#reachGrad)"
                     dot={false}
+                    name={t("reach")}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -419,7 +382,7 @@ export function AnalyticsView() {
               {analytics.top_posts.length === 0
                 ? <p className="text-sm text-textSecondary">{t("noPostsInPeriod")}</p>
                 : analytics.top_posts.map((post, i) => (
-                    <TopPostCard key={post.message_id} post={post} rank={i + 1} />
+                    <PostCard key={post.id} post={post} rank={i + 1} />
                   ))
               }
             </div>

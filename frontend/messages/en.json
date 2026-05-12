@@ -122,7 +122,9 @@
     "unlink": "Unlink account",
     "unlinkConfirm": "Are you sure?",
     "unlinkYes": "Yes, unlink",
-    "unlinkNo": "Cancel"
+    "unlinkNo": "Cancel",
+    "vkCommunities": "communities",
+    "vkConnectError": "Failed to connect VK. Please try again."
   },
   "Analytics": {
     "title": "Analytics",
@@ -147,6 +149,31 @@
     "topPosts": "Top posts by views",
     "heatmap": "Best posting time",
     "noPostsInPeriod": "No posts in this period.",
+    "noHeatmapData": "Not enough data yet.",
+    "heatmapHint": "Colour = avg views. Darker = better time to post.",
+    "comments": "Comments"
+  },
+  "VKAnalytics": {
+    "title": "VK Analytics",
+    "loading": "Loading communities…",
+    "noCommunities": "No VK communities connected",
+    "noCommunitiesDesc": "Go to Integrations → connect VK to see your communities.",
+    "loadingData": "Loading analytics…",
+    "refresh": "Refresh",
+    "lastUpdated": "Updated {min} min ago",
+    "justUpdated": "Just updated",
+    "subscribers": "subscribers",
+    "reach": "Reach",
+    "views": "Views",
+    "visitors": "Visitors",
+    "likes": "Likes",
+    "comments": "Comments",
+    "shares": "Shares",
+    "engagementRate": "Engagement Rate",
+    "reachChart": "Reach over time",
+    "topPosts": "Top posts by views",
+    "noPostsInPeriod": "No posts in this period.",
+    "heatmap": "Best posting time",
     "noHeatmapData": "Not enough data yet.",
     "heatmapHint": "Colour = avg views. Darker = better time to post."
   },

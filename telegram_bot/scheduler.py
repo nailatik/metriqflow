@@ -31,13 +31,13 @@ async def _refresh_views(pool: asyncpg.Pool, interval: str) -> None:
 
     total = 0
     for channel_id, message_ids in posts_by_channel.items():
-        all_updates: list[tuple[int, int, int, int]] = []
+        all_updates: list[tuple[int, int, int, int, int]] = []
 
         for i in range(0, len(message_ids), _BATCH_SIZE):
             batch = message_ids[i : i + _BATCH_SIZE]
             stats = await fetch_message_stats(channel_id, batch)
-            for msg_id, views, forwards in stats:
-                all_updates.append((views, forwards, channel_id, msg_id))
+            for msg_id, views, forwards, comments in stats:
+                all_updates.append((views, forwards, comments, channel_id, msg_id))
             await asyncio.sleep(0.3)
 
         if all_updates:
@@ -67,6 +67,7 @@ async def _update_member_counts(bot: Bot, pool: asyncpg.Pool) -> None:
                     "UPDATE telegram_channels SET member_count = $1 WHERE channel_id = $2",
                     count, row["channel_id"],
                 )
+            await queries.upsert_member_count_snapshot(pool, row["channel_id"], count)
             updated += 1
             await asyncio.sleep(0.1)
         except Exception as e:

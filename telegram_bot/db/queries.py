@@ -204,7 +204,7 @@ async def get_posts_grouped_by_channel(
 
 async def bulk_update_post_stats(
     pool: asyncpg.Pool,
-    updates: list[tuple[int, int, int, int]],  # (views, forwards, channel_id, message_id)
+    updates: list[tuple[int, int, int, int, int]],  # (views, forwards, comments, channel_id, message_id)
 ) -> None:
     if not updates:
         return
@@ -212,8 +212,8 @@ async def bulk_update_post_stats(
         await conn.executemany(
             """
             UPDATE telegram_posts
-            SET views = $1, forwards = $2, collected_at = NOW()
-            WHERE channel_id = $3 AND message_id = $4
+            SET views = $1, forwards = $2, comments = $3, collected_at = NOW()
+            WHERE channel_id = $4 AND message_id = $5
             """,
             updates,
         )
@@ -229,18 +229,41 @@ async def upsert_post(
     reactions_total: int,
     has_media: bool,
     posted_at: datetime | None,
+    comments: int = 0,
 ) -> None:
     async with pool.acquire() as conn:
         await conn.execute(
             """
             INSERT INTO telegram_posts
-                (channel_id, message_id, text, views, forwards, reactions_total, has_media, posted_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                (channel_id, message_id, text, views, forwards, reactions_total, comments, has_media, posted_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             ON CONFLICT (channel_id, message_id) DO UPDATE
                 SET views           = EXCLUDED.views,
                     forwards        = EXCLUDED.forwards,
                     reactions_total = EXCLUDED.reactions_total,
+                    comments        = EXCLUDED.comments,
                     collected_at    = NOW()
             """,
-            channel_id, message_id, text, views, forwards, reactions_total, has_media, posted_at,
+            channel_id, message_id, text, views, forwards, reactions_total, comments, has_media, posted_at,
+        )
+
+
+async def upsert_member_count_snapshot(
+    pool: asyncpg.Pool,
+    channel_id: int,
+    count: int,
+) -> None:
+    """Insert snapshot; deduplicate within the same hour."""
+    async with pool.acquire() as conn:
+        await conn.execute(
+            """
+            INSERT INTO member_count_snapshots (channel_id, count)
+            SELECT $1, $2
+            WHERE NOT EXISTS (
+                SELECT 1 FROM member_count_snapshots
+                WHERE channel_id = $1
+                  AND recorded_at >= date_trunc('hour', NOW())
+            )
+            """,
+            channel_id, count,
         )

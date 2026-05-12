@@ -1,5 +1,5 @@
-import { AnalyticsView } from "@/features/analytics/ui/AnalyticsView/AnalyticsView";
+import { AnalyticsTabView } from "@/features/analytics/ui/AnalyticsTabView/AnalyticsTabView";
 
 export default function AnalyticsPage() {
-  return <AnalyticsView />;
+  return <AnalyticsTabView />;
 }
