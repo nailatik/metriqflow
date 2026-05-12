@@ -12,6 +12,7 @@ export const ReportsList = observer(() => {
   const uiStore = useUiStore();
   const [newTitle, setNewTitle] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
   useEffect(() => {
     if (reportsStore.list.length === 0) {
@@ -26,10 +27,11 @@ export const ReportsList = observer(() => {
     setShowForm(false);
   };
 
-  const handleDelete = async (id: number) => {
-    if (confirm(t("confirmDelete"))) {
-      await reportsStore.deleteReport(id);
-    }
+  const handleDeleteClick = (id: number) => setDeleteConfirmId(id);
+  const handleDeleteCancel = () => setDeleteConfirmId(null);
+  const handleDeleteConfirm = async (id: number) => {
+    await reportsStore.deleteReport(id);
+    setDeleteConfirmId(null);
   };
 
   return (
@@ -48,6 +50,7 @@ export const ReportsList = observer(() => {
             placeholder={t("placeholder")}
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleCreate()}
           />
           <Button onClick={handleCreate} disabled={uiStore.loading || !newTitle.trim()}>
             {t("save")}
@@ -67,12 +70,31 @@ export const ReportsList = observer(() => {
           >
             <h3 className="font-semibold text-textMain">{report.title}</h3>
             <p className="text-textSecondary text-sm mt-2">{t("reportId", { id: report.id })}</p>
-            <button
-              onClick={() => handleDelete(report.id)}
-              className="text-error text-sm mt-3 hover:underline"
-            >
-              {t("delete")}
-            </button>
+
+            {deleteConfirmId === report.id ? (
+              <div className="flex items-center gap-3 mt-3">
+                <span className="text-sm text-textSecondary">{t("confirmDelete")}</span>
+                <button
+                  onClick={() => handleDeleteConfirm(report.id)}
+                  className="text-sm text-error font-medium hover:underline"
+                >
+                  {t("delete")}
+                </button>
+                <button
+                  onClick={handleDeleteCancel}
+                  className="text-sm text-textSecondary hover:underline"
+                >
+                  {t("cancel")}
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => handleDeleteClick(report.id)}
+                className="text-error text-sm mt-3 hover:underline"
+              >
+                {t("delete")}
+              </button>
+            )}
           </div>
         ))}
       </div>

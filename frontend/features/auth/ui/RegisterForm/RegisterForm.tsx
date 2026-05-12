@@ -43,10 +43,13 @@ export const RegisterForm = observer(() => {
   };
 
   const handleStep1 = () => {
-    const emailErr = validateEmail(email);
-    const passErr = validatePassword(password);
-    if (emailErr || passErr) {
-      setErrors({ email: emailErr || undefined, password: passErr || undefined });
+    const emailKey = validateEmail(email);
+    const passKey = validatePassword(password);
+    if (emailKey || passKey) {
+      setErrors({
+        email: emailKey ? t(`errors.${emailKey}`) : undefined,
+        password: passKey ? t(`errors.${passKey}`) : undefined,
+      });
       return;
     }
     setErrors({});

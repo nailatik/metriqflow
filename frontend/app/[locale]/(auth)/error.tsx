@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 
-export default function RegisterError({ error, reset }: { error: Error; reset: () => void }) {
+export default function AuthError({ error, reset }: { error: Error; reset: () => void }) {
   const t = useTranslations("Common.error");
   useEffect(() => { console.error(error); }, [error]);
   return (

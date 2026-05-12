@@ -23,7 +23,7 @@
       "@/entities/*": ["./entities/*"],
       "@/public/*": ["./public/*"],
       "@/i18n/*": ["./i18n/*"],
-      "@/messages/*": ["./messages/*"]
+      "@/messages/*": ["./shared/messages/*"]
     },
     "baseUrl": "."
   },

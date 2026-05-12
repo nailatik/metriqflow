@@ -1,20 +1,27 @@
-export const validateEmail = (email: string): string => {
-  if (!email) return "Email is required";
-  const regex = /^\S+@\S+\.\S+$/;
-  if (!regex.test(email)) return "Invalid email format";
-  return "";
-};
+type ValidationResult = string | null;
 
-export const validatePassword = (password: string): string => {
-  if (!password) return "Password is required";
-  if (password.length < 6) return "Password must be at least 6 characters";
-  if (!/[A-Z]/.test(password)) return "Password must contain at least one uppercase letter (A–Z)";
-  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) return "Password must contain at least one special character";
-  return "";
-};
+const EMAIL_RE = /^\S+@\S+\.\S+$/;
+const UPPER_RE = /[A-Z]/;
+const SPECIAL_RE = /[!@#$%^&*(),.?":{}|<>]/;
 
-export const getPasswordChecks = (password: string) => ({
-  minLength: password.length >= 6,
-  uppercase: /[A-Z]/.test(password),
-  special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
-});
+export function validateEmail(email: string): ValidationResult {
+  if (!email) return "emailRequired";
+  if (!EMAIL_RE.test(email)) return "emailInvalid";
+  return null;
+}
+
+export function validatePassword(password: string): ValidationResult {
+  if (!password) return "passwordRequired";
+  if (password.length < 6) return "passwordMinLength";
+  if (!UPPER_RE.test(password)) return "passwordUppercase";
+  if (!SPECIAL_RE.test(password)) return "passwordSpecial";
+  return null;
+}
+
+export function getPasswordChecks(password: string) {
+  return {
+    minLength: password.length >= 6,
+    uppercase: UPPER_RE.test(password),
+    special: SPECIAL_RE.test(password),
+  };
+}

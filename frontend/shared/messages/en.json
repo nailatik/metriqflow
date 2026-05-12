@@ -17,16 +17,34 @@
     "socialProof": "Trusted by developers and marketing teams worldwide",
     "features": {
       "title": "Everything you need for analytics",
-      "dashboard": { "title": "Unified Dashboard", "desc": "All your social data in one clean interface." },
-      "reports": { "title": "Automated Reports", "desc": "Generate reports without manual work." },
-      "insights": { "title": "Real-time Insights", "desc": "Track performance as it happens." }
+      "dashboard": {
+        "title": "Unified Dashboard",
+        "desc": "All your social data in one clean interface."
+      },
+      "reports": {
+        "title": "Automated Reports",
+        "desc": "Generate reports without manual work."
+      },
+      "insights": {
+        "title": "Real-time Insights",
+        "desc": "Track performance as it happens."
+      }
     },
     "howItWorks": {
       "title": "How it works",
       "step": "Step {n}",
-      "connect": { "title": "Connect accounts", "desc": "Link your social platforms" },
-      "analyze": { "title": "Analyze data", "desc": "We process everything automatically" },
-      "get": { "title": "Get insights", "desc": "Receive reports & analytics" }
+      "connect": {
+        "title": "Connect accounts",
+        "desc": "Link your social platforms"
+      },
+      "analyze": {
+        "title": "Analyze data",
+        "desc": "We process everything automatically"
+      },
+      "get": {
+        "title": "Get insights",
+        "desc": "Receive reports & analytics"
+      }
     },
     "cta": {
       "title": "Start using Metriq Flow today",
@@ -73,7 +91,13 @@
       "fullName": "Full name is required",
       "birthDate": "Date of birth is required",
       "phone": "Phone is required",
-      "agreement": "Agreement is required"
+      "agreement": "Agreement is required",
+      "emailRequired": "Email is required",
+      "emailInvalid": "Invalid email format",
+      "passwordRequired": "Password is required",
+      "passwordMinLength": "Password must be at least 6 characters",
+      "passwordUppercase": "Must contain at least one uppercase letter",
+      "passwordSpecial": "Must contain at least one special character"
     }
   },
   "Dashboard": {
@@ -106,7 +130,8 @@
     "empty": "No reports yet",
     "reportId": "Report ID: {id}",
     "delete": "Delete",
-    "confirmDelete": "Delete this report?"
+    "confirmDelete": "Delete this report?",
+    "cancel": "Cancel"
   },
   "Integrations": {
     "title": "Integrations",

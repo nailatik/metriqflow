@@ -1,19 +1,25 @@
 "use client";
 
-import { type InputHTMLAttributes } from "react";
+import { useId, type InputHTMLAttributes } from "react";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
 }
 
-export function Input({ label, error, className = "", ...rest }: InputProps) {
+export function Input({ label, error, id: externalId, className = "", ...rest }: InputProps) {
+  const autoId = useId();
+  const id = externalId ?? autoId;
+
   return (
     <div className="w-full flex flex-col gap-1">
       {label && (
-        <label className="text-sm text-textSecondary">{label}</label>
+        <label htmlFor={id} className="text-sm text-textSecondary">
+          {label}
+        </label>
       )}
       <input
+        id={id}
         className={`
           w-full px-4 py-3 border rounded-xl outline-none transition
           bg-surface text-textMain

@@ -34,7 +34,7 @@ export const Sidebar = observer(() => {
   const getLinkClass = (href: string, exact: boolean) => {
     const isActive = exact ? pathname === href : pathname.startsWith(href);
     return `px-3 py-2 rounded-lg transition ${
-      isActive ? "bg-primary text-white" : "hover:bg-gray-100 text-textSecondary"
+      isActive ? "bg-primary text-white" : "hover:bg-border text-textSecondary"
     }`;
   };
 

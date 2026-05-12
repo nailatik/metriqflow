@@ -4,11 +4,11 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing, type Locale } from "@/i18n/routing";
-import { StoreProvider } from "@/shared/store/StoreProvider";
 import { CommonWrapper } from "@/widgets/CommonWrapper/CommonWrapper";
 import { AppInitializer } from "@/widgets/AppInitializer/AppInitializer";
 import { ThemeProvider } from "@/widgets/ThemeProvider/ThemeProvider";
 import { ThemeToggle } from "@/widgets/ThemeToggle/ThemeToggle";
+import "@/shared/styles/globals.css";
 
 interface LocaleLayoutProps {
   children: ReactNode;
@@ -65,17 +65,19 @@ export default async function LocaleLayout({ children, params }: LocaleLayoutPro
   const messages = await getMessages();
 
   return (
-    <NextIntlClientProvider messages={messages}>
-      <StoreProvider>
-        <ThemeProvider>
-          <AppInitializer>
-            <CommonWrapper>
-              {children}
-              <ThemeToggle />
-            </CommonWrapper>
-          </AppInitializer>
-        </ThemeProvider>
-      </StoreProvider>
-    </NextIntlClientProvider>
+    <html lang={locale} suppressHydrationWarning>
+      <body suppressHydrationWarning>
+        <NextIntlClientProvider messages={messages}>
+          <ThemeProvider>
+            <AppInitializer>
+              <CommonWrapper>
+                {children}
+                <ThemeToggle />
+              </CommonWrapper>
+            </AppInitializer>
+          </ThemeProvider>
+        </NextIntlClientProvider>
+      </body>
+    </html>
   );
 }

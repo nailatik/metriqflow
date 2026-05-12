@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { observer } from "mobx-react-lite";
 import { http } from "@/shared/lib/axios";
 import { Button } from "@/shared/ui/Button/Button";
 
@@ -230,7 +229,7 @@ function StubCard({ name }: { name: string }) {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-export const IntegrationsView = observer(() => {
+export function IntegrationsView() {
   const t = useTranslations("Integrations");
 
   return (
@@ -245,4 +244,4 @@ export const IntegrationsView = observer(() => {
       </div>
     </div>
   );
-});
+}
