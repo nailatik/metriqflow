@@ -33,6 +33,14 @@ async def bot_status_in_channel(update: ChatMemberUpdated, db: asyncpg.Pool) -> 
             )
             return
 
+        channel_count = await queries.get_active_channel_count(db, linked["id"])
+        if channel_count >= 5:
+            logger.info(
+                "Channel limit reached for user_id=%s, ignoring channel %s",
+                linked["id"], channel.id,
+            )
+            return
+
         await queries.upsert_channel(
             db,
             user_id=linked["id"],

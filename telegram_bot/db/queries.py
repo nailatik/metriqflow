@@ -118,6 +118,14 @@ async def upsert_channel(
         )
 
 
+async def get_active_channel_count(pool: asyncpg.Pool, user_id: int) -> int:
+    async with pool.acquire() as conn:
+        return await conn.fetchval(
+            "SELECT COUNT(*) FROM telegram_channels WHERE user_id = $1 AND is_active = TRUE",
+            user_id,
+        ) or 0
+
+
 async def deactivate_channel(pool: asyncpg.Pool, channel_id: int) -> None:
     async with pool.acquire() as conn:
         await conn.execute(

@@ -28,8 +28,8 @@ export function AnalyticsTabView() {
       http.get<{ linked: boolean }>("/integrations/telegram/status")
         .then((r) => setHasTg(r.data.linked))
         .catch(() => {}),
-      http.get<{ linked: boolean }>("/vk/status")
-        .then((r) => setHasVk(r.data.linked))
+      http.get<{ id: number }[]>("/vk/communities")
+        .then((r) => setHasVk(r.data.length > 0))
         .catch(() => {}),
     ]).finally(() => setLoaded(true));
   }, []);

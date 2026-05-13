@@ -1,49 +1,12 @@
 import { Request, Response } from "express";
 import { query } from "../db";
-import crypto from "crypto";
 
-const VK_APP_ID        = process.env.VK_APP_ID!;
-const VK_CLIENT_SECRET = process.env.VK_CLIENT_SECRET!;
-const VK_REDIRECT_URI  = process.env.VK_REDIRECT_URI  ?? "http://localhost:8000/vk/callback";
-const FRONTEND_URL     = process.env.FRONTEND_URL     ?? "http://localhost:3000";
-const VK_API_V         = "5.131";
-const VK_BASE          = "https://api.vk.com/method";
-// Separate secret for OAuth state HMAC — keeps JWT_SECRET isolated
-const VK_STATE_SECRET  = process.env.VK_STATE_SECRET ?? process.env.JWT_SECRET!;
+const VK_API_V  = "5.131";
+const VK_BASE   = "https://api.vk.com/method";
+
+const COMMUNITY_LIMIT = 5;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function createState(userId: number): string {
-  const ts   = Date.now();
-  const hmac = crypto
-    .createHmac("sha256", VK_STATE_SECRET)
-    .update(`${userId}:${ts}`)
-    .digest("hex");
-  return Buffer.from(`${userId}:${ts}:${hmac}`).toString("base64url");
-}
-
-function verifyState(state: string): number | null {
-  try {
-    const decoded = Buffer.from(state, "base64url").toString();
-    const parts   = decoded.split(":");
-    if (parts.length !== 3) return null;
-    const userIdStr = parts[0]!;
-    const tsStr     = parts[1]!;
-    const hmac      = parts[2]!;
-    const userId = parseInt(userIdStr, 10);
-    const ts     = parseInt(tsStr, 10);
-    if (isNaN(userId) || isNaN(ts)) return null;
-    if (Date.now() - ts > 15 * 60 * 1000) return null;
-    const expected = crypto
-      .createHmac("sha256", VK_STATE_SECRET)
-      .update(`${userId}:${ts}`)
-      .digest("hex");
-    if (hmac !== expected) return null;
-    return userId;
-  } catch {
-    return null;
-  }
-}
 
 async function vkCall<T>(
   method: string,
@@ -57,7 +20,7 @@ async function vkCall<T>(
     url.searchParams.set(k, String(v));
   }
   const res  = await fetch(url.toString());
-  const data = await res.json() as { response?: T; error?: { error_msg: string } };
+  const data = await res.json() as { response?: T; error?: { error_msg: string; error_code: number } };
   if (data.error) throw new Error(data.error.error_msg);
   return data.response!;
 }
@@ -67,129 +30,110 @@ function parseVkDate(v: number | string): string {
   return String(v).slice(0, 10);
 }
 
-// ─── Endpoints ───────────────────────────────────────────────────────────────
+// ─── Add community ────────────────────────────────────────────────────────────
 
-/* GET /vk/auth-url  (auth required) */
-export const getVkAuthUrl = (req: Request, res: Response) => {
-  const userId = req.user?.id;
-  if (!userId) return res.status(401).json({ message: "Unauthorized" });
-
-  const state = createState(userId);
-  const url   = new URL("https://oauth.vk.com/authorize");
-  url.searchParams.set("client_id",     VK_APP_ID);
-  url.searchParams.set("display",       "page");
-  url.searchParams.set("redirect_uri",  VK_REDIRECT_URI);
-  url.searchParams.set("scope",         "stats,groups,wall,offline");
-  url.searchParams.set("response_type", "code");
-  url.searchParams.set("v",             VK_API_V);
-  url.searchParams.set("state",         state);
-
-  return res.json({ url: url.toString() });
-};
-
-/* GET /vk/callback  (no auth — VK redirects here) */
-export const handleVkCallback = async (req: Request, res: Response) => {
+/* POST /vk/communities  body: { community_token } */
+export const addVkCommunity = async (req: Request, res: Response) => {
   try {
-    const { code, state, error } = req.query as Record<string, string>;
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
-    if (error || !code || !state) {
-      return res.redirect(`${FRONTEND_URL}/app/integrations?vk=error`);
+    const { community_token } = req.body as { community_token?: string };
+    if (!community_token?.trim()) {
+      return res.status(400).json({ message: "community_token is required" });
     }
+    const token = community_token.trim();
 
-    const userId = verifyState(state);
-    if (!userId) return res.redirect(`${FRONTEND_URL}/app/integrations?vk=error`);
-
-    // Exchange code → access_token
-    const tokenUrl = new URL("https://oauth.vk.com/access_token");
-    tokenUrl.searchParams.set("client_id",     VK_APP_ID);
-    tokenUrl.searchParams.set("client_secret", VK_CLIENT_SECRET);
-    tokenUrl.searchParams.set("redirect_uri",  VK_REDIRECT_URI);
-    tokenUrl.searchParams.set("code",          code);
-
-    const tokenRes  = await fetch(tokenUrl.toString());
-    const tokenData = await tokenRes.json() as {
-      access_token?: string;
-      user_id?: number;
-      error?: string;
-    };
-
-    if (!tokenData.access_token || !tokenData.user_id) {
-      return res.redirect(`${FRONTEND_URL}/app/integrations?vk=error`);
-    }
-
-    const { access_token, user_id: vkUserId } = tokenData;
-
-    // Upsert integration row
-    const intRes = await query(
-      `INSERT INTO vk_integrations (user_id, vk_user_id, access_token)
-       VALUES ($1, $2, $3)
-       ON CONFLICT (user_id) DO UPDATE
-         SET vk_user_id = $2, access_token = $3, created_at = NOW()
-       RETURNING id`,
-      [userId, vkUserId, access_token]
+    // Enforce limit
+    const countRes = await query(
+      "SELECT COUNT(*) FROM vk_communities WHERE user_id = $1 AND is_active = TRUE",
+      [userId]
     );
-    const integrationId = (intRes.rows[0] as { id: number }).id;
+    const count = parseInt((countRes.rows[0] as { count: string }).count, 10);
+    if (count >= COMMUNITY_LIMIT) {
+      return res.status(400).json({ message: `Community limit reached (${COMMUNITY_LIMIT} max)` });
+    }
 
-    // Fetch communities the user manages
-    type VkGroup = {
+    // Validate token — calling without group_ids returns the community the token belongs to
+    type VkGroupInfo = {
       id: number;
       name: string;
       screen_name: string;
       photo_50?: string;
       members_count?: number;
     };
-    const groups = await vkCall<{ count: number; items: VkGroup[] }>(
-      "groups.get",
-      { filter: "admin,editor,moder", extended: 1, fields: "members_count", count: 100 },
-      access_token
+
+    let group: VkGroupInfo;
+    try {
+      const result = await vkCall<VkGroupInfo[]>(
+        "groups.getById",
+        { fields: "members_count" },
+        token
+      );
+      if (!result || result.length === 0) throw new Error("empty");
+      group = result[0]!;
+    } catch {
+      return res.status(400).json({ message: "Invalid token or insufficient community permissions" });
+    }
+
+    // Upsert
+    const existing = await query(
+      "SELECT id FROM vk_communities WHERE user_id = $1 AND community_id = $2",
+      [userId, group.id]
     );
 
-    for (const g of groups.items) {
+    if (existing.rows.length > 0) {
+      await query(
+        `UPDATE vk_communities
+         SET community_token = $1, name = $2, screen_name = $3,
+             photo_url = $4, member_count = $5, is_active = TRUE
+         WHERE user_id = $6 AND community_id = $7`,
+        [token, group.name, group.screen_name, group.photo_50 ?? null, group.members_count ?? null, userId, group.id]
+      );
+    } else {
       await query(
         `INSERT INTO vk_communities
-           (user_id, vk_integration_id, community_id, name, screen_name, photo_url, member_count)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
-         ON CONFLICT (user_id, community_id) DO UPDATE
-           SET name = $4, screen_name = $5, photo_url = $6, member_count = $7, is_active = TRUE`,
-        [userId, integrationId, g.id, g.name, g.screen_name, g.photo_50 ?? null, g.members_count ?? null]
+           (user_id, community_id, name, screen_name, photo_url, member_count, community_token)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [userId, group.id, group.name, group.screen_name, group.photo_50 ?? null, group.members_count ?? null, token]
       );
     }
 
-    return res.redirect(`${FRONTEND_URL}/app/integrations?vk=connected`);
-  } catch (err) {
-    console.error("VK CALLBACK ERROR:", err);
-    return res.redirect(`${FRONTEND_URL}/app/integrations?vk=error`);
-  }
-};
-
-/* GET /vk/status */
-export const getVkStatus = async (req: Request, res: Response) => {
-  try {
-    const userId = req.user?.id;
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
-
-    const result = await query(
-      "SELECT vk_user_id, created_at FROM vk_integrations WHERE user_id = $1",
-      [userId]
+    const row = await query(
+      "SELECT id FROM vk_communities WHERE user_id = $1 AND community_id = $2",
+      [userId, group.id]
     );
 
-    return res.json({ linked: result.rows.length > 0 });
+    return res.json({
+      id:           (row.rows[0] as { id: number }).id,
+      community_id: String(group.id),
+      name:         group.name,
+      screen_name:  group.screen_name,
+      photo_url:    group.photo_50 ?? null,
+      member_count: group.members_count ?? null,
+    });
   } catch (err) {
-    console.error("VK STATUS ERROR:", err);
+    console.error("VK ADD COMMUNITY ERROR:", err);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
 
-/* DELETE /vk/disconnect */
-export const disconnectVk = async (req: Request, res: Response) => {
+/* DELETE /vk/communities/:id */
+export const removeVkCommunity = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
-    await query("DELETE FROM vk_integrations WHERE user_id = $1", [userId]);
-    return res.json({ message: "Disconnected" });
+    const id = parseInt(req.params.id as string, 10);
+    if (isNaN(id)) return res.status(400).json({ message: "Invalid id" });
+
+    await query(
+      "UPDATE vk_communities SET is_active = FALSE WHERE id = $1 AND user_id = $2",
+      [id, userId]
+    );
+    return res.json({ message: "Removed" });
   } catch (err) {
-    console.error("VK DISCONNECT ERROR:", err);
+    console.error("VK REMOVE COMMUNITY ERROR:", err);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -234,11 +178,9 @@ export const getVkCommunityAnalytics = async (req: Request, res: Response) => {
     }
 
     const row = await query(
-      `SELECT vc.community_id, vc.name, vc.screen_name, vc.photo_url, vc.member_count,
-              vi.access_token
-       FROM vk_communities vc
-       JOIN vk_integrations vi ON vi.id = vc.vk_integration_id
-       WHERE vc.id = $1 AND vc.user_id = $2 AND vc.is_active = TRUE`,
+      `SELECT community_id, name, screen_name, photo_url, member_count, community_token
+       FROM vk_communities
+       WHERE id = $1 AND user_id = $2 AND is_active = TRUE`,
       [communityId, userId]
     );
 
@@ -252,15 +194,15 @@ export const getVkCommunityAnalytics = async (req: Request, res: Response) => {
       screen_name: string;
       photo_url: string | null;
       member_count: number | null;
-      access_token: string;
+      community_token: string;
     };
 
-    const { access_token } = community;
+    const { community_token } = community;
     const groupId = Number(community.community_id);
 
     let interval: "day" | "month" = "day";
     let intervals_count = 7;
-    let growth_count    = 0; // extra intervals for prev-period growth
+    let growth_count    = 0;
     switch (period) {
       case "7d":  interval = "day";   intervals_count = 7;  growth_count = 7;  break;
       case "30d": interval = "day";   intervals_count = 30; growth_count = 30; break;
@@ -292,23 +234,22 @@ export const getVkCommunityAnalytics = async (req: Request, res: Response) => {
       vkCall<VkStatDay[]>(
         "stats.get",
         { group_id: groupId, interval, intervals_count: fetchCount },
-        access_token
+        community_token
       ),
       vkCall<VkGroupInfo[]>(
         "groups.getById",
         { group_ids: groupId, fields: "members_count" },
-        access_token
+        community_token
       ),
       vkCall<{ items: VkPost[] }>(
         "wall.get",
         { owner_id: -groupId, count: 100, filter: "owner" },
-        access_token
+        community_token
       ),
     ]);
 
     const currentMemberCount = groupInfoArr[0]?.members_count ?? community.member_count ?? 0;
 
-    // VK returns oldest → newest; split into prev + current portions
     const prevStatsRaw = growth_count > 0 ? allStats.slice(0, growth_count) : [];
     const curStatsRaw  = growth_count > 0 ? allStats.slice(growth_count)    : allStats;
 
@@ -344,7 +285,6 @@ export const getVkCommunityAnalytics = async (req: Request, res: Response) => {
       ? ((summary.total_likes + summary.total_comments + summary.total_shares) / summary.total_reach) * 100
       : 0;
 
-    // Growth %: compare current vs previous period
     const pct = (cur: number, prev: number): number | null =>
       prev === 0 ? null : ((cur - prev) / prev) * 100;
 
@@ -365,7 +305,6 @@ export const getVkCommunityAnalytics = async (req: Request, res: Response) => {
       };
     }
 
-    // Save member_count snapshot (upsert — max 1 per hour)
     const communityIdNum = parseInt(community.community_id, 10);
     try {
       await query(
@@ -379,7 +318,6 @@ export const getVkCommunityAnalytics = async (req: Request, res: Response) => {
         [communityIdNum, currentMemberCount]
       );
 
-      // Subscriber growth from snapshots
       const snapResult = await query(
         `WITH
            latest AS (
@@ -405,7 +343,7 @@ export const getVkCommunityAnalytics = async (req: Request, res: Response) => {
         }
       }
     } catch {
-      // Snapshot table may not exist yet (pre-migration); non-fatal
+      // snapshots table may not exist yet — non-fatal
     }
 
     const allPosts = wallData.items.map((p) => ({
@@ -425,7 +363,6 @@ export const getVkCommunityAnalytics = async (req: Request, res: Response) => {
       .slice(0, 10)
       .map(({ _ts: _, ...rest }) => rest);
 
-    // Heatmap: group by (day_of_week, hour) using post.date unix timestamp
     const heatMap = new Map<string, { total: number; count: number }>();
     for (const p of wallData.items) {
       const d   = new Date(p.date * 1000);
