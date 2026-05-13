@@ -8,6 +8,15 @@ const COMMUNITY_LIMIT = 5;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+export class VkApiError extends Error {
+  code: number;
+  constructor(code: number, message: string) {
+    super(message);
+    this.code = code;
+    this.name = "VkApiError";
+  }
+}
+
 async function vkCall<T>(
   method: string,
   params: Record<string, string | number>,
@@ -21,8 +30,49 @@ async function vkCall<T>(
   }
   const res  = await fetch(url.toString());
   const data = await res.json() as { response?: T; error?: { error_msg: string; error_code: number } };
-  if (data.error) throw new Error(data.error.error_msg);
+  if (data.error) throw new VkApiError(data.error.error_code, data.error.error_msg);
   return data.response!;
+}
+
+function vkErrorMessage(err: unknown): { status: number; message: string; code?: number } {
+  if (err instanceof VkApiError) {
+    switch (err.code) {
+      case 5:    return { status: 400, code: 5,    message: "VK token invalid or expired. Get a new user token." };
+      case 15:   return { status: 400, code: 15,   message: "Access denied. Your VK account is not an admin of this community." };
+      case 17:   return { status: 400, code: 17,   message: "VK requires re-validation. Open the auth URL again in the same browser." };
+      case 27:   return { status: 400, code: 27,   message: "This is a community token. Use a user token (Implicit Flow): get it from oauth.vk.com." };
+      case 28:   return { status: 400, code: 28,   message: "This is an application token, not a user token. Use Implicit Flow." };
+      case 100:  return { status: 400, code: 100,  message: "Invalid community ID or parameters." };
+      case 113:  return { status: 400, code: 113,  message: "Community ID is invalid." };
+      case 203:  return { status: 400, code: 203,  message: "Access to community denied. Make sure your VK account is an admin." };
+      case 1051: return { status: 400, code: 1051, message: "Statistics are not available for this community type (needs 100+ subscribers, must be a public group, not an event)." };
+      default:   return { status: 400, code: err.code, message: `VK API error ${err.code}: ${err.message}` };
+    }
+  }
+  return { status: 500, message: "Internal server error" };
+}
+
+/** Parse user input ("12345", "metriqflow", "https://vk.com/metriqflow") → identifier for groups.getById */
+function parseGroupInput(raw: string): string | null {
+  const s = raw.trim();
+  if (!s) return null;
+
+  // URL forms
+  const urlMatch = s.match(/^(?:https?:\/\/)?(?:m\.|www\.)?vk\.com\/([A-Za-z0-9._-]+)\/?$/);
+  if (urlMatch) {
+    const tail = urlMatch[1]!;
+    const clubMatch = tail.match(/^(?:club|public|event)(\d+)$/);
+    if (clubMatch) return clubMatch[1]!;
+    return tail;
+  }
+
+  // Bare numeric
+  if (/^\d+$/.test(s)) return s;
+
+  // Screen name
+  if (/^[A-Za-z0-9._-]+$/.test(s)) return s;
+
+  return null;
 }
 
 function parseVkDate(v: number | string): string {
@@ -32,17 +82,33 @@ function parseVkDate(v: number | string): string {
 
 // ─── Add community ────────────────────────────────────────────────────────────
 
-/* POST /vk/communities  body: { community_token } */
+/* POST /vk/communities  body: { access_token, group_id }
+ *
+ * access_token: VK USER token obtained via Implicit Flow (oauth.vk.com/authorize ...
+ *   response_type=token, scope=stats,groups,wall,offline). Community tokens are
+ *   rejected — stats.get returns error 27 for them.
+ * group_id: numeric id, screen name, or vk.com/<…> URL.
+ */
 export const addVkCommunity = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
-    const { community_token } = req.body as { community_token?: string };
-    if (!community_token?.trim()) {
-      return res.status(400).json({ message: "community_token is required" });
+    const body = req.body as { access_token?: string; group_id?: string; community_token?: string };
+    const accessToken = (body.access_token ?? body.community_token ?? "").trim();
+    const groupInputRaw = (body.group_id ?? "").trim();
+
+    if (!accessToken) {
+      return res.status(400).json({ message: "access_token is required" });
     }
-    const token = community_token.trim();
+    if (!groupInputRaw) {
+      return res.status(400).json({ message: "group_id is required" });
+    }
+
+    const groupIdentifier = parseGroupInput(groupInputRaw);
+    if (!groupIdentifier) {
+      return res.status(400).json({ message: "Could not parse community ID. Use numeric id, screen name, or vk.com URL." });
+    }
 
     // Enforce limit
     const countRes = await query(
@@ -54,7 +120,7 @@ export const addVkCommunity = async (req: Request, res: Response) => {
       return res.status(400).json({ message: `Community limit reached (${COMMUNITY_LIMIT} max)` });
     }
 
-    // Validate token — calling without group_ids returns the community the token belongs to
+    // Resolve community meta
     type VkGroupInfo = {
       id: number;
       name: string;
@@ -67,13 +133,38 @@ export const addVkCommunity = async (req: Request, res: Response) => {
     try {
       const result = await vkCall<VkGroupInfo[]>(
         "groups.getById",
-        { fields: "members_count" },
-        token
+        { group_ids: groupIdentifier, fields: "members_count" },
+        accessToken
       );
-      if (!result || result.length === 0) throw new Error("empty");
+      if (!result || result.length === 0) {
+        return res.status(400).json({ message: "Community not found" });
+      }
       group = result[0]!;
-    } catch {
-      return res.status(400).json({ message: "Invalid token or insufficient community permissions" });
+    } catch (err) {
+      const mapped = vkErrorMessage(err);
+      console.error("VK ADD COMMUNITY (groups.getById):", err);
+      return res.status(mapped.status).json({ message: mapped.message, code: mapped.code });
+    }
+
+    // Validate token works for stats — this is what actually matters for analytics.
+    // 1051 (stats unavailable for community type) is a community-config issue, not
+    // a token issue — let it through with a warning so the user sees the community
+    // saved but is told analytics won't work.
+    let statsWarning: string | null = null;
+    try {
+      await vkCall(
+        "stats.get",
+        { group_id: group.id, interval: "day", intervals_count: 1 },
+        accessToken
+      );
+    } catch (err) {
+      const mapped = vkErrorMessage(err);
+      console.error("VK ADD COMMUNITY (stats.get):", err);
+      if (err instanceof VkApiError && err.code === 1051) {
+        statsWarning = mapped.message;
+      } else {
+        return res.status(mapped.status).json({ message: mapped.message, code: mapped.code });
+      }
     }
 
     // Upsert
@@ -88,14 +179,14 @@ export const addVkCommunity = async (req: Request, res: Response) => {
          SET community_token = $1, name = $2, screen_name = $3,
              photo_url = $4, member_count = $5, is_active = TRUE
          WHERE user_id = $6 AND community_id = $7`,
-        [token, group.name, group.screen_name, group.photo_50 ?? null, group.members_count ?? null, userId, group.id]
+        [accessToken, group.name, group.screen_name, group.photo_50 ?? null, group.members_count ?? null, userId, group.id]
       );
     } else {
       await query(
         `INSERT INTO vk_communities
            (user_id, community_id, name, screen_name, photo_url, member_count, community_token)
          VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [userId, group.id, group.name, group.screen_name, group.photo_50 ?? null, group.members_count ?? null, token]
+        [userId, group.id, group.name, group.screen_name, group.photo_50 ?? null, group.members_count ?? null, accessToken]
       );
     }
 
@@ -105,12 +196,13 @@ export const addVkCommunity = async (req: Request, res: Response) => {
     );
 
     return res.json({
-      id:           (row.rows[0] as { id: number }).id,
-      community_id: String(group.id),
-      name:         group.name,
-      screen_name:  group.screen_name,
-      photo_url:    group.photo_50 ?? null,
-      member_count: group.members_count ?? null,
+      id:            (row.rows[0] as { id: number }).id,
+      community_id:  String(group.id),
+      name:          group.name,
+      screen_name:   group.screen_name,
+      photo_url:     group.photo_50 ?? null,
+      member_count:  group.members_count ?? null,
+      stats_warning: statsWarning,
     });
   } catch (err) {
     console.error("VK ADD COMMUNITY ERROR:", err);
@@ -230,23 +322,41 @@ export const getVkCommunityAnalytics = async (req: Request, res: Response) => {
 
     const fetchCount = intervals_count + growth_count;
 
-    const [allStats, groupInfoArr, wallData] = await Promise.all([
-      vkCall<VkStatDay[]>(
-        "stats.get",
-        { group_id: groupId, interval, intervals_count: fetchCount },
-        community_token
-      ),
-      vkCall<VkGroupInfo[]>(
-        "groups.getById",
-        { group_ids: groupId, fields: "members_count" },
-        community_token
-      ),
-      vkCall<{ items: VkPost[] }>(
-        "wall.get",
-        { owner_id: -groupId, count: 100, filter: "owner" },
-        community_token
-      ),
-    ]);
+    let allStats: VkStatDay[];
+    let groupInfoArr: VkGroupInfo[];
+    let wallData: { items: VkPost[] };
+    try {
+      [allStats, groupInfoArr, wallData] = await Promise.all([
+        vkCall<VkStatDay[]>(
+          "stats.get",
+          { group_id: groupId, interval, intervals_count: fetchCount },
+          community_token
+        ),
+        vkCall<VkGroupInfo[]>(
+          "groups.getById",
+          { group_ids: groupId, fields: "members_count" },
+          community_token
+        ),
+        vkCall<{ items: VkPost[] }>(
+          "wall.get",
+          { owner_id: -groupId, count: 100, filter: "owner" },
+          community_token
+        ),
+      ]);
+    } catch (err) {
+      const mapped = vkErrorMessage(err);
+      console.error("VK ANALYTICS (vk api):", err);
+      // 27/28/5 → token is the wrong kind or expired → mark community as needing reauth
+      if (err instanceof VkApiError && (err.code === 27 || err.code === 28 || err.code === 5)) {
+        return res.status(409).json({
+          error: "token_invalid",
+          code: err.code,
+          message: mapped.message,
+          message_ru: "Токен сообщества больше не подходит. Удалите сообщество и добавьте заново, используя пользовательский токен (Implicit Flow).",
+        });
+      }
+      return res.status(mapped.status).json({ message: mapped.message, code: mapped.code });
+    }
 
     const currentMemberCount = groupInfoArr[0]?.members_count ?? community.member_count ?? 0;
 

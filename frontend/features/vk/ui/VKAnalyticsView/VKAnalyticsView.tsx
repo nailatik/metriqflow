@@ -192,6 +192,7 @@ export function VKAnalyticsView() {
   const [communitiesLoading, setCommunitiesLoading] = useState(true);
   const [lastUpdated,        setLastUpdated]        = useState<Date | null>(null);
   const [minutesAgo,         setMinutesAgo]         = useState(0);
+  const [fetchError,         setFetchError]         = useState<string | null>(null);
 
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -207,14 +208,26 @@ export function VKAnalyticsView() {
   const fetchAnalytics = useCallback(() => {
     if (!selectedId) return;
     setLoading(true);
+    setFetchError(null);
     http.get<Analytics>(`/vk/communities/${selectedId}/analytics?period=${period}`)
       .then((r) => {
         setAnalytics(r.data);
         setLastUpdated(new Date());
         setMinutesAgo(0);
       })
+      .catch((e: unknown) => {
+        const data = (e as { response?: { status?: number; data?: { error?: string; message?: string; message_ru?: string; code?: number } } })?.response;
+        const status = data?.status;
+        const payload = data?.data;
+        if (status === 409 && payload?.error === "token_invalid") {
+          setFetchError(payload.message_ru ?? payload.message ?? t("tokenInvalid"));
+        } else {
+          setFetchError(payload?.message ?? t("loadError"));
+        }
+        setAnalytics(null);
+      })
       .finally(() => setLoading(false));
-  }, [selectedId, period]);
+  }, [selectedId, period, t]);
 
   useEffect(() => {
     setAnalytics(null);
@@ -299,6 +312,13 @@ export function VKAnalyticsView() {
           </div>
         </div>
       </div>
+
+      {fetchError && !loading && (
+        <div className="bg-error/5 border border-error/30 rounded-xl px-5 py-4 flex flex-col gap-2">
+          <p className="text-sm font-semibold text-error">{t("loadError")}</p>
+          <p className="text-sm text-textSecondary">{fetchError}</p>
+        </div>
+      )}
 
       {loading && !analytics && (
         <p className="text-textSecondary text-sm">{t("loadingData")}</p>
