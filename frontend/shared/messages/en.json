@@ -177,6 +177,9 @@
     "timezoneDetected": "Auto-detected",
     "noChannelWarning": "Select at least one delivery channel",
     "saving": "Saving...",
+    "edit": "Edit",
+    "editModalTitle": "Edit schedule",
+    "save": "Save",
     "noSchedules": "No schedules",
     "schedulesCount": "{n} schedules",
     "sourceUsed": "already set"

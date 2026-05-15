@@ -177,6 +177,9 @@
     "timezoneDetected": "Определён автоматически",
     "noChannelWarning": "Выберите хотя бы один канал доставки",
     "saving": "Сохранение...",
+    "edit": "Редактировать",
+    "editModalTitle": "Редактировать расписание",
+    "save": "Сохранить",
     "noSchedules": "Нет расписаний",
     "schedulesCount": "{n} расписаний",
     "sourceUsed": "уже создан"

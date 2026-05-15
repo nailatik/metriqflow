@@ -147,16 +147,32 @@ export const updateSchedule = async (req: Request, res: Response) => {
     if (!scheduleId) return res.status(400).json({ message: "Invalid id" });
 
     const {
-      enabled, paused, title,
+      enabled, paused, title, send_hour, frequency_days,
       channels: rawChannels,
-    } = req.body as { enabled?: boolean; paused?: boolean; title?: string; channels?: ChannelInput[] };
+    } = req.body as {
+      enabled?: boolean; paused?: boolean; title?: string;
+      send_hour?: number; frequency_days?: number;
+      channels?: ChannelInput[];
+    };
 
     const sets: string[] = [];
     const vals: unknown[] = [scheduleId, userId];
 
-    if (enabled !== undefined) { vals.push(enabled); sets.push(`enabled = $${vals.length}`); }
-    if (paused  !== undefined) { vals.push(paused);  sets.push(`paused = $${vals.length}`);  }
-    if (title) { vals.push(title.trim().slice(0, 255)); sets.push(`title = $${vals.length}`); }
+    if (enabled          !== undefined) { vals.push(enabled);                      sets.push(`enabled = $${vals.length}`);          }
+    if (paused           !== undefined) { vals.push(paused);                       sets.push(`paused = $${vals.length}`);           }
+    if (title)                          { vals.push(title.trim().slice(0, 255));    sets.push(`title = $${vals.length}`);            }
+    if (frequency_days   !== undefined) { vals.push(frequency_days);               sets.push(`frequency_days = $${vals.length}`);   }
+    if (send_hour        !== undefined) {
+      vals.push(send_hour);
+      sets.push(`send_hour = $${vals.length}`);
+      vals.push(send_hour);
+      const sh = vals.length;
+      sets.push(`next_send_at = CASE
+        WHEN EXTRACT(HOUR FROM NOW() AT TIME ZONE timezone) >= $${sh}
+          THEN (DATE_TRUNC('day', NOW() AT TIME ZONE timezone) + INTERVAL '1 day' + make_interval(hours => $${sh}::int)) AT TIME ZONE timezone
+          ELSE (DATE_TRUNC('day', NOW() AT TIME ZONE timezone) + make_interval(hours => $${sh}::int)) AT TIME ZONE timezone
+        END`);
+    }
 
     if (sets.length > 0) {
       const result = await query(

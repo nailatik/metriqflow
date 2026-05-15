@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { observer } from "mobx-react-lite";
 import { useSchedulesStore } from "@/shared/store/StoreProvider";
 import { CreateScheduleModal } from "../CreateScheduleModal/CreateScheduleModal";
+import { EditScheduleModal } from "../EditScheduleModal/EditScheduleModal";
 import type { Schedule } from "@/entities/schedule/types";
 
 function pad(n: number) { return String(n).padStart(2, "0"); }
@@ -27,12 +28,14 @@ function ScheduleCard({
   onToggle,
   onPause,
   onDelete,
+  onEdit,
   t,
 }: {
   schedule: Schedule;
   onToggle: (id: number, enabled: boolean) => void;
   onPause: (id: number, paused: boolean) => void;
   onDelete: (id: number) => void;
+  onEdit: (s: Schedule) => void;
   t: ReturnType<typeof useTranslations>;
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -136,6 +139,12 @@ function ScheduleCard({
         >
           {schedule.paused ? t("resume") : t("pause")}
         </button>
+        <button
+          onClick={() => onEdit(schedule)}
+          className="text-xs font-medium text-textSecondary hover:text-primary transition hover:underline"
+        >
+          {t("edit" as Parameters<typeof t>[0])}
+        </button>
 
         {confirmDelete ? (
           <div className="flex items-center gap-2 ml-auto">
@@ -157,6 +166,7 @@ export const SchedulesList = observer(() => {
   const t = useTranslations("Schedules");
   const schedulesStore = useSchedulesStore();
   const [modalOpen, setModalOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<Schedule | null>(null);
 
   useEffect(() => { schedulesStore.fetchSchedules(); }, [schedulesStore]);
 
@@ -191,11 +201,17 @@ export const SchedulesList = observer(() => {
             onToggle={(id, enabled) => schedulesStore.updateSchedule({ id, enabled })}
             onPause={(id, paused) => schedulesStore.updateSchedule({ id, paused })}
             onDelete={(id) => schedulesStore.deleteSchedule(id)}
+            onEdit={(s) => setEditTarget(s)}
           />
         ))}
       </div>
 
       <CreateScheduleModal open={modalOpen} onClose={() => setModalOpen(false)} />
+      <EditScheduleModal
+        open={!!editTarget}
+        schedule={editTarget}
+        onClose={() => setEditTarget(null)}
+      />
     </div>
   );
 });

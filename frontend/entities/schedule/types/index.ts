@@ -43,5 +43,7 @@ export interface UpdateSchedule {
   enabled?: boolean;
   paused?: boolean;
   title?: string;
+  send_hour?: number;
+  frequency_days?: ScheduleFrequency;
   channels?: { channel: "telegram" | "email"; email?: string; enabled: boolean }[];
 }
