@@ -32,32 +32,49 @@ const FREQS: { days: ScheduleFrequency; key: string }[] = [
   { days: 30, key: "freq30" },
 ];
 
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
+
+function pad(n: number) { return String(n).padStart(2, "0"); }
+
+function getBrowserTimezone(): string {
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { return "UTC"; }
+}
+
 export const CreateScheduleModal = observer(({ open, onClose, onCreated }: Props) => {
   const t = useTranslations("Schedules");
   const locale = useLocale();
   const schedulesStore = useSchedulesStore();
   const userStore = useUserStore();
 
-  const [source, setSource]     = useState<ReportSource>("all");
-  const [format, setFormat]     = useState<ReportFormat>("csv");
-  const [freq, setFreq]         = useState<ScheduleFrequency>(7);
-  const [title, setTitle]       = useState("");
-  const [tgEnabled, setTg]      = useState(false);
-  const [emailEnabled, setEmail] = useState(false);
+  const usedSources = new Set(schedulesStore.list.map((s) => s.source));
+  const firstFreeSource = (["all", "telegram", "vk"] as ReportSource[]).find((s) => !usedSources.has(s)) ?? "all";
+
+  const [source, setSource]       = useState<ReportSource>(firstFreeSource);
+  const [format, setFormat]       = useState<ReportFormat>("csv");
+  const [freq, setFreq]           = useState<ScheduleFrequency>(7);
+  const [sendHour, setSendHour]   = useState(9);
+  const [timezone]                = useState(() => getBrowserTimezone());
+  const [title, setTitle]         = useState("");
+  const [tgEnabled, setTg]        = useState(false);
+  const [emailEnabled, setEmail]  = useState(false);
   const [emailAddr, setEmailAddr] = useState("");
-  const [loading, setLoading]   = useState(false);
+  const [loading, setLoading]     = useState(false);
 
   const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (open) {
-      const src = source === "all" ? (locale === "ru" ? "Все" : "All") : source === "telegram" ? "Telegram" : "VK";
+      const free = (["all", "telegram", "vk"] as ReportSource[]).find((s) => !usedSources.has(s)) ?? "all";
+      setSource(free);
+      const src = free === "all" ? (locale === "ru" ? "Все" : "All") : free === "telegram" ? "Telegram" : "VK";
       setTitle(`${src} · ${freq}d auto`);
       setEmailAddr(userStore.user?.email ?? "");
     }
-  }, [open, source, freq, locale]);
+  }, [open]);
 
   if (!open) return null;
+
+  const isSourceTaken = usedSources.has(source);
 
   const handleSubmit = async () => {
     const channels = [];
@@ -70,6 +87,7 @@ export const CreateScheduleModal = observer(({ open, onClose, onCreated }: Props
     const result = await schedulesStore.createSchedule({
       title: title.trim() || undefined,
       source, format, frequency_days: freq, locale,
+      send_hour: sendHour, timezone,
       channels,
     });
     setLoading(false);
@@ -97,15 +115,31 @@ export const CreateScheduleModal = observer(({ open, onClose, onCreated }: Props
           <div>
             <p className="text-sm font-medium text-textSecondary mb-2">{t("labelSource")}</p>
             <div className="flex gap-2">
-              {SOURCES.map((s) => (
-                <button key={s.id} onClick={() => setSource(s.id)}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition ${
-                    source === s.id ? "bg-primary text-white border-primary"
-                      : "border-border text-textSecondary hover:border-primary hover:text-primary"
-                  }`}>
-                  {t(s.key as Parameters<typeof t>[0])}
-                </button>
-              ))}
+              {SOURCES.map((s) => {
+                const taken = usedSources.has(s.id);
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => !taken && setSource(s.id)}
+                    disabled={taken}
+                    title={taken ? t("sourceUsed" as Parameters<typeof t>[0]) : undefined}
+                    className={`flex-1 py-2 rounded-lg text-sm font-medium border transition relative ${
+                      taken
+                        ? "border-border text-textSecondary/40 bg-surface cursor-not-allowed opacity-50"
+                        : source === s.id
+                          ? "bg-primary text-white border-primary"
+                          : "border-border text-textSecondary hover:border-primary hover:text-primary"
+                    }`}
+                  >
+                    {t(s.key as Parameters<typeof t>[0])}
+                    {taken && (
+                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] bg-border text-textSecondary px-1.5 rounded-full leading-4 whitespace-nowrap">
+                        {t("sourceUsed" as Parameters<typeof t>[0])}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -143,6 +177,25 @@ export const CreateScheduleModal = observer(({ open, onClose, onCreated }: Props
                   {t(f.key as Parameters<typeof t>[0])}
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Send time */}
+          <div>
+            <p className="text-sm font-medium text-textSecondary mb-2">{t("labelTime" as Parameters<typeof t>[0])}</p>
+            <div className="flex items-center gap-3">
+              <select
+                value={sendHour}
+                onChange={(e) => setSendHour(Number(e.target.value))}
+                className="px-3 py-2 border border-border rounded-xl text-sm bg-surface text-textMain outline-none focus:border-primary"
+              >
+                {HOURS.map((h) => (
+                  <option key={h} value={h}>{pad(h)}:00</option>
+                ))}
+              </select>
+              <span className="text-xs text-textSecondary">
+                {timezone} · {t("timezoneDetected" as Parameters<typeof t>[0])}
+              </span>
             </div>
           </div>
 
@@ -193,7 +246,7 @@ export const CreateScheduleModal = observer(({ open, onClose, onCreated }: Props
         <div className="flex gap-3 px-6 py-4 border-t border-border">
           <Button variant="secondary" onClick={onClose} className="flex-1">{t("cancel")}</Button>
           <Button variant="primary" onClick={handleSubmit}
-            disabled={loading || noChannel || !title.trim()}
+            disabled={loading || noChannel || !title.trim() || isSourceTaken}
             className="flex-1">
             {loading ? t("saving") : t("create")}
           </Button>

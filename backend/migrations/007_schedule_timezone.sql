@@ -1,0 +1,2 @@
+ALTER TABLE report_schedules
+  ADD COLUMN IF NOT EXISTS timezone TEXT NOT NULL DEFAULT 'UTC';

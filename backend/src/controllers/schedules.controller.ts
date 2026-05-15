@@ -16,7 +16,7 @@ export const getSchedules = async (req: Request, res: Response) => {
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
     const schedules = await query(
-      `SELECT id, title, source, format, frequency_days, locale,
+      `SELECT id, title, source, format, frequency_days, locale, send_hour, timezone,
               enabled, paused, next_send_at, last_sent_at, last_status, created_at
        FROM report_schedules WHERE user_id = $1 ORDER BY created_at DESC`,
       [userId]
@@ -62,32 +62,57 @@ export const createSchedule = async (req: Request, res: Response) => {
       format: rawFormat = "csv",
       frequency_days: rawFreq = 7,
       locale: rawLocale = "en",
+      send_hour: rawHour = 9,
+      timezone: rawTz = "UTC",
       channels: rawChannels = [],
     } = req.body as {
       title?: string; source?: string; format?: string;
-      frequency_days?: number; locale?: string; channels?: ChannelInput[];
+      frequency_days?: number; locale?: string;
+      send_hour?: number; timezone?: string;
+      channels?: ChannelInput[];
     };
 
-    const validSources  = new Set(["all", "telegram", "vk"]);
-    const validFormats  = new Set(["csv", "pdf", "xml"]);
-    const validLocales  = new Set(["en", "ru"]);
-    const validFreqs    = new Set([1, 7, 30]);
+    const validSources = new Set(["all", "telegram", "vk"]);
+    const validFormats = new Set(["csv", "pdf", "xml"]);
+    const validLocales = new Set(["en", "ru"]);
+    const validFreqs   = new Set([1, 7, 30]);
 
-    const source    = validSources.has(rawSource)  ? rawSource  : "all";
-    const format    = validFormats.has(rawFormat)  ? rawFormat  : "csv";
-    const locale    = validLocales.has(rawLocale)  ? rawLocale  : "en";
-    const freq      = validFreqs.has(Number(rawFreq)) ? Number(rawFreq) : 7;
+    const source   = validSources.has(rawSource) ? rawSource : "all";
+    const format   = validFormats.has(rawFormat) ? rawFormat : "csv";
+    const locale   = validLocales.has(rawLocale) ? rawLocale : "en";
+    const freq     = validFreqs.has(Number(rawFreq)) ? Number(rawFreq) : 7;
+    const sendHour = Math.min(23, Math.max(0, Math.floor(Number(rawHour) || 9)));
+
+    // Validate IANA timezone — PostgreSQL will throw if invalid, we catch below
+    const timezone = typeof rawTz === "string" && rawTz.trim().length > 0 ? rawTz.trim() : "UTC";
 
     const title = rawTitle?.trim() || `${source} · ${freq}d auto`;
     if (title.length > 255) return res.status(400).json({ message: "Title too long" });
 
+    const existing = await query(
+      "SELECT id FROM report_schedules WHERE user_id = $1 AND source = $2",
+      [userId, source]
+    );
+    if (existing.rows.length > 0) {
+      return res.status(409).json({ message: "Schedule for this source already exists" });
+    }
+
+    // $7 = sendHour (column), $8 = timezone (column + AT TIME ZONE), $9 = sendHour (CASE calc)
+    // Split sendHour into two params to avoid PostgreSQL "inconsistent types" error
     const insert = await query(
       `INSERT INTO report_schedules
-         (user_id, title, source, format, frequency_days, locale, next_send_at)
-       VALUES ($1, $2, $3, $4, $5, $6, NOW() + ($5::text || ' days')::interval)
-       RETURNING id, title, source, format, frequency_days, locale, enabled, paused,
-                 next_send_at, last_sent_at, last_status, created_at`,
-      [userId, title, source, format, freq, locale]
+         (user_id, title, source, format, frequency_days, locale, send_hour, timezone, next_send_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8,
+         CASE
+           WHEN EXTRACT(HOUR FROM NOW() AT TIME ZONE $8) >= $9
+             THEN (DATE_TRUNC('day', NOW() AT TIME ZONE $8) + INTERVAL '1 day' + make_interval(hours => $9::int)) AT TIME ZONE $8
+           ELSE
+             (DATE_TRUNC('day', NOW() AT TIME ZONE $8) + make_interval(hours => $9::int)) AT TIME ZONE $8
+         END
+       )
+       RETURNING id, title, source, format, frequency_days, locale, send_hour, timezone,
+                 enabled, paused, next_send_at, last_sent_at, last_status, created_at`,
+      [userId, title, source, format, freq, locale, sendHour, timezone, sendHour]
     );
     const schedule = insert.rows[0] as { id: number };
 
@@ -156,6 +181,7 @@ export const updateSchedule = async (req: Request, res: Response) => {
 
     const updated = await query(
       `SELECT rs.id, rs.title, rs.source, rs.format, rs.frequency_days, rs.locale,
+              rs.send_hour, rs.timezone,
               rs.enabled, rs.paused, rs.next_send_at, rs.last_sent_at, rs.last_status, rs.created_at,
               json_agg(json_build_object('channel', sc.channel, 'email', sc.email, 'enabled', sc.enabled))
                 FILTER (WHERE sc.id IS NOT NULL) AS channels

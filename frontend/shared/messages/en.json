@@ -123,10 +123,10 @@
     }
   },
   "Schedules": {
-    "title": "Auto-reports",
+    "title": "Automatic reports",
     "subtitle": "Scheduled delivery to Telegram or email",
-    "create": "+ New schedule",
-    "empty": "No schedules yet",
+    "create": "+ New auto-report",
+    "empty": "No automatic reports yet",
     "emptyHint": "Create a schedule and get reports delivered automatically",
     "paused": "Paused",
     "disabled": "Off",
@@ -140,11 +140,11 @@
     "nextSend": "Next",
     "lastSent": "Last sent",
     "email": "Email",
-    "modalTitle": "New schedule",
-    "labelSource": "Source",
+    "modalTitle": "New auto-report",
+    "labelSource": "Data source",
     "labelFormat": "Format",
     "labelFrequency": "Frequency",
-    "labelDelivery": "Deliver to",
+    "labelDelivery": "Delivery",
     "labelTitle": "Schedule name",
     "sourceAll": "All",
     "sourceTelegram": "Telegram",
@@ -154,10 +154,14 @@
     "freq7": "Weekly",
     "freq30": "Monthly",
     "tgHint": "bot chat",
+    "tgDelivery": "Telegram bot",
+    "labelTime": "Send time",
+    "timezoneDetected": "Auto-detected",
     "noChannelWarning": "Select at least one delivery channel",
     "saving": "Saving...",
     "noSchedules": "No schedules",
-    "schedulesCount": "{n} schedules"
+    "schedulesCount": "{n} schedules",
+    "sourceUsed": "already set"
   },
   "Reports": {
     "title": "Reports",
@@ -189,7 +193,7 @@
     "recommended": "rec",
     "generate": "Generate",
     "generating": "Generating...",
-    "schedulesTab": "Auto-reports"
+    "schedulesTab": "Automatic reports"
   },
   "Integrations": {
     "title": "Integrations",

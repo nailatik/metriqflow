@@ -15,6 +15,8 @@ type ScheduleRow = {
   format: string;
   frequency_days: number;
   locale: string;
+  send_hour: number;
+  timezone: string;
 };
 
 type ChannelRow = {
@@ -33,7 +35,7 @@ export function startScheduler(): void {
   cron.schedule("* * * * *", async () => {
     try {
       const due = await query(
-        `SELECT id, user_id, title, source, format, frequency_days, locale
+        `SELECT id, user_id, title, source, format, frequency_days, locale, send_hour, timezone
          FROM report_schedules
          WHERE enabled = TRUE AND paused = FALSE AND next_send_at <= NOW()
          LIMIT 20`,
@@ -55,14 +57,19 @@ export function startScheduler(): void {
 
 async function processSchedule(sched: ScheduleRow): Promise<void> {
   // Lock this schedule row to prevent double-processing
+  // Advance next_send_at by frequency_days at the same send_hour in the stored timezone
   const lock = await query(
     `UPDATE report_schedules
-     SET next_send_at = NOW() + ($1::text || ' days')::interval,
+     SET next_send_at = (
+           DATE_TRUNC('day', NOW() AT TIME ZONE $1) +
+           make_interval(days => $2::int) +
+           make_interval(hours => $3::int)
+         ) AT TIME ZONE $1,
          last_sent_at = NOW(),
          last_status  = 'pending'
-     WHERE id = $2 AND next_send_at <= NOW()
+     WHERE id = $4 AND next_send_at <= NOW()
      RETURNING id`,
-    [sched.frequency_days, sched.id]
+    [sched.timezone, sched.frequency_days, sched.send_hour, sched.id]
   );
   if (lock.rowCount === 0) return; // Already processed by another instance
 

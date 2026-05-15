@@ -123,10 +123,10 @@
     }
   },
   "Schedules": {
-    "title": "Авторепорты",
+    "title": "Автоматические отчёты",
     "subtitle": "Доставка отчётов в Telegram или на email",
-    "create": "+ Новый авторепорт",
-    "empty": "Авторепортов пока нет",
+    "create": "+ Новый автоотчёт",
+    "empty": "Автоматических отчётов пока нет",
     "emptyHint": "Создайте расписание и получайте отчёты автоматически",
     "paused": "Пауза",
     "disabled": "Выкл",
@@ -140,11 +140,11 @@
     "nextSend": "Следующий",
     "lastSent": "Последний",
     "email": "Email",
-    "modalTitle": "Новый авторепорт",
-    "labelSource": "Источник",
+    "modalTitle": "Новый автоотчёт",
+    "labelSource": "Источник данных",
     "labelFormat": "Формат",
     "labelFrequency": "Частота",
-    "labelDelivery": "Доставить в",
+    "labelDelivery": "Доставка",
     "labelTitle": "Название",
     "sourceAll": "Все",
     "sourceTelegram": "Telegram",
@@ -154,10 +154,14 @@
     "freq7": "Еженедельно",
     "freq30": "Ежемесячно",
     "tgHint": "в чат с ботом",
+    "tgDelivery": "Telegram-бот",
+    "labelTime": "Время отправки",
+    "timezoneDetected": "Определён автоматически",
     "noChannelWarning": "Выберите хотя бы один канал доставки",
     "saving": "Сохранение...",
     "noSchedules": "Нет расписаний",
-    "schedulesCount": "{n} расписаний"
+    "schedulesCount": "{n} расписаний",
+    "sourceUsed": "уже создан"
   },
   "Reports": {
     "title": "Отчёты",
@@ -189,7 +193,7 @@
     "recommended": "рек",
     "generate": "Сформировать",
     "generating": "Формируется...",
-    "schedulesTab": "Авторепорты"
+    "schedulesTab": "Автоматические отчёты"
   },
   "Integrations": {
     "title": "Интеграции",

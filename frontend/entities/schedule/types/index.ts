@@ -16,6 +16,8 @@ export interface Schedule {
   format: ReportFormat;
   frequency_days: ScheduleFrequency;
   locale: string;
+  send_hour: number;
+  timezone: string;
   enabled: boolean;
   paused: boolean;
   next_send_at: string;
@@ -31,6 +33,8 @@ export interface CreateSchedule {
   format: ReportFormat;
   frequency_days: ScheduleFrequency;
   locale: string;
+  send_hour: number;
+  timezone: string;
   channels: { channel: "telegram" | "email"; email?: string; enabled: boolean }[];
 }
 

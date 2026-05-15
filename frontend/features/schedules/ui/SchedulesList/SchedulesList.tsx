@@ -7,6 +7,8 @@ import { useSchedulesStore } from "@/shared/store/StoreProvider";
 import { CreateScheduleModal } from "../CreateScheduleModal/CreateScheduleModal";
 import type { Schedule } from "@/entities/schedule/types";
 
+function pad(n: number) { return String(n).padStart(2, "0"); }
+
 const FREQ_LABEL: Record<number, string> = {
   1:  "Daily",
   7:  "Weekly",
@@ -70,30 +72,50 @@ function ScheduleCard({
       </div>
 
       {/* Meta badges */}
-      <div className="flex items-center gap-2 flex-wrap text-xs">
-        <span className="px-2 py-0.5 rounded-full bg-surface border border-border text-textSecondary">{schedule.source}</span>
-        <span className="px-2 py-0.5 rounded-full bg-surface border border-border text-textSecondary">.{schedule.format.toUpperCase()}</span>
-        <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
-          {FREQ_LABEL[schedule.frequency_days] ?? `${schedule.frequency_days}d`}
-        </span>
-      </div>
+      {(() => {
+        const SOURCE_MAP: Record<string, string> = {
+          all: t("sourceAll"),
+          telegram: t("sourceTelegram"),
+          vk: t("sourceVk"),
+        };
+        return (
+          <div className="flex items-center gap-2 flex-wrap text-xs">
+            <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+              {SOURCE_MAP[schedule.source] ?? schedule.source}
+            </span>
+            <span className="px-2 py-0.5 rounded-full bg-surface border border-border text-textSecondary">.{schedule.format.toUpperCase()}</span>
+            <span className="px-2 py-0.5 rounded-full bg-surface border border-border text-textSecondary">
+              {FREQ_LABEL[schedule.frequency_days] ?? `${schedule.frequency_days}d`}
+            </span>
+          </div>
+        );
+      })()}
 
       {/* Channels */}
-      <div className="flex gap-4 text-xs text-textSecondary">
-        {tgCh && (
-          <span className={tgCh.enabled ? "text-primary" : "line-through"}>
-            ✈️ Telegram
-          </span>
-        )}
-        {emailCh && (
-          <span className={emailCh.enabled ? "text-primary" : "line-through"}>
-            ✉️ {emailCh.email ?? t("email")}
-          </span>
-        )}
-      </div>
+      {(tgCh || emailCh) && (
+        <div className="text-xs text-textSecondary space-y-1">
+          <span className="font-medium">{t("labelDelivery")}:</span>
+          <div className="flex gap-4">
+            {tgCh && (
+              <span className={tgCh.enabled ? "text-primary" : "line-through"}>
+                ✈️ {t("tgDelivery")}
+              </span>
+            )}
+            {emailCh && (
+              <span className={emailCh.enabled ? "text-primary" : "line-through"}>
+                ✉️ {emailCh.email ?? t("email")}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Timing */}
       <div className="text-xs text-textSecondary space-y-0.5">
+        <p>
+          {pad(schedule.send_hour)}:00
+          <span className="text-textSecondary/50 ml-1">({schedule.timezone})</span>
+        </p>
         <p>{t("nextSend")}: <span className="text-textMain">{nextDate}</span></p>
         {schedule.last_sent_at && (
           <p>{t("lastSent")}: <span className="text-textMain">{lastDate}</span></p>
