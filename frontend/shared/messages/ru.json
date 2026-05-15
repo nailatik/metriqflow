@@ -60,7 +60,8 @@
     "submit": "Войти",
     "loading": "Вход...",
     "noAccount": "Нет аккаунта?",
-    "signUp": "Зарегистрироваться"
+    "signUp": "Зарегистрироваться",
+    "invalidCredentials": "Неправильный логин или пароль"
   },
   "Register": {
     "step1": {

@@ -46,8 +46,10 @@ api.interceptors.response.use(
     const message: string | undefined = error.response?.data?.message;
 
     const isRefreshEndpoint = originalRequest?.url?.includes("/auth/refresh");
+    const isAuthEndpoint = originalRequest?.url?.includes("/auth/login") ||
+                           originalRequest?.url?.includes("/auth/register");
 
-    if (status === 401 && !originalRequest._retry && !isRefreshEndpoint) {
+    if (status === 401 && !originalRequest._retry && !isRefreshEndpoint && !isAuthEndpoint) {
       originalRequest._retry = true;
       try {
         const res = await api.post<{ accessToken: string }>("/auth/refresh");

@@ -16,11 +16,17 @@ export const LoginForm = observer(() => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     const ok = await userStore.login(email, password);
-    if (ok) router.push("/app");
+    if (ok) {
+      router.push("/app");
+    } else {
+      setError(t("invalidCredentials"));
+    }
   };
 
   return (
@@ -48,6 +54,10 @@ export const LoginForm = observer(() => {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
+
+        {error && (
+          <p className="text-sm text-red-500 text-center -mb-1">{error}</p>
+        )}
 
         <Button variant="primary" disabled={uiStore.loading} type="submit" className="w-full">
           {uiStore.loading ? t("loading") : t("submit")}
