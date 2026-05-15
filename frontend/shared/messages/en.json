@@ -120,6 +120,23 @@
     "recentActivity": {
       "title": "Recent activity",
       "empty": "No recent activity yet"
+    },
+    "onboarding": {
+      "title": "Getting started",
+      "subtitle": "Complete a few steps to finish setting up",
+      "progress": "{done} of {total} done",
+      "allDone": "All set!",
+      "allDoneDesc": "Your account is fully configured and ready to go.",
+      "dismiss": "Dismiss",
+      "go": "Set up →",
+      "step1Title": "Connect a Telegram channel",
+      "step1Desc": "Add the analytics bot to your channel in the Integrations section",
+      "step2Title": "Add a VK community",
+      "step2Desc": "Connect a public VK community to collect analytics",
+      "step3Title": "Create your first report",
+      "step3Desc": "Generate a CSV, PDF or XML report from your data",
+      "step4Title": "Set up auto-reports",
+      "step4Desc": "Receive reports on a schedule to Telegram or email"
     }
   },
   "Schedules": {
