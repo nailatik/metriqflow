@@ -145,7 +145,7 @@ export default observer(function ProfilePage() {
             <InfoField label={tP("fullName")} value={user?.full_name} />
             <InfoField label={tP("email")} value={user?.email} />
             <InfoField label={tP("phone")} value={user?.phone} />
-            <InfoField label={tP("birthDate")} value={user?.birth_date} />
+            <InfoField label={tP("birthDate")} value={user?.birth_date ? user.birth_date.slice(0, 10) : undefined} />
             <InfoField label={tP("organization")} value={user?.organization} />
             <InfoField label={tP("accountId")} value={user?.id} />
           </div>
@@ -156,9 +156,31 @@ export default observer(function ProfilePage() {
           <h2 className="text-xs font-semibold text-textSecondary uppercase tracking-widest mb-4">
             {tD("recentActivity.title")}
           </h2>
-          <p className="text-sm text-textSecondary">
-            {tD("recentActivity.empty")}
-          </p>
+          {reportsStore.list.length === 0 ? (
+            <p className="text-sm text-textSecondary">{tD("recentActivity.empty")}</p>
+          ) : (
+            <div className="space-y-3">
+              {reportsStore.list.slice(0, 5).map((r) => (
+                <div key={r.id} className="flex items-start gap-3">
+                  <span className={`mt-0.5 w-2 h-2 rounded-full flex-shrink-0 ${
+                    r.status === "ready" ? "bg-green-500" :
+                    r.status === "failed" ? "bg-red-500" : "bg-yellow-400"
+                  }`} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm text-textMain truncate">{r.title}</p>
+                    <p className="text-xs text-textSecondary mt-0.5">
+                      {new Date(r.created_at).toLocaleDateString()} · {r.format.toUpperCase()}
+                    </p>
+                  </div>
+                </div>
+              ))}
+              {reportsStore.list.length > 5 && (
+                <Link href="/app/reports" className="text-xs text-primary hover:underline block pt-1">
+                  + {reportsStore.list.length - 5} more
+                </Link>
+              )}
+            </div>
+          )}
         </div>
 
       </div>

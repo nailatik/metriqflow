@@ -241,7 +241,7 @@ export const getVkCommunities = async (req: Request, res: Response) => {
 };
 
 /* GET /vk/communities/:communityId/analytics?period=7d|30d|3m|all */
-const VALID_PERIODS = new Set(["24h", "7d", "30d"]);
+const VALID_PERIODS = new Set(["24h", "7d", "30d", "all"]);
 
 export const getVkCommunityAnalytics = async (req: Request, res: Response) => {
   try {
@@ -280,11 +280,12 @@ export const getVkCommunityAnalytics = async (req: Request, res: Response) => {
 
     const groupId = Number(community.community_id);
 
-    // Rolling window (seconds). "all" = no window (every fetched post).
+    // Rolling window (seconds). "all" = every fetched post (last 100, VK hard cap).
     const DAY = 86400;
     const windowSec: number =
       period === "24h" ? 1  * DAY :
       period === "30d" ? 30 * DAY :
+      period === "all" ? Infinity :
       /* 7d */           7  * DAY;
 
     type VkGroupInfo = { members_count?: number };

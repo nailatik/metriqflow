@@ -78,6 +78,7 @@ const PERIODS = [
   { value: "24h", label: "24h" },
   { value: "7d",  label: "7d"  },
   { value: "30d", label: "30d" },
+  { value: "all", label: "All" },
 ] as const;
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -120,15 +121,16 @@ function StatCard({
   );
 }
 
-function PostCard({ post, rank }: { post: Post; rank: number }) {
+function PostCard({ post, rank, communityId }: { post: Post; rank: number; communityId?: string }) {
   const preview = post.text
     ? post.text.slice(0, 80) + (post.text.length > 80 ? "…" : "")
     : post.has_media ? "📎 Media" : "—";
-  return (
-    <div className="flex gap-3 items-start py-3 border-b border-border last:border-0">
+  const url = communityId ? `https://vk.com/wall-${communityId}_${post.id}` : null;
+  const inner = (
+    <>
       <span className="text-sm font-bold text-primary w-5 flex-shrink-0">#{rank}</span>
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-textMain truncate">{preview}</p>
+        <p className={`text-sm truncate ${url ? "text-primary hover:underline" : "text-textMain"}`}>{preview}</p>
         <p className="text-xs text-textSecondary mt-0.5">
           {new Date(post.date).toLocaleDateString()} · ❤️ {fmt(post.likes)} · 🔁 {fmt(post.reposts)}
         </p>
@@ -137,7 +139,15 @@ function PostCard({ post, rank }: { post: Post; rank: number }) {
         <p className="text-sm font-semibold text-textMain">{fmt(post.views)}</p>
         <p className="text-xs text-textSecondary">views</p>
       </div>
-    </div>
+    </>
+  );
+  return url ? (
+    <a href={url} target="_blank" rel="noopener noreferrer"
+      className="flex gap-3 items-start py-3 border-b border-border last:border-0">
+      {inner}
+    </a>
+  ) : (
+    <div className="flex gap-3 items-start py-3 border-b border-border last:border-0">{inner}</div>
   );
 }
 
@@ -186,7 +196,7 @@ export function VKAnalyticsView() {
 
   const [communities,        setCommunities]        = useState<Community[]>([]);
   const [selectedId,         setSelectedId]         = useState<number | null>(null);
-  const [period,             setPeriod]             = useState<"24h" | "7d" | "30d">("7d");
+  const [period,             setPeriod]             = useState<"24h" | "7d" | "30d" | "all">("7d");
   const [analytics,          setAnalytics]          = useState<Analytics | null>(null);
   const [loading,            setLoading]            = useState(false);
   const [communitiesLoading, setCommunitiesLoading] = useState(true);
@@ -402,7 +412,7 @@ export function VKAnalyticsView() {
               {analytics.top_posts.length === 0
                 ? <p className="text-sm text-textSecondary">{t("noPostsInPeriod")}</p>
                 : analytics.top_posts.map((post, i) => (
-                    <PostCard key={post.id} post={post} rank={i + 1} />
+                    <PostCard key={post.id} post={post} rank={i + 1} communityId={analytics.community.community_id} />
                   ))
               }
             </div>

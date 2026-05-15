@@ -106,15 +106,16 @@ function StatCard({
   );
 }
 
-function TopPostCard({ post, rank }: { post: TopPost; rank: number }) {
+function TopPostCard({ post, rank, channelUsername }: { post: TopPost; rank: number; channelUsername?: string | null }) {
   const preview = post.text
     ? post.text.slice(0, 80) + (post.text.length > 80 ? "…" : "")
     : post.has_media ? "📎 Media post" : "—";
-  return (
-    <div className="flex gap-3 items-start py-3 border-b border-border last:border-0">
+  const url = channelUsername ? `https://t.me/${channelUsername}/${post.message_id}` : null;
+  const inner = (
+    <>
       <span className="text-sm font-bold text-primary w-5 flex-shrink-0">#{rank}</span>
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-textMain truncate">{preview}</p>
+        <p className={`text-sm truncate ${url ? "text-primary hover:underline" : "text-textMain"}`}>{preview}</p>
         <p className="text-xs text-textSecondary mt-0.5">
           {new Date(post.posted_at).toLocaleDateString()}
         </p>
@@ -123,7 +124,15 @@ function TopPostCard({ post, rank }: { post: TopPost; rank: number }) {
         <p className="text-sm font-semibold text-textMain">{fmt(post.views)}</p>
         <p className="text-xs text-textSecondary">views</p>
       </div>
-    </div>
+    </>
+  );
+  return url ? (
+    <a href={url} target="_blank" rel="noopener noreferrer"
+      className="flex gap-3 items-start py-3 border-b border-border last:border-0">
+      {inner}
+    </a>
+  ) : (
+    <div className="flex gap-3 items-start py-3 border-b border-border last:border-0">{inner}</div>
   );
 }
 
@@ -419,7 +428,7 @@ export function AnalyticsView() {
               {analytics.top_posts.length === 0
                 ? <p className="text-sm text-textSecondary">{t("noPostsInPeriod")}</p>
                 : analytics.top_posts.map((post, i) => (
-                    <TopPostCard key={post.message_id} post={post} rank={i + 1} />
+                    <TopPostCard key={post.message_id} post={post} rank={i + 1} channelUsername={analytics.channel.username} />
                   ))
               }
             </div>
