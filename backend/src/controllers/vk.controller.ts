@@ -1,10 +1,16 @@
 import { Request, Response } from "express";
 import { query } from "../db";
 
-const VK_API_V  = "5.131";
+const VK_API_V  = "5.199";
 const VK_BASE   = "https://api.vk.com/method";
 
 const COMMUNITY_LIMIT = 5;
+
+/* Single app-wide service token. Reads public community data (wall.get,
+ * groups.getById). VK disabled all user-token OAuth flows on 2024-06-25, and
+ * community tokens fail stats/wall with error 27 — the service token is the
+ * only key that still works for an external integration. */
+const VK_SERVICE_TOKEN = process.env.VK_SERVICE_TOKEN ?? "";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -75,32 +81,27 @@ function parseGroupInput(raw: string): string | null {
   return null;
 }
 
-function parseVkDate(v: number | string): string {
-  if (typeof v === "number") return new Date(v * 1000).toISOString().slice(0, 10);
-  return String(v).slice(0, 10);
-}
-
 // ─── Add community ────────────────────────────────────────────────────────────
 
-/* POST /vk/communities  body: { access_token, group_id }
+/* POST /vk/communities  body: { group_id }
  *
- * access_token: VK USER token obtained via Implicit Flow (oauth.vk.com/authorize ...
- *   response_type=token, scope=stats,groups,wall,offline). Community tokens are
- *   rejected — stats.get returns error 27 for them.
- * group_id: numeric id, screen name, or vk.com/<…> URL.
+ * group_id: numeric id, screen name, or vk.com/<…> URL of a PUBLIC community.
+ * Resolved with the app-wide service token — no per-user auth. Internal stats
+ * (reach/visitors/demographics) are unavailable: VK gates stats.get behind a
+ * user token, and all user-token OAuth flows were disabled 2024-06-25.
  */
 export const addVkCommunity = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
-    const body = req.body as { access_token?: string; group_id?: string; community_token?: string };
-    const accessToken = (body.access_token ?? body.community_token ?? "").trim();
-    const groupInputRaw = (body.group_id ?? "").trim();
-
-    if (!accessToken) {
-      return res.status(400).json({ message: "access_token is required" });
+    if (!VK_SERVICE_TOKEN) {
+      console.error("VK ADD COMMUNITY: VK_SERVICE_TOKEN not configured");
+      return res.status(500).json({ message: "VK integration is not configured on the server" });
     }
+
+    const body = req.body as { group_id?: string };
+    const groupInputRaw = (body.group_id ?? "").trim();
     if (!groupInputRaw) {
       return res.status(400).json({ message: "group_id is required" });
     }
@@ -120,54 +121,43 @@ export const addVkCommunity = async (req: Request, res: Response) => {
       return res.status(400).json({ message: `Community limit reached (${COMMUNITY_LIMIT} max)` });
     }
 
-    // Resolve community meta
+    // Resolve community meta. v5.199 groups.getById → { groups: [...] }
     type VkGroupInfo = {
       id: number;
       name: string;
       screen_name: string;
       photo_50?: string;
       members_count?: number;
+      is_closed?: number;
     };
 
     let group: VkGroupInfo;
     try {
-      const result = await vkCall<VkGroupInfo[]>(
+      const result = await vkCall<{ groups: VkGroupInfo[] }>(
         "groups.getById",
         { group_ids: groupIdentifier, fields: "members_count" },
-        accessToken
+        VK_SERVICE_TOKEN
       );
-      if (!result || result.length === 0) {
+      const groups = result?.groups ?? [];
+      if (groups.length === 0) {
         return res.status(400).json({ message: "Community not found" });
       }
-      group = result[0]!;
+      group = groups[0]!;
     } catch (err) {
       const mapped = vkErrorMessage(err);
       console.error("VK ADD COMMUNITY (groups.getById):", err);
       return res.status(mapped.status).json({ message: mapped.message, code: mapped.code });
     }
 
-    // Validate token works for stats — this is what actually matters for analytics.
-    // 1051 (stats unavailable for community type) is a community-config issue, not
-    // a token issue — let it through with a warning so the user sees the community
-    // saved but is told analytics won't work.
-    let statsWarning: string | null = null;
-    try {
-      await vkCall(
-        "stats.get",
-        { group_id: group.id, interval: "day", intervals_count: 1 },
-        accessToken
-      );
-    } catch (err) {
-      const mapped = vkErrorMessage(err);
-      console.error("VK ADD COMMUNITY (stats.get):", err);
-      if (err instanceof VkApiError && err.code === 1051) {
-        statsWarning = mapped.message;
-      } else {
-        return res.status(mapped.status).json({ message: mapped.message, code: mapped.code });
-      }
+    if (group.is_closed) {
+      return res.status(400).json({
+        message: "This community is private. Only public communities can be analyzed with VK's available API.",
+        code: 15,
+      });
     }
 
-    // Upsert
+    // Upsert. community_token column kept for schema compat — stores the
+    // service token (analytics reads VK_SERVICE_TOKEN directly anyway).
     const existing = await query(
       "SELECT id FROM vk_communities WHERE user_id = $1 AND community_id = $2",
       [userId, group.id]
@@ -179,14 +169,14 @@ export const addVkCommunity = async (req: Request, res: Response) => {
          SET community_token = $1, name = $2, screen_name = $3,
              photo_url = $4, member_count = $5, is_active = TRUE
          WHERE user_id = $6 AND community_id = $7`,
-        [accessToken, group.name, group.screen_name, group.photo_50 ?? null, group.members_count ?? null, userId, group.id]
+        [VK_SERVICE_TOKEN, group.name, group.screen_name, group.photo_50 ?? null, group.members_count ?? null, userId, group.id]
       );
     } else {
       await query(
         `INSERT INTO vk_communities
            (user_id, community_id, name, screen_name, photo_url, member_count, community_token)
          VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [userId, group.id, group.name, group.screen_name, group.photo_50 ?? null, group.members_count ?? null, accessToken]
+        [userId, group.id, group.name, group.screen_name, group.photo_50 ?? null, group.members_count ?? null, VK_SERVICE_TOKEN]
       );
     }
 
@@ -196,13 +186,12 @@ export const addVkCommunity = async (req: Request, res: Response) => {
     );
 
     return res.json({
-      id:            (row.rows[0] as { id: number }).id,
-      community_id:  String(group.id),
-      name:          group.name,
-      screen_name:   group.screen_name,
-      photo_url:     group.photo_50 ?? null,
-      member_count:  group.members_count ?? null,
-      stats_warning: statsWarning,
+      id:           (row.rows[0] as { id: number }).id,
+      community_id: String(group.id),
+      name:         group.name,
+      screen_name:  group.screen_name,
+      photo_url:    group.photo_50 ?? null,
+      member_count: group.members_count ?? null,
     });
   } catch (err) {
     console.error("VK ADD COMMUNITY ERROR:", err);
@@ -252,7 +241,7 @@ export const getVkCommunities = async (req: Request, res: Response) => {
 };
 
 /* GET /vk/communities/:communityId/analytics?period=7d|30d|3m|all */
-const VALID_PERIODS = new Set(["7d", "30d", "3m", "all"]);
+const VALID_PERIODS = new Set(["24h", "7d", "30d"]);
 
 export const getVkCommunityAnalytics = async (req: Request, res: Response) => {
   try {
@@ -289,25 +278,15 @@ export const getVkCommunityAnalytics = async (req: Request, res: Response) => {
       community_token: string;
     };
 
-    const { community_token } = community;
     const groupId = Number(community.community_id);
 
-    let interval: "day" | "month" = "day";
-    let intervals_count = 7;
-    let growth_count    = 0;
-    switch (period) {
-      case "7d":  interval = "day";   intervals_count = 7;  growth_count = 7;  break;
-      case "30d": interval = "day";   intervals_count = 30; growth_count = 30; break;
-      case "3m":  interval = "month"; intervals_count = 3;  break;
-      case "all": interval = "month"; intervals_count = 12; break;
-    }
+    // Rolling window (seconds). "all" = no window (every fetched post).
+    const DAY = 86400;
+    const windowSec: number =
+      period === "24h" ? 1  * DAY :
+      period === "30d" ? 30 * DAY :
+      /* 7d */           7  * DAY;
 
-    type VkStatDay = {
-      period_from: number | string;
-      visitors?: { views?: number; visitors?: number };
-      reach?: { reach?: number; reach_subscribers?: number };
-      activity?: { likes?: number; comments?: number; share?: number };
-    };
     type VkGroupInfo = { members_count?: number };
     type VkPost = {
       id: number;
@@ -320,99 +299,109 @@ export const getVkCommunityAnalytics = async (req: Request, res: Response) => {
       attachments?: unknown[];
     };
 
-    const fetchCount = intervals_count + growth_count;
-
-    let allStats: VkStatDay[];
-    let groupInfoArr: VkGroupInfo[];
+    // v5.199: groups.getById → { groups: [...] }. wall.get returns the latest
+    // 100 posts (VK hard cap per call) — sufficient for recent-activity MVP.
+    let groupInfo: { groups: VkGroupInfo[] };
     let wallData: { items: VkPost[] };
     try {
-      [allStats, groupInfoArr, wallData] = await Promise.all([
-        vkCall<VkStatDay[]>(
-          "stats.get",
-          { group_id: groupId, interval, intervals_count: fetchCount },
-          community_token
-        ),
-        vkCall<VkGroupInfo[]>(
+      [groupInfo, wallData] = await Promise.all([
+        vkCall<{ groups: VkGroupInfo[] }>(
           "groups.getById",
           { group_ids: groupId, fields: "members_count" },
-          community_token
+          VK_SERVICE_TOKEN
         ),
         vkCall<{ items: VkPost[] }>(
           "wall.get",
           { owner_id: -groupId, count: 100, filter: "owner" },
-          community_token
+          VK_SERVICE_TOKEN
         ),
       ]);
     } catch (err) {
       const mapped = vkErrorMessage(err);
       console.error("VK ANALYTICS (vk api):", err);
-      // 27/28/5 → token is the wrong kind or expired → mark community as needing reauth
-      if (err instanceof VkApiError && (err.code === 27 || err.code === 28 || err.code === 5)) {
-        return res.status(409).json({
-          error: "token_invalid",
-          code: err.code,
-          message: mapped.message,
-          message_ru: "Токен сообщества больше не подходит. Удалите сообщество и добавьте заново, используя пользовательский токен (Implicit Flow).",
-        });
-      }
       return res.status(mapped.status).json({ message: mapped.message, code: mapped.code });
     }
 
-    const currentMemberCount = groupInfoArr[0]?.members_count ?? community.member_count ?? 0;
+    const currentMemberCount = groupInfo.groups?.[0]?.members_count ?? community.member_count ?? 0;
 
-    const prevStatsRaw = growth_count > 0 ? allStats.slice(0, growth_count) : [];
-    const curStatsRaw  = growth_count > 0 ? allStats.slice(growth_count)    : allStats;
+    const nowSec = Math.floor(Date.now() / 1000);
+    const inCurrent = (ts: number) => ts >= nowSec - windowSec;
+    const inPrevious = (ts: number) =>
+      ts < nowSec - windowSec && ts >= nowSec - 2 * windowSec;
 
-    const mapStat = (d: VkStatDay) => ({
-      date:              parseVkDate(d.period_from),
-      reach:             d.reach?.reach             ?? 0,
-      reach_subscribers: d.reach?.reach_subscribers ?? 0,
-      views:             d.visitors?.views           ?? 0,
-      visitors:          d.visitors?.visitors        ?? 0,
-      likes:             d.activity?.likes           ?? 0,
-      comments:          d.activity?.comments        ?? 0,
-      shares:            d.activity?.share           ?? 0,
+    const mapPost = (p: VkPost) => ({
+      id:        p.id,
+      text:      p.text || null,
+      date:      new Date(p.date * 1000).toISOString(),
+      likes:     p.likes?.count    ?? 0,
+      reposts:   p.reposts?.count  ?? 0,
+      comments:  p.comments?.count ?? 0,
+      views:     p.views?.count    ?? 0,
+      has_media: !!(p.attachments?.length),
+      _ts:       p.date,
     });
 
-    const statsByDay = curStatsRaw.map(mapStat);
+    const allPosts     = wallData.items.map(mapPost);
+    const currentPosts = allPosts.filter((p) => inCurrent(p._ts));
+    const previousPosts = allPosts.filter((p) => inPrevious(p._ts));
 
-    const sumStats = (rows: typeof statsByDay) =>
+    // Per-day aggregation of post engagement. reach/visitors are unavailable
+    // (stats.get is gated) — kept at 0 to preserve the response shape.
+    const byDay = new Map<string, { views: number; likes: number; comments: number; shares: number }>();
+    for (const p of currentPosts) {
+      const day  = p.date.slice(0, 10);
+      const cell = byDay.get(day) ?? { views: 0, likes: 0, comments: 0, shares: 0 };
+      cell.views    += p.views;
+      cell.likes    += p.likes;
+      cell.comments += p.comments;
+      cell.shares   += p.reposts;
+      byDay.set(day, cell);
+    }
+    const statsByDay = Array.from(byDay.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, c]) => ({
+        date,
+        reach: 0,
+        reach_subscribers: 0,
+        views: c.views,
+        visitors: 0,
+        likes: c.likes,
+        comments: c.comments,
+        shares: c.shares,
+      }));
+
+    const sumPosts = (rows: typeof currentPosts) =>
       rows.reduce(
-        (acc, d) => ({
-          total_reach:    acc.total_reach    + d.reach,
-          total_views:    acc.total_views    + d.views,
-          total_visitors: acc.total_visitors + d.visitors,
-          total_likes:    acc.total_likes    + d.likes,
-          total_comments: acc.total_comments + d.comments,
-          total_shares:   acc.total_shares   + d.shares,
+        (acc, p) => ({
+          total_reach:    0,
+          total_views:    acc.total_views    + p.views,
+          total_visitors: 0,
+          total_likes:    acc.total_likes    + p.likes,
+          total_comments: acc.total_comments + p.comments,
+          total_shares:   acc.total_shares   + p.reposts,
         }),
         { total_reach: 0, total_views: 0, total_visitors: 0, total_likes: 0, total_comments: 0, total_shares: 0 }
       );
 
-    const summary = sumStats(statsByDay);
+    const summary = sumPosts(currentPosts);
 
-    const engagement_rate = summary.total_reach > 0
-      ? ((summary.total_likes + summary.total_comments + summary.total_shares) / summary.total_reach) * 100
+    const engagement_rate = summary.total_views > 0
+      ? ((summary.total_likes + summary.total_comments + summary.total_shares) / summary.total_views) * 100
       : 0;
 
     const pct = (cur: number, prev: number): number | null =>
       prev === 0 ? null : ((cur - prev) / prev) * 100;
 
-    type GrowthMap = Record<string, number | null>;
-    let growth: GrowthMap = {
+    const growth: Record<string, number | null> = {
       reach: null, views: null, likes: null, comments: null, shares: null, subscribers: null,
     };
 
-    if (growth_count > 0 && prevStatsRaw.length > 0) {
-      const prev = sumStats(prevStatsRaw.map(mapStat));
-      growth = {
-        reach:    pct(summary.total_reach,    prev.total_reach),
-        views:    pct(summary.total_views,    prev.total_views),
-        likes:    pct(summary.total_likes,    prev.total_likes),
-        comments: pct(summary.total_comments, prev.total_comments),
-        shares:   pct(summary.total_shares,   prev.total_shares),
-        subscribers: null,
-      };
+    if (previousPosts.length > 0) {
+      const prev = sumPosts(previousPosts);
+      growth.views    = pct(summary.total_views,    prev.total_views);
+      growth.likes    = pct(summary.total_likes,    prev.total_likes);
+      growth.comments = pct(summary.total_comments, prev.total_comments);
+      growth.shares   = pct(summary.total_shares,   prev.total_shares);
     }
 
     const communityIdNum = parseInt(community.community_id, 10);
@@ -456,29 +445,17 @@ export const getVkCommunityAnalytics = async (req: Request, res: Response) => {
       // snapshots table may not exist yet — non-fatal
     }
 
-    const allPosts = wallData.items.map((p) => ({
-      id:        p.id,
-      text:      p.text || null,
-      date:      new Date(p.date * 1000).toISOString(),
-      likes:     p.likes?.count    ?? 0,
-      reposts:   p.reposts?.count  ?? 0,
-      comments:  p.comments?.count ?? 0,
-      views:     p.views?.count    ?? 0,
-      has_media: !!(p.attachments?.length),
-      _ts:       p.date,
-    }));
-
-    const topPosts = [...allPosts]
+    const topPosts = [...currentPosts]
       .sort((a, b) => b.views - a.views)
       .slice(0, 10)
       .map(({ _ts: _, ...rest }) => rest);
 
     const heatMap = new Map<string, { total: number; count: number }>();
-    for (const p of wallData.items) {
-      const d   = new Date(p.date * 1000);
+    for (const p of currentPosts) {
+      const d   = new Date(p._ts * 1000);
       const key = `${d.getUTCDay()}:${d.getUTCHours()}`;
       const cell = heatMap.get(key) ?? { total: 0, count: 0 };
-      cell.total += p.views?.count ?? 0;
+      cell.total += p.views;
       cell.count += 1;
       heatMap.set(key, cell);
     }

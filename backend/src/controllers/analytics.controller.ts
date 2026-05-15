@@ -256,3 +256,179 @@ export const getChannelAnalytics = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+/* GET /integrations/analytics/summary?period=24h|7d|30d
+ *
+ * Cross-network totals for the combined "All" analytics tab. Only metrics
+ * comparable across networks: followers, views, engagement, follower growth.
+ * VK has no reach (stats.get is gated) so reach is intentionally absent.
+ */
+const VK_API_V = "5.199";
+const VK_SERVICE_TOKEN = process.env.VK_SERVICE_TOKEN ?? "";
+
+async function vkApi<T>(method: string, params: Record<string, string | number>): Promise<T | null> {
+  if (!VK_SERVICE_TOKEN) return null;
+  const url = new URL(`https://api.vk.com/method/${method}`);
+  url.searchParams.set("access_token", VK_SERVICE_TOKEN);
+  url.searchParams.set("v", VK_API_V);
+  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, String(v));
+  try {
+    const res  = await fetch(url.toString());
+    const data = await res.json() as { response?: T; error?: unknown };
+    if (data.error || data.response === undefined) return null;
+    return data.response;
+  } catch {
+    return null;
+  }
+}
+
+type NetSummary = {
+  connected: boolean;
+  followers: number;
+  views: number;
+  engagement_rate: number;
+  followers_growth: number | null;
+};
+
+export const getCombinedSummary = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+    const periodRaw = parsePeriod(req.query.period);
+    const period: "24h" | "7d" | "30d" =
+      periodRaw === "24h" || periodRaw === "30d" ? periodRaw : "7d";
+    const days = period === "24h" ? 1 : period === "30d" ? 30 : 7;
+
+    // ── Telegram ──────────────────────────────────────────────────────────────
+    const [tgChannels, tgAgg, tgGrowth] = await Promise.all([
+      query(
+        `SELECT COALESCE(SUM(member_count), 0)::int AS followers, COUNT(*)::int AS n
+         FROM telegram_channels WHERE user_id = $1 AND is_active = TRUE`,
+        [userId]
+      ),
+      query(
+        `SELECT
+           COALESCE(SUM(tp.views), 0)::int                              AS views,
+           COALESCE(SUM(tp.reactions_total + tp.forwards), 0)::int       AS engagement_num
+         FROM telegram_posts tp
+         JOIN telegram_channels tc ON tc.channel_id = tp.channel_id
+         WHERE tc.user_id = $1 AND tc.is_active = TRUE
+           AND tp.posted_at >= NOW() - ($2::text || ' days')::interval`,
+        [userId, days]
+      ),
+      query(
+        `WITH chans AS (
+           SELECT channel_id FROM telegram_channels WHERE user_id = $1 AND is_active = TRUE
+         ),
+         latest AS (
+           SELECT DISTINCT ON (s.channel_id) s.channel_id, s.count
+           FROM member_count_snapshots s JOIN chans c ON c.channel_id = s.channel_id
+           ORDER BY s.channel_id, s.recorded_at DESC
+         ),
+         prev AS (
+           SELECT DISTINCT ON (s.channel_id) s.channel_id, s.count
+           FROM member_count_snapshots s JOIN chans c ON c.channel_id = s.channel_id
+           WHERE s.recorded_at <= NOW() - ($2::text || ' days')::interval
+           ORDER BY s.channel_id, s.recorded_at DESC
+         )
+         SELECT (SELECT COALESCE(SUM(count), 0) FROM latest) AS cur,
+                (SELECT COALESCE(SUM(count), 0) FROM prev)   AS prev`,
+        [userId, days]
+      ),
+    ]);
+
+    const tgN = (tgChannels.rows[0] as { followers: number; n: number });
+    const tgA = (tgAgg.rows[0] as { views: number; engagement_num: number });
+    const tgG = (tgGrowth.rows[0] as { cur: string | number; prev: string | number });
+    const telegram: NetSummary | null = tgN.n > 0 ? {
+      connected: true,
+      followers: tgN.followers,
+      views: tgA.views,
+      engagement_rate: tgA.views > 0 ? (tgA.engagement_num / tgA.views) * 100 : 0,
+      followers_growth: pct(Number(tgG.cur), Number(tgG.prev)),
+    } : null;
+
+    // ── VK ────────────────────────────────────────────────────────────────────
+    const vkCommunities = await query(
+      `SELECT community_id, COALESCE(member_count, 0)::int AS member_count
+       FROM vk_communities WHERE user_id = $1 AND is_active = TRUE`,
+      [userId]
+    );
+    const vkRows = vkCommunities.rows as { community_id: string; member_count: number }[];
+
+    let vk: NetSummary | null = null;
+    if (vkRows.length > 0) {
+      const sinceSec = Math.floor(Date.now() / 1000) - days * 86400;
+      type VkPost = {
+        date: number;
+        likes?: { count: number }; reposts?: { count: number };
+        comments?: { count: number }; views?: { count: number };
+      };
+      let views = 0, eng = 0;
+      for (const c of vkRows) {
+        const wall = await vkApi<{ items: VkPost[] }>("wall.get", {
+          owner_id: -Number(c.community_id), count: 100, filter: "owner",
+        });
+        if (!wall) continue;
+        for (const p of wall.items) {
+          if (p.date < sinceSec) continue;
+          views += p.views?.count ?? 0;
+          eng   += (p.likes?.count ?? 0) + (p.comments?.count ?? 0) + (p.reposts?.count ?? 0);
+        }
+      }
+
+      const vkGrowth = await query(
+        `WITH comms AS (
+           SELECT community_id::bigint AS cid FROM vk_communities
+           WHERE user_id = $1 AND is_active = TRUE
+         ),
+         latest AS (
+           SELECT DISTINCT ON (s.community_id) s.community_id, s.member_count
+           FROM vk_community_snapshots s JOIN comms c ON c.cid = s.community_id
+           ORDER BY s.community_id, s.recorded_at DESC
+         ),
+         prev AS (
+           SELECT DISTINCT ON (s.community_id) s.community_id, s.member_count
+           FROM vk_community_snapshots s JOIN comms c ON c.cid = s.community_id
+           WHERE s.recorded_at <= NOW() - ($2::text || ' days')::interval
+           ORDER BY s.community_id, s.recorded_at DESC
+         )
+         SELECT (SELECT COALESCE(SUM(member_count), 0) FROM latest) AS cur,
+                (SELECT COALESCE(SUM(member_count), 0) FROM prev)   AS prev`,
+        [userId, days]
+      );
+      const vkG = vkGrowth.rows[0] as { cur: string | number; prev: string | number };
+      const vkFollowers = vkRows.reduce((acc, r) => acc + r.member_count, 0);
+
+      vk = {
+        connected: true,
+        followers: vkFollowers,
+        views,
+        engagement_rate: views > 0 ? (eng / views) * 100 : 0,
+        followers_growth: pct(Number(vkG.cur), Number(vkG.prev)),
+      };
+    }
+
+    // ── Combined ──────────────────────────────────────────────────────────────
+    const tgFollowers = telegram?.followers ?? 0;
+    const vkFollowers = vk?.followers ?? 0;
+    const tgViews = telegram?.views ?? 0;
+    const vkViews = vk?.views ?? 0;
+    const tgEngNum = tgA.engagement_num;
+    const vkEngNum = vk ? Math.round((vk.engagement_rate / 100) * vk.views) : 0;
+    const totalViews = tgViews + vkViews;
+
+    const combined = {
+      followers: tgFollowers + vkFollowers,
+      views: totalViews,
+      engagement_rate: totalViews > 0 ? ((tgEngNum + vkEngNum) / totalViews) * 100 : 0,
+      networks: (telegram ? 1 : 0) + (vk ? 1 : 0),
+    };
+
+    return res.json({ period, combined, telegram, vk });
+  } catch (err) {
+    console.error("COMBINED SUMMARY ERROR:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};

@@ -56,7 +56,7 @@ const I18N: Record<Locale, I18nDict> = {
     tgSection: "Telegram",
     vkSection: "VK Communities",
     tgHeaders: ["Date", "Views", "Reactions", "Forwards", "Comments", "Posts"],
-    vkHeaders: ["Community", "Screen Name", "Members"],
+    vkHeaders: ["Date", "Views", "Likes", "Comments", "Reposts", "Posts"],
     tgCsvComment: "# Telegram",
     vkCsvComment: "# VK Communities",
     lastDays: (n) => n === 1 ? "Last 24h" : `Last ${n} days`,
@@ -69,7 +69,7 @@ const I18N: Record<Locale, I18nDict> = {
     tgSection: "Telegram",
     vkSection: "Сообщества VK",
     tgHeaders: ["Дата", "Просмотры", "Реакции", "Репосты", "Комментарии", "Посты"],
-    vkHeaders: ["Сообщество", "Адрес", "Участники"],
+    vkHeaders: ["Дата", "Просмотры", "Лайки", "Комментарии", "Репосты", "Посты"],
     tgCsvComment: "# Telegram",
     vkCsvComment: "# Сообщества VK",
     lastDays: (n) => n === 1 ? "Последние 24ч" : `Последние ${n} дней`,
@@ -80,13 +80,34 @@ function getI18n(locale: string): I18nDict {
   return I18N[locale as Locale] ?? I18N.en;
 }
 
+// ─── VK API (service token, public data only) ────────────────────────────────
+
+const VK_API_V = "5.199";
+const VK_SERVICE_TOKEN = process.env.VK_SERVICE_TOKEN ?? "";
+
+async function vkApi<T>(method: string, params: Record<string, string | number>): Promise<T | null> {
+  if (!VK_SERVICE_TOKEN) return null;
+  const url = new URL(`https://api.vk.com/method/${method}`);
+  url.searchParams.set("access_token", VK_SERVICE_TOKEN);
+  url.searchParams.set("v", VK_API_V);
+  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, String(v));
+  try {
+    const res  = await fetch(url.toString());
+    const data = await res.json() as { response?: T; error?: unknown };
+    if (data.error || data.response === undefined) return null;
+    return data.response;
+  } catch {
+    return null;
+  }
+}
+
 // ─── Data fetchers ────────────────────────────────────────────────────────────
 
 type TgRow = {
   date: string; views: number; reactions: number; forwards: number; comments: number; posts: number;
 };
 type VkRow = {
-  name: string; screen_name: string; member_count: number;
+  date: string; views: number; likes: number; comments: number; reposts: number; posts: number;
 };
 
 async function fetchTelegramData(userId: number, periodDays: number): Promise<TgRow[]> {
@@ -110,15 +131,48 @@ async function fetchTelegramData(userId: number, periodDays: number): Promise<Tg
   return result.rows as TgRow[];
 }
 
-async function fetchVkData(userId: number, _periodDays: number): Promise<VkRow[]> {
-  const result = await query(
-    `SELECT vc.name, vc.screen_name, COALESCE(vc.member_count, 0)::int AS member_count
-     FROM vk_communities vc
-     WHERE vc.user_id = $1 AND vc.is_active = TRUE
-     ORDER BY vc.name ASC`,
+async function fetchVkData(userId: number, periodDays: number): Promise<VkRow[]> {
+  const communities = await query(
+    `SELECT community_id FROM vk_communities
+     WHERE user_id = $1 AND is_active = TRUE`,
     [userId]
   );
-  return result.rows as VkRow[];
+  const ids = (communities.rows as { community_id: string }[]).map((r) => Number(r.community_id));
+  if (ids.length === 0) return [];
+
+  const windowStart = Math.floor(Date.now() / 1000) - periodDays * 86400;
+
+  type VkPost = {
+    date: number;
+    likes?: { count: number };
+    reposts?: { count: number };
+    comments?: { count: number };
+    views?: { count: number };
+  };
+
+  const byDay = new Map<string, Omit<VkRow, "date">>();
+
+  for (const gid of ids) {
+    const wall = await vkApi<{ items: VkPost[] }>("wall.get", {
+      owner_id: -gid, count: 100, filter: "owner",
+    });
+    if (!wall) continue;
+    for (const p of wall.items) {
+      if (p.date < windowStart) continue;
+      const day  = new Date(p.date * 1000).toISOString().slice(0, 10);
+      const cell = byDay.get(day) ?? { views: 0, likes: 0, comments: 0, reposts: 0, posts: 0 };
+      cell.views    += p.views?.count    ?? 0;
+      cell.likes    += p.likes?.count    ?? 0;
+      cell.comments += p.comments?.count ?? 0;
+      cell.reposts  += p.reposts?.count  ?? 0;
+      cell.posts    += 1;
+      byDay.set(day, cell);
+    }
+  }
+
+  return Array.from(byDay.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, c]) => ({ date, ...c }));
 }
 
 // ─── File generators ──────────────────────────────────────────────────────────
@@ -144,7 +198,7 @@ function generateCsv(
     lines.push(t.vkCsvComment);
     lines.push(t.vkHeaders.map((h) => `"${h}"`).join(","));
     for (const r of vkRows) {
-      lines.push(`"${r.name.replace(/"/g, '""')}",${r.screen_name},${r.member_count}`);
+      lines.push(`${r.date},${r.views},${r.likes},${r.comments},${r.reposts},${r.posts}`);
     }
   }
 
@@ -181,7 +235,7 @@ function generateXml(
     lines.push(`  <section name="${esc(t.vkSection)}">`);
     for (const r of vkRows) {
       lines.push(
-        `    <community name="${esc(r.name)}" screen_name="${r.screen_name}" member_count="${r.member_count}"/>`
+        `    <day date="${r.date}" views="${r.views}" likes="${r.likes}" comments="${r.comments}" reposts="${r.reposts}" posts="${r.posts}"/>`
       );
     }
     lines.push("  </section>");
@@ -274,7 +328,7 @@ function generatePdf(
     if ((source === "all" || source === "vk") && vkRows.length > 0) {
       drawTable(
         t.vkHeaders,
-        vkRows.map((r) => [r.name, r.screen_name, String(r.member_count)]),
+        vkRows.map((r) => [r.date, String(r.views), String(r.likes), String(r.comments), String(r.reposts), String(r.posts)]),
         t.vkSection
       );
     }

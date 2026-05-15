@@ -75,13 +75,13 @@ type Analytics = {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const PERIODS = [
+  { value: "24h", label: "24h" },
   { value: "7d",  label: "7d"  },
   { value: "30d", label: "30d" },
-  { value: "3m",  label: "3m"  },
-  { value: "all", label: "All" },
 ] as const;
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const AUTO_REFRESH_MS = 10 * 60 * 1000;
 
 const fmt = (n: number) => {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -186,7 +186,7 @@ export function VKAnalyticsView() {
 
   const [communities,        setCommunities]        = useState<Community[]>([]);
   const [selectedId,         setSelectedId]         = useState<number | null>(null);
-  const [period,             setPeriod]             = useState<"7d" | "30d" | "3m" | "all">("7d");
+  const [period,             setPeriod]             = useState<"24h" | "7d" | "30d">("7d");
   const [analytics,          setAnalytics]          = useState<Analytics | null>(null);
   const [loading,            setLoading]            = useState(false);
   const [communitiesLoading, setCommunitiesLoading] = useState(true);
@@ -194,7 +194,8 @@ export function VKAnalyticsView() {
   const [minutesAgo,         setMinutesAgo]         = useState(0);
   const [fetchError,         setFetchError]         = useState<string | null>(null);
 
-  const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const tickRef        = useRef<ReturnType<typeof setInterval> | null>(null);
+  const autoRefreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     http.get<Community[]>("/vk/communities")
@@ -216,14 +217,8 @@ export function VKAnalyticsView() {
         setMinutesAgo(0);
       })
       .catch((e: unknown) => {
-        const data = (e as { response?: { status?: number; data?: { error?: string; message?: string; message_ru?: string; code?: number } } })?.response;
-        const status = data?.status;
-        const payload = data?.data;
-        if (status === 409 && payload?.error === "token_invalid") {
-          setFetchError(payload.message_ru ?? payload.message ?? t("tokenInvalid"));
-        } else {
-          setFetchError(payload?.message ?? t("loadError"));
-        }
+        const payload = (e as { response?: { data?: { message?: string } } })?.response?.data;
+        setFetchError(payload?.message ?? t("loadError"));
         setAnalytics(null);
       })
       .finally(() => setLoading(false));
@@ -232,6 +227,13 @@ export function VKAnalyticsView() {
   useEffect(() => {
     setAnalytics(null);
     fetchAnalytics();
+  }, [fetchAnalytics]);
+
+  // Auto-refresh every 10 min (mirrors Telegram analytics)
+  useEffect(() => {
+    if (autoRefreshRef.current) clearInterval(autoRefreshRef.current);
+    autoRefreshRef.current = setInterval(fetchAnalytics, AUTO_REFRESH_MS);
+    return () => { if (autoRefreshRef.current) clearInterval(autoRefreshRef.current); };
   }, [fetchAnalytics]);
 
   // "X min ago" ticker
@@ -337,20 +339,18 @@ export function VKAnalyticsView() {
 
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <StatCard label={t("reach")}        value={fmt(s.total_reach)}               growth={g?.reach}    />
-            <StatCard label={t("views")}         value={fmt(s.total_views)}               growth={g?.views}    />
-            <StatCard label={t("likes")}         value={fmt(s.total_likes)}               growth={g?.likes}    />
+            <StatCard label={t("views")}          value={fmt(s.total_views)}                growth={g?.views}    />
+            <StatCard label={t("likes")}          value={fmt(s.total_likes)}                growth={g?.likes}    />
+            <StatCard label={t("comments")}       value={fmt(s.total_comments)}             growth={g?.comments} />
+            <StatCard label={t("shares")}         value={fmt(s.total_shares)}               growth={g?.shares}   />
             <StatCard label={t("engagementRate")} value={`${s.engagement_rate.toFixed(2)}%`} />
-            <StatCard label={t("visitors")}      value={fmt(s.total_visitors)}            />
-            <StatCard label={t("comments")}      value={fmt(s.total_comments)}            growth={g?.comments} />
-            <StatCard label={t("shares")}        value={fmt(s.total_shares)}              growth={g?.shares}   />
           </div>
 
           {/* Reach chart */}
           {analytics.stats_by_day.length > 0 && (
             <div className="bg-surface border border-border rounded-xl p-6">
               <p className="text-xs font-semibold text-textSecondary uppercase tracking-widest mb-4">
-                {t("reachChart")}
+                {t("viewsChart")}
               </p>
               <ResponsiveContainer width="100%" height={220}>
                 <AreaChart data={analytics.stats_by_day} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
@@ -381,12 +381,12 @@ export function VKAnalyticsView() {
                   />
                   <Area
                     type="monotone"
-                    dataKey="reach"
+                    dataKey="views"
                     stroke="#4F46E5"
                     strokeWidth={2}
                     fill="url(#reachGrad)"
                     dot={false}
-                    name={t("reach")}
+                    name={t("views")}
                   />
                 </AreaChart>
               </ResponsiveContainer>

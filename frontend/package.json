@@ -10,7 +10,6 @@
     "test": "echo \"No tests configured\""
   },
   "dependencies": {
-    "@vkid/sdk": "^2.6.5",
     "axios": "^1.7.9",
     "mobx": "^6.13.5",
     "mobx-react-lite": "^4.0.7",
