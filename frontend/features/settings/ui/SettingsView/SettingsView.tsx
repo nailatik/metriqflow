@@ -5,10 +5,6 @@ import { useTranslations, useLocale } from "next-intl";
 import { observer } from "mobx-react-lite";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUserStore } from "@/shared/store/StoreProvider";
-import { authService } from "@/entities/user/api/authService";
-import { Button } from "@/shared/ui/Button/Button";
-import { Input } from "@/shared/ui/Input/Input";
-import { getPasswordChecks } from "@/shared/lib/validation";
 
 export const SettingsView = observer(() => {
   const t = useTranslations("Settings");

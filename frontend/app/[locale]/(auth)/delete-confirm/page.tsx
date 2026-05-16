@@ -32,7 +32,7 @@ export default function DeleteConfirmPage() {
     if (!token) return;
     setStatus("loading");
     try {
-      await authService.confirmDeleteAccount(token);
+      await authService.deleteAccount(token);
       userStore.logout();
       setStatus("done");
       setTimeout(() => router.replace("/login"), 3000);

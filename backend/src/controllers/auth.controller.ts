@@ -289,7 +289,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
       `UPDATE users
        SET email_verified = true, email_verification_token = NULL, email_verification_expires_at = NULL
        WHERE id = $1`,
-      [result.rows[0].id]
+      [result.rows[0]!.id]
     );
 
     return res.json({ message: "Email verified" });
@@ -333,7 +333,7 @@ export const resendVerification = async (req: Request, res: Response) => {
       [verificationToken, userId]
     );
 
-    sendVerificationEmail(user.email, verificationToken).catch((err) =>
+    sendVerificationEmail(user.email as string, verificationToken).catch((err) =>
       console.error("Failed to send verification email:", err)
     );
 
@@ -420,7 +420,7 @@ export const changePassword = async (req: Request, res: Response) => {
     const user = result.rows[0];
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    const isMatch = await bcrypt.compare(currentPassword, user.password as string);
     if (!isMatch) {
       return res.status(400).json({ message: "Current password is incorrect" });
     }

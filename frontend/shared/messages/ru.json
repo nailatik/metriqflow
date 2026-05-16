@@ -338,7 +338,9 @@
       "save": "Сохранить",
       "cancel": "Отмена",
       "saveSuccess": "Сохранено",
-      "saveError": "Ошибка сохранения"
+      "saveError": "Ошибка сохранения",
+      "verified": "Подтверждён",
+      "notVerified": "Не подтверждён"
     },
     "security": {
       "title": "Безопасность",

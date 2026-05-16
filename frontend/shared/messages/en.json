@@ -338,7 +338,9 @@
       "save": "Save",
       "cancel": "Cancel",
       "saveSuccess": "Saved",
-      "saveError": "Failed to save"
+      "saveError": "Failed to save",
+      "verified": "Verified",
+      "notVerified": "Not verified"
     },
     "security": {
       "title": "Security",
