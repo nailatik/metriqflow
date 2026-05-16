@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { SettingsView } from "@/features/settings/ui/SettingsView/SettingsView";
@@ -9,5 +10,9 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 }
 
 export default function SettingsPage() {
-  return <SettingsView />;
+  return (
+    <Suspense>
+      <SettingsView />
+    </Suspense>
+  );
 }

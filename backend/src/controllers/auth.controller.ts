@@ -6,6 +6,7 @@ import { createAccessToken, createRefreshToken } from "../auth/auth.tokens";
 import { setRefreshCookie } from "../auth/auth.cookies";
 import { UserDB, UserRow } from "../types/express";
 import jwt from "jsonwebtoken";
+import { sendDeleteConfirmationEmail } from "../services/delivery.service";
 
 type AuthBody = {
   email: string;
@@ -305,18 +306,98 @@ export const updateProfile = async (req: Request, res: Response) => {
   }
 };
 
-/* ---------------- DELETE USER (CLEANUP) ---------------- */
+/* ---------------- CHANGE PASSWORD ---------------- */
+
+export const changePassword = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+    const { currentPassword, newPassword } = req.body as { currentPassword: string; newPassword: string };
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "Both passwords are required" });
+    }
+
+    const passwordError = validatePassword(newPassword);
+    if (passwordError) {
+      return res.status(400).json({ message: passwordError });
+    }
+
+    const result = await query("SELECT password FROM users WHERE id = $1", [userId]);
+    const user = result.rows[0];
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Current password is incorrect" });
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await query("UPDATE users SET password = $1 WHERE id = $2", [hashed, userId]);
+
+    return res.json({ message: "Password updated" });
+  } catch (err) {
+    console.error("CHANGE PASSWORD ERROR:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+/* ---------------- REQUEST ACCOUNT DELETION ---------------- */
+
+export const requestDeleteAccount = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const userEmail = req.user?.email;
+    if (!userId || !userEmail) return res.status(401).json({ message: "Unauthorized" });
+
+    const token = jwt.sign(
+      { id: userId, purpose: "delete-account" },
+      process.env.JWT_SECRET!,
+      { expiresIn: "1h" }
+    );
+
+    const locale = (req.body as { locale?: string }).locale ?? "ru";
+    const confirmUrl = `${process.env.FRONTEND_URL ?? "http://localhost:3000"}/${locale}/app/settings?confirmDelete=${token}`;
+
+    await sendDeleteConfirmationEmail(userEmail, confirmUrl);
+
+    return res.json({ message: "Confirmation email sent" });
+  } catch (err) {
+    console.error("REQUEST DELETE ERROR:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+/* ---------------- DELETE USER (REQUIRES TOKEN) ---------------- */
 
 export const deleteUser = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
+    const { token } = req.body as { token: string };
+    if (!token) return res.status(400).json({ message: "Confirmation token required" });
+
+    let payload: { id: number; purpose: string };
+    try {
+      payload = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; purpose: string };
+    } catch {
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
+
+    if (payload.purpose !== "delete-account" || payload.id !== userId) {
+      return res.status(403).json({ message: "Token mismatch" });
     }
 
     await query("DELETE FROM refresh_tokens WHERE user_id = $1", [userId]);
     await query("DELETE FROM users WHERE id = $1", [userId]);
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    });
 
     return res.json({ message: "User deleted" });
   } catch (err) {

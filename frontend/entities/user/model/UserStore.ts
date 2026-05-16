@@ -82,6 +82,53 @@ export class UserStore {
     }
   }
 
+  async updateOrganization(organization: string): Promise<{ success: boolean; error?: string }> {
+    if (!this.user) return { success: false, error: "Not authenticated" };
+    try {
+      const res = await authService.updateProfile({
+        fullName: this.user.full_name ?? "",
+        birthDate: this.user.birth_date ?? "",
+        organization: organization || null,
+        phone: this.user.phone ?? "",
+        agreedToProcessing: true,
+      });
+      runInAction(() => {
+        this.user = res.data;
+      });
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err?.response?.data?.message ?? "Error" };
+    }
+  }
+
+  async changePassword(currentPassword: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      await authService.changePassword(currentPassword, newPassword);
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err?.response?.data?.message ?? "Error" };
+    }
+  }
+
+  async requestDeleteAccount(locale: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      await authService.requestDeleteAccount(locale);
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err?.response?.data?.message ?? "Error" };
+    }
+  }
+
+  async deleteAccount(token: string): Promise<boolean> {
+    try {
+      await authService.deleteAccount(token);
+      this.logout();
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   logout(): void {
     this.token = null;
     this.user = null;

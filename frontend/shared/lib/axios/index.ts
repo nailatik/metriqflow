@@ -89,5 +89,5 @@ export const http = {
   post: <T, D = unknown>(url: string, data?: D) => api.post<T>(url, data),
   put: <T, D = unknown>(url: string, data?: D) => api.put<T>(url, data),
   patch: <T, D = unknown>(url: string, data?: D) => api.patch<T>(url, data),
-  delete: <T = unknown>(url: string) => api.delete<T>(url),
+  delete: <T = unknown>(url: string, config?: { data?: unknown }) => api.delete<T>(url, config),
 };
