@@ -22,4 +22,5 @@ export interface RegisterData {
   organization?: string;
   phone: string;
   agreedToProcessing: boolean;
+  locale?: string;
 }

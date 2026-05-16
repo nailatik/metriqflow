@@ -27,6 +27,6 @@ export const authService = {
   verifyEmail: (token: string) =>
     http.get<{ message: string }>(`/auth/verify-email?token=${token}`),
 
-  resendVerification: () =>
-    http.post<{ message: string }>("/auth/resend-verification"),
+  resendVerification: (locale = "ru") =>
+    http.post<{ message: string }>("/auth/resend-verification", { locale }),
 };

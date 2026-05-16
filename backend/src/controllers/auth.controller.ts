@@ -17,6 +17,7 @@ type AuthBody = {
   organization: string;
   phone: string;
   agreedToProcessing: boolean;
+  locale?: string;
 };
 
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
@@ -27,7 +28,7 @@ const generateToken = () => crypto.randomBytes(32).toString("hex");
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { email, password, fullName, birthDate, organization, phone, agreedToProcessing } = req.body as AuthBody;
+    const { email, password, fullName, birthDate, organization, phone, agreedToProcessing, locale = "ru" } = req.body as AuthBody;
 
     const normalizedEmail = normalizeEmail(email);
 
@@ -101,7 +102,7 @@ export const register = async (req: Request, res: Response) => {
     setRefreshCookie(res, refreshToken);
 
     // Send verification email (non-blocking — don't fail registration if email fails)
-    sendVerificationEmail(normalizedEmail, verificationToken).catch((err) =>
+    sendVerificationEmail(normalizedEmail, verificationToken, locale).catch((err) =>
       console.error("Failed to send verification email:", err)
     );
 
@@ -333,7 +334,8 @@ export const resendVerification = async (req: Request, res: Response) => {
       [verificationToken, userId]
     );
 
-    sendVerificationEmail(user.email as string, verificationToken).catch((err) =>
+    const resendLocale = (req.body as { locale?: string }).locale ?? "ru";
+    sendVerificationEmail(user.email as string, verificationToken, resendLocale).catch((err) =>
       console.error("Failed to send verification email:", err)
     );
 

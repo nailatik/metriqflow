@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { observer } from "mobx-react-lite";
 import { PhoneInput } from "react-international-phone";
 import "react-international-phone/style.css";
@@ -24,6 +24,7 @@ export const RegisterForm = observer(() => {
   const searchParams = useSearchParams();
   const step = searchParams.get("step") === "2" ? 2 : 1;
 
+  const locale = useLocale();
   const userStore = useUserStore();
   const uiStore = useUiStore();
 
@@ -82,6 +83,7 @@ export const RegisterForm = observer(() => {
     const ok = await userStore.register({
       email: storedEmail,
       password: storedPassword,
+      locale,
       fullName: formData.fullName,
       birthDate: formData.birthDate,
       organization: formData.organization || undefined,

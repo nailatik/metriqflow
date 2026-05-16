@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { useUserStore } from "@/shared/store/StoreProvider";
 import { authService } from "@/entities/user/api/authService";
@@ -16,6 +16,7 @@ export default function VerifyEmailPage() {
   const searchParams = useSearchParams();
   const userStore = useUserStore();
 
+  const locale = useLocale();
   const token = searchParams.get("token");
 
   const [status, setStatus] = useState<Status>(token ? "verifying" : "pending");
@@ -50,7 +51,7 @@ export default function VerifyEmailPage() {
     setResendLoading(true);
     setError("");
     try {
-      await authService.resendVerification();
+      await authService.resendVerification(locale);
       setResendSent(true);
     } catch {
       setError(t("resendError"));

@@ -100,9 +100,9 @@ async function sendSimpleEmail(to: string, subject: string, html: string): Promi
   });
 }
 
-export async function sendVerificationEmail(toEmail: string, token: string): Promise<void> {
+export async function sendVerificationEmail(toEmail: string, token: string, locale = "ru"): Promise<void> {
   const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:3000";
-  const link = `${frontendUrl}/ru/verify-email?token=${token}`;
+  const link = `${frontendUrl}/${locale}/verify-email?token=${token}`;
   const html = `
     <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
       <h2 style="color:#6366f1">Подтвердите email</h2>
