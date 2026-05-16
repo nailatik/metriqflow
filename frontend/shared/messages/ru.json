@@ -340,7 +340,8 @@
       "saveSuccess": "Сохранено",
       "saveError": "Ошибка сохранения",
       "verified": "Подтверждён",
-      "notVerified": "Не подтверждён"
+      "notVerified": "Не подтверждён",
+      "password": "Пароль"
     },
     "security": {
       "title": "Безопасность",

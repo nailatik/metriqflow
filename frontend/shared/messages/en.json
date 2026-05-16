@@ -340,7 +340,8 @@
       "saveSuccess": "Saved",
       "saveError": "Failed to save",
       "verified": "Verified",
-      "notVerified": "Not verified"
+      "notVerified": "Not verified",
+      "password": "Password"
     },
     "security": {
       "title": "Security",

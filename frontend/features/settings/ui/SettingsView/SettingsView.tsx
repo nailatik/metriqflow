@@ -32,6 +32,7 @@ export const SettingsView = observer(() => {
   };
 
   // ── Change password ────────────────────────────────────────────────────────
+  const [editingPwd, setEditingPwd] = useState(false);
   const [pwdForm, setPwdForm] = useState({ current: "", next: "", confirm: "" });
   const [pwdStatus, setPwdStatus] = useState<"idle" | "saving" | "success" | "error" | "mismatch">("idle");
   const [pwdError, setPwdError] = useState("");
@@ -47,11 +48,21 @@ export const SettingsView = observer(() => {
     if (result.success) {
       setPwdStatus("success");
       setPwdForm({ current: "", next: "", confirm: "" });
-      setTimeout(() => setPwdStatus("idle"), 3000);
+      setTimeout(() => {
+        setPwdStatus("idle");
+        setEditingPwd(false);
+      }, 2500);
     } else {
       setPwdError(result.error ?? t("security.errorGeneric"));
       setPwdStatus("error");
     }
+  };
+
+  const handleCancelPwd = () => {
+    setEditingPwd(false);
+    setPwdForm({ current: "", next: "", confirm: "" });
+    setPwdStatus("idle");
+    setPwdError("");
   };
 
   // ── Delete account ─────────────────────────────────────────────────────────
@@ -97,6 +108,8 @@ export const SettingsView = observer(() => {
       <div className="bg-surface border border-border rounded-xl p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-textMain mb-4">{t("account.title")}</h2>
         <div className="space-y-4 text-textSecondary">
+
+          {/* Email */}
           <div>
             <p className="text-sm font-medium text-textMain">{t("account.email")}</p>
             <div className="flex items-center gap-2 mt-1">
@@ -113,10 +126,14 @@ export const SettingsView = observer(() => {
               )}
             </div>
           </div>
+
+          {/* Full name */}
           <div>
             <p className="text-sm font-medium text-textMain">{t("account.fullName")}</p>
             <p className="mt-1">{user?.full_name ?? "—"}</p>
           </div>
+
+          {/* Organization */}
           <div>
             <p className="text-sm font-medium text-textMain mb-1">{t("account.organization")}</p>
             {editingOrg ? (
@@ -161,72 +178,83 @@ export const SettingsView = observer(() => {
               <p className="text-xs text-red-500 mt-1">{t("account.saveError")}</p>
             )}
           </div>
+
+          {/* Phone */}
           <div>
             <p className="text-sm font-medium text-textMain">{t("account.phone")}</p>
             <p className="mt-1">{user?.phone ?? "—"}</p>
           </div>
+
+          {/* Password */}
+          <div>
+            <p className="text-sm font-medium text-textMain mb-1">{t("account.password")}</p>
+            {editingPwd ? (
+              <form onSubmit={handleChangePassword} className="space-y-3 mt-1 max-w-sm">
+                <input
+                  type="password"
+                  value={pwdForm.current}
+                  onChange={(e) => setPwdForm(f => ({ ...f, current: e.target.value }))}
+                  placeholder={t("security.currentPassword")}
+                  required
+                  autoFocus
+                  className="w-full px-3 py-1.5 rounded-lg border border-border bg-background text-textMain text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                />
+                <input
+                  type="password"
+                  value={pwdForm.next}
+                  onChange={(e) => setPwdForm(f => ({ ...f, next: e.target.value }))}
+                  placeholder={t("security.newPassword")}
+                  required
+                  className="w-full px-3 py-1.5 rounded-lg border border-border bg-background text-textMain text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                />
+                <input
+                  type="password"
+                  value={pwdForm.confirm}
+                  onChange={(e) => setPwdForm(f => ({ ...f, confirm: e.target.value }))}
+                  placeholder={t("security.confirmPassword")}
+                  required
+                  className="w-full px-3 py-1.5 rounded-lg border border-border bg-background text-textMain text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                />
+                {pwdStatus === "mismatch" && (
+                  <p className="text-xs text-red-500">{t("security.passwordsMismatch")}</p>
+                )}
+                {pwdStatus === "error" && (
+                  <p className="text-xs text-red-500">{pwdError}</p>
+                )}
+                {pwdStatus === "success" && (
+                  <p className="text-xs text-green-500">{t("security.successMessage")}</p>
+                )}
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    disabled={pwdStatus === "saving" || pwdStatus === "success"}
+                    className="px-3 py-1.5 text-sm font-medium bg-accent text-white rounded-lg hover:opacity-90 disabled:opacity-60 transition"
+                  >
+                    {pwdStatus === "saving" ? t("security.saving") : t("security.save")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancelPwd}
+                    className="px-3 py-1.5 text-sm text-textSecondary hover:text-textMain transition"
+                  >
+                    {t("account.cancel")}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="flex items-center gap-3 mt-1">
+                <span className="tracking-widest text-textSecondary">••••••••</span>
+                <button
+                  onClick={() => setEditingPwd(true)}
+                  className="text-xs text-accent hover:underline"
+                >
+                  {t("account.edit")}
+                </button>
+              </div>
+            )}
+          </div>
+
         </div>
-      </div>
-
-      {/* ── Security section ────────────────────────────────────────────────── */}
-      <div className="bg-surface border border-border rounded-xl p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-textMain mb-4">{t("security.title")}</h2>
-        <form onSubmit={handleChangePassword} className="space-y-4 max-w-sm">
-          <div>
-            <label className="block text-sm font-medium text-textMain mb-1">
-              {t("security.currentPassword")}
-            </label>
-            <input
-              type="password"
-              value={pwdForm.current}
-              onChange={(e) => setPwdForm(f => ({ ...f, current: e.target.value }))}
-              required
-              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-textMain text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-textMain mb-1">
-              {t("security.newPassword")}
-            </label>
-            <input
-              type="password"
-              value={pwdForm.next}
-              onChange={(e) => setPwdForm(f => ({ ...f, next: e.target.value }))}
-              required
-              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-textMain text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-textMain mb-1">
-              {t("security.confirmPassword")}
-            </label>
-            <input
-              type="password"
-              value={pwdForm.confirm}
-              onChange={(e) => setPwdForm(f => ({ ...f, confirm: e.target.value }))}
-              required
-              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-textMain text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-            />
-          </div>
-
-          {pwdStatus === "mismatch" && (
-            <p className="text-sm text-red-500">{t("security.passwordsMismatch")}</p>
-          )}
-          {pwdStatus === "error" && (
-            <p className="text-sm text-red-500">{pwdError}</p>
-          )}
-          {pwdStatus === "success" && (
-            <p className="text-sm text-green-500">{t("security.successMessage")}</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={pwdStatus === "saving"}
-            className="px-4 py-2 text-sm font-medium bg-accent text-white rounded-lg hover:opacity-90 disabled:opacity-60 transition"
-          >
-            {pwdStatus === "saving" ? t("security.saving") : t("security.save")}
-          </button>
-        </form>
       </div>
 
       {/* ── Danger zone ─────────────────────────────────────────────────────── */}
