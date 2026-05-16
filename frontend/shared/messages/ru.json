@@ -327,11 +327,44 @@
   "Settings": {
     "title": "Настройки",
     "account": {
-      "title": "Аккаунт",
+      "title": "Профиль",
       "email": "Email",
       "fullName": "Полное имя",
       "organization": "Организация",
-      "phone": "Телефон"
+      "phone": "Телефон",
+      "edit": "Редактировать",
+      "save": "Сохранить",
+      "cancel": "Отмена",
+      "saveSuccess": "Сохранено",
+      "saveError": "Ошибка сохранения"
+    },
+    "security": {
+      "title": "Безопасность",
+      "changePassword": "Смена пароля",
+      "currentPassword": "Текущий пароль",
+      "newPassword": "Новый пароль",
+      "confirmPassword": "Подтвердите новый пароль",
+      "save": "Сменить пароль",
+      "saving": "Сохранение...",
+      "passwordsMismatch": "Пароли не совпадают",
+      "successMessage": "Пароль успешно изменён",
+      "errorInvalid": "Неверный текущий пароль",
+      "errorGeneric": "Ошибка при смене пароля"
+    },
+    "danger": {
+      "title": "Опасная зона",
+      "deleteAccount": "Удалить аккаунт",
+      "deleteDescription": "Это действие необратимо. Мы отправим письмо с подтверждением на ваш email.",
+      "sendConfirmation": "Отправить письмо с подтверждением",
+      "sending": "Отправка...",
+      "emailSent": "Письмо отправлено. Проверьте почту и перейдите по ссылке.",
+      "sendError": "Ошибка отправки письма",
+      "confirmDeleteTitle": "Подтвердить удаление аккаунта?",
+      "confirmDeleteDescription": "Все данные будут удалены безвозвратно. Это действие нельзя отменить.",
+      "confirmDeleteButton": "Удалить навсегда",
+      "deleting": "Удаление...",
+      "cancel": "Отмена",
+      "deleteError": "Ошибка при удалении"
     },
     "preferences": {
       "title": "Предпочтения",

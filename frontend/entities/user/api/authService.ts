@@ -11,4 +11,16 @@ export const authService = {
   me: () => http.get<User>("/auth/me"),
 
   refresh: () => http.post<{ accessToken: string }>("/auth/refresh"),
+
+  updateProfile: (data: { fullName: string; birthDate: string; organization: string | null; phone: string; agreedToProcessing: boolean }) =>
+    http.patch<User>("/auth/profile", data),
+
+  changePassword: (currentPassword: string, newPassword: string) =>
+    http.patch<{ message: string }>("/auth/password", { currentPassword, newPassword }),
+
+  requestDeleteAccount: (locale: string) =>
+    http.post<{ message: string }>("/auth/delete-request", { locale }),
+
+  deleteAccount: (token: string) =>
+    http.delete<{ message: string }>("/auth/account", { data: { token } }),
 };

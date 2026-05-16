@@ -327,11 +327,44 @@
   "Settings": {
     "title": "Settings",
     "account": {
-      "title": "Account",
+      "title": "Profile",
       "email": "Email",
       "fullName": "Full name",
       "organization": "Organization",
-      "phone": "Phone"
+      "phone": "Phone",
+      "edit": "Edit",
+      "save": "Save",
+      "cancel": "Cancel",
+      "saveSuccess": "Saved",
+      "saveError": "Failed to save"
+    },
+    "security": {
+      "title": "Security",
+      "changePassword": "Change password",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "save": "Change password",
+      "saving": "Saving...",
+      "passwordsMismatch": "Passwords do not match",
+      "successMessage": "Password changed successfully",
+      "errorInvalid": "Current password is incorrect",
+      "errorGeneric": "Failed to change password"
+    },
+    "danger": {
+      "title": "Danger zone",
+      "deleteAccount": "Delete account",
+      "deleteDescription": "This action is irreversible. We will send a confirmation email.",
+      "sendConfirmation": "Send confirmation email",
+      "sending": "Sending...",
+      "emailSent": "Email sent. Check your inbox and click the link.",
+      "sendError": "Failed to send email",
+      "confirmDeleteTitle": "Confirm account deletion?",
+      "confirmDeleteDescription": "All data will be permanently deleted. This cannot be undone.",
+      "confirmDeleteButton": "Delete permanently",
+      "deleting": "Deleting...",
+      "cancel": "Cancel",
+      "deleteError": "Failed to delete account"
     },
     "preferences": {
       "title": "Preferences",

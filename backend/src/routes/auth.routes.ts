@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { login, register, refresh, logout, updateProfile, deleteUser } from "../controllers/auth.controller";
+import { login, register, refresh, logout, updateProfile, deleteUser, changePassword, requestDeleteAccount } from "../controllers/auth.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
 import { query } from "../db";
 
@@ -20,6 +20,8 @@ router.get("/me", authMiddleware, async (req: any, res: any) => {
 });
 
 router.patch("/profile", authMiddleware, updateProfile);
+router.patch("/password", authMiddleware, changePassword);
+router.post("/delete-request", authMiddleware, requestDeleteAccount);
 router.delete("/account", authMiddleware, deleteUser);
 
 export default router;
