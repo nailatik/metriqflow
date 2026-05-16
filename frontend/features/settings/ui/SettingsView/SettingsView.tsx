@@ -5,6 +5,10 @@ import { useTranslations, useLocale } from "next-intl";
 import { observer } from "mobx-react-lite";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUserStore } from "@/shared/store/StoreProvider";
+import { authService } from "@/entities/user/api/authService";
+import { Button } from "@/shared/ui/Button/Button";
+import { Input } from "@/shared/ui/Input/Input";
+import { getPasswordChecks } from "@/shared/lib/validation";
 
 export const SettingsView = observer(() => {
   const t = useTranslations("Settings");
@@ -99,7 +103,19 @@ export const SettingsView = observer(() => {
         <div className="space-y-4 text-textSecondary">
           <div>
             <p className="text-sm font-medium text-textMain">{t("account.email")}</p>
-            <p className="mt-1">{user?.email ?? "—"}</p>
+            <div className="flex items-center gap-2 mt-1">
+              <p>{user?.email ?? "—"}</p>
+              {user?.email_verified === false && (
+                <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">
+                  {t("account.notVerified")}
+                </span>
+              )}
+              {user?.email_verified && (
+                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                  {t("account.verified")}
+                </span>
+              )}
+            </div>
           </div>
           <div>
             <p className="text-sm font-medium text-textMain">{t("account.fullName")}</p>

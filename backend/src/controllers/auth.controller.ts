@@ -1,12 +1,13 @@
 import { Request, Response } from "express";
 import { query } from "../db";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import { validateEmail, validatePassword } from "../utils/validation";
 import { createAccessToken, createRefreshToken } from "../auth/auth.tokens";
 import { setRefreshCookie } from "../auth/auth.cookies";
 import { UserDB, UserRow } from "../types/express";
 import jwt from "jsonwebtoken";
-import { sendDeleteConfirmationEmail } from "../services/delivery.service";
+import { sendVerificationEmail, sendDeleteConfirmationEmail } from "../services/delivery.service";
 
 type AuthBody = {
   email: string;
@@ -19,6 +20,8 @@ type AuthBody = {
 };
 
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
+
+const generateToken = () => crypto.randomBytes(32).toString("hex");
 
 /* ---------------- REGISTER ---------------- */
 
@@ -64,12 +67,14 @@ export const register = async (req: Request, res: Response) => {
     }
 
     const hashed = await bcrypt.hash(password, 10);
+    const verificationToken = generateToken();
 
     const result = await query(
-      `INSERT INTO users (email, password, full_name, birth_date, organization, phone, agreed_to_processing, is_profile_completed)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, true)
-       RETURNING id, email, full_name, birth_date, organization, phone, is_profile_completed`,
-      [normalizedEmail, hashed, fullName, birthDate, organization || null, phone, agreedToProcessing]
+      `INSERT INTO users (email, password, full_name, birth_date, organization, phone, agreed_to_processing, is_profile_completed,
+                          email_verified, email_verification_token, email_verification_expires_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, true, false, $8, NOW() + interval '24 hours')
+       RETURNING id, email, full_name, birth_date, organization, phone, is_profile_completed, email_verified`,
+      [normalizedEmail, hashed, fullName, birthDate, organization || null, phone, agreedToProcessing, verificationToken]
     );
 
     const user = result.rows[0] as UserRow | undefined;
@@ -95,6 +100,11 @@ export const register = async (req: Request, res: Response) => {
 
     setRefreshCookie(res, refreshToken);
 
+    // Send verification email (non-blocking — don't fail registration if email fails)
+    sendVerificationEmail(normalizedEmail, verificationToken).catch((err) =>
+      console.error("Failed to send verification email:", err)
+    );
+
     return res.json({
       user,
       accessToken,
@@ -114,7 +124,7 @@ export const login = async (req: Request, res: Response) => {
     const normalizedEmail = normalizeEmail(email);
 
     const result = await query(
-      `SELECT id, email, password, created_at, is_profile_completed
+      `SELECT id, email, password, created_at, is_profile_completed, email_verified
        FROM users WHERE email = $1`,
       [normalizedEmail]
     );
@@ -154,6 +164,7 @@ export const login = async (req: Request, res: Response) => {
         email: user.email,
         created_at: user.created_at,
         is_profile_completed: user.is_profile_completed,
+        email_verified: user.email_verified,
       },
       accessToken,
     });
@@ -188,7 +199,7 @@ export const refresh = async (req: Request, res: Response) => {
     }
 
     const result = await query(
-      `SELECT id, email, created_at, is_profile_completed
+      `SELECT id, email, created_at, is_profile_completed, email_verified
        FROM users WHERE id = $1`,
       [payload.id]
     );
@@ -252,6 +263,87 @@ export const logout = async (req: Request, res: Response) => {
   }
 };
 
+/* ---------------- VERIFY EMAIL ---------------- */
+
+export const verifyEmail = async (req: Request, res: Response) => {
+  try {
+    const { token } = req.query as { token: string };
+
+    if (!token) {
+      return res.status(400).json({ message: "Token is required" });
+    }
+
+    const result = await query(
+      `SELECT id FROM users
+       WHERE email_verification_token = $1
+         AND email_verification_expires_at > NOW()
+         AND email_verified = false`,
+      [token]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
+
+    await query(
+      `UPDATE users
+       SET email_verified = true, email_verification_token = NULL, email_verification_expires_at = NULL
+       WHERE id = $1`,
+      [result.rows[0].id]
+    );
+
+    return res.json({ message: "Email verified" });
+  } catch (err) {
+    console.error("VERIFY EMAIL ERROR:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+/* ---------------- RESEND VERIFICATION ---------------- */
+
+export const resendVerification = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const result = await query(
+      "SELECT id, email, email_verified FROM users WHERE id = $1",
+      [userId]
+    );
+
+    const user = result.rows[0];
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.email_verified) {
+      return res.status(400).json({ message: "Email already verified" });
+    }
+
+    const verificationToken = generateToken();
+
+    await query(
+      `UPDATE users
+       SET email_verification_token = $1, email_verification_expires_at = NOW() + interval '24 hours'
+       WHERE id = $2`,
+      [verificationToken, userId]
+    );
+
+    sendVerificationEmail(user.email, verificationToken).catch((err) =>
+      console.error("Failed to send verification email:", err)
+    );
+
+    return res.json({ message: "Verification email sent" });
+  } catch (err) {
+    console.error("RESEND VERIFICATION ERROR:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 /* ---------------- UPDATE PROFILE ---------------- */
 
 type ProfileBody = {
@@ -289,8 +381,8 @@ export const updateProfile = async (req: Request, res: Response) => {
     }
 
     const result = await query(
-      `UPDATE users 
-       SET full_name = $1, birth_date = $2, organization = $3, phone = $4, 
+      `UPDATE users
+       SET full_name = $1, birth_date = $2, organization = $3, phone = $4,
            agreed_to_processing = $5, is_profile_completed = true
        WHERE id = $6
        RETURNING id, email, full_name, birth_date, organization, phone, is_profile_completed`,

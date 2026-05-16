@@ -1,5 +1,16 @@
 import { Router } from "express";
-import { login, register, refresh, logout, updateProfile, deleteUser, changePassword, requestDeleteAccount } from "../controllers/auth.controller";
+import {
+  login,
+  register,
+  refresh,
+  logout,
+  updateProfile,
+  deleteUser,
+  verifyEmail,
+  resendVerification,
+  changePassword,
+  requestDeleteAccount,
+} from "../controllers/auth.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
 import { query } from "../db";
 
@@ -10,10 +21,13 @@ router.post("/login", login);
 router.post("/refresh", refresh);
 router.post("/logout", logout);
 
+router.get("/verify-email", verifyEmail);
+router.post("/resend-verification", authMiddleware, resendVerification);
+
 router.get("/me", authMiddleware, async (req: any, res: any) => {
   const userId = req.user.id;
   const result = await query(
-    "SELECT id, email, full_name, birth_date, organization, phone FROM users WHERE id = $1",
+    "SELECT id, email, full_name, birth_date, organization, phone, email_verified FROM users WHERE id = $1",
     [userId]
   );
   res.json(result.rows[0] || req.user);

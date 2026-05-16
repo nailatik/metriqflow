@@ -21,6 +21,7 @@ type UserRow = {
   birth_date?: string;
   organization?: string;
   phone?: string;
+  email_verified?: boolean;
 };
 
 type UserDB = {
@@ -29,4 +30,5 @@ type UserDB = {
   password: string;
   created_at: string;
   is_profile_completed: boolean;
+  email_verified: boolean;
 };

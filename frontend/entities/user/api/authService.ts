@@ -23,4 +23,10 @@ export const authService = {
 
   deleteAccount: (token: string) =>
     http.delete<{ message: string }>("/auth/account", { data: { token } }),
+
+  verifyEmail: (token: string) =>
+    http.get<{ message: string }>(`/auth/verify-email?token=${token}`),
+
+  resendVerification: () =>
+    http.post<{ message: string }>("/auth/resend-verification"),
 };

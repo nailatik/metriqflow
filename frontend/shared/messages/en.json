@@ -326,6 +326,8 @@
   },
   "Settings": {
     "title": "Settings",
+    "save": "Save",
+    "saving": "Saving...",
     "account": {
       "title": "Profile",
       "email": "Email",
@@ -366,10 +368,68 @@
       "cancel": "Cancel",
       "deleteError": "Failed to delete account"
     },
-    "preferences": {
-      "title": "Preferences",
-      "comingSoon": "Settings management coming soon."
+    "org": {
+      "title": "Organization",
+      "label": "Organization name",
+      "placeholder": "Your company",
+      "success": "Organization updated",
+      "error": "Failed to save"
+    },
+    "password": {
+      "title": "Change password",
+      "old": "Current password",
+      "new": "New password",
+      "confirm": "Confirm new password",
+      "submit": "Change password",
+      "success": "Password changed successfully",
+      "allRequired": "Fill in all fields",
+      "mismatch": "Passwords do not match",
+      "weak": "Password does not meet requirements",
+      "wrongOld": "Current password is incorrect",
+      "error": "Failed to change password",
+      "checkLength": "At least 6 characters",
+      "checkUpper": "One uppercase letter",
+      "checkSpecial": "One special character"
+    },
+    "delete": {
+      "title": "Delete account",
+      "description": "Once deleted, all your data will be lost forever. This action cannot be undone.",
+      "button": "Delete account",
+      "confirmText": "Are you sure you want to delete your account?",
+      "confirmHint": "We will send a confirmation email to:",
+      "sendEmail": "Send confirmation email",
+      "sending": "Sending...",
+      "cancel": "Cancel",
+      "sent": "Confirmation email sent to:",
+      "error": "Failed to send email"
     }
+  },
+  "VerifyEmail": {
+    "title": "Verify your email",
+    "subtitle": "We sent a verification link to:",
+    "hint": "Click the link in the email to activate your account.",
+    "resend": "Resend email",
+    "resendLoading": "Sending...",
+    "resendSuccess": "Email sent! Check your inbox.",
+    "resendError": "Failed to send. Please try again later.",
+    "logout": "Log out",
+    "verifying": "Verifying...",
+    "successTitle": "Email verified!",
+    "successSubtitle": "Redirecting you to the dashboard...",
+    "errorTitle": "Link is invalid",
+    "errorSubtitle": "The link has expired or was already used. Request a new one."
+  },
+  "DeleteConfirm": {
+    "title": "Confirm account deletion",
+    "subtitle": "Click the button below to permanently delete your account and all data. This cannot be undone.",
+    "confirm": "Delete permanently",
+    "loading": "Deleting...",
+    "cancel": "Cancel",
+    "doneTitle": "Account deleted",
+    "doneSubtitle": "All your data has been removed. Redirecting to login...",
+    "errorTitle": "Error",
+    "errorText": "The link is invalid or has expired.",
+    "noToken": "No token found in link."
   },
   "Profile": {
     "title": "Profile",

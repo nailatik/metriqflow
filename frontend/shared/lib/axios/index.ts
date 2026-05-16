@@ -48,6 +48,9 @@ api.interceptors.response.use(
     const isRefreshEndpoint = originalRequest?.url?.includes("/auth/refresh");
     const isAuthEndpoint = originalRequest?.url?.includes("/auth/login") ||
                            originalRequest?.url?.includes("/auth/register");
+    // These endpoints handle their own errors inline — no global modal
+    const isSilentEndpoint = originalRequest?.url?.includes("/auth/verify-email") ||
+                             originalRequest?.url?.includes("/auth/account/confirm");
 
     if (status === 401 && !originalRequest._retry && !isRefreshEndpoint && !isAuthEndpoint) {
       originalRequest._retry = true;
@@ -74,10 +77,12 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    if (status === 409) {
-      getRootStore().uiStore.setError(message ?? "User already exists");
-    } else if (status) {
-      getRootStore().uiStore.setError(message ?? "Request error");
+    if (!isSilentEndpoint) {
+      if (status === 409) {
+        getRootStore().uiStore.setError(message ?? "User already exists");
+      } else if (status) {
+        getRootStore().uiStore.setError(message ?? "Request error");
+      }
     }
 
     return Promise.reject(error);

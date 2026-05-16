@@ -92,7 +92,7 @@ export const RegisterForm = observer(() => {
     if (ok) {
       sessionStorage.removeItem("reg_email");
       sessionStorage.removeItem("reg_password");
-      router.push("/app");
+      router.push("/verify-email");
     }
   };
 

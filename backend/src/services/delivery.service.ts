@@ -85,30 +85,48 @@ export async function sendReportViaEmail(
   });
 }
 
-export async function sendDeleteConfirmationEmail(
-  toEmail: string,
-  confirmUrl: string
-): Promise<void> {
-  if (!process.env.SMTP_USER) throw new Error("SMTP not configured");
-
+async function sendSimpleEmail(to: string, subject: string, html: string): Promise<void> {
+  const smtpUser = process.env.SMTP_USER;
+  if (!smtpUser) {
+    console.log(`[DEV] Email to ${to} | Subject: ${subject}\n${html}`);
+    return;
+  }
   const transport = createTransport();
-
   await transport.sendMail({
-    from:    `"MetriqFlow" <${process.env.SMTP_FROM ?? process.env.SMTP_USER}>`,
-    to:      toEmail,
-    subject: "Подтверждение удаления аккаунта MetriqFlow",
-    html: `
-      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-        <h2 style="color: #e53e3e;">Удаление аккаунта</h2>
-        <p>Вы запросили удаление вашего аккаунта MetriqFlow.</p>
-        <p>Нажмите кнопку ниже для подтверждения. Ссылка действительна 1 час.</p>
-        <a href="${confirmUrl}" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#e53e3e;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">
-          Удалить аккаунт
-        </a>
-        <p style="margin-top:24px;color:#888;font-size:12px;">
-          Если вы не запрашивали это — проигнорируйте письмо.
-        </p>
-      </div>
-    `,
+    from: `"MetriqFlow" <${process.env.SMTP_FROM ?? smtpUser}>`,
+    to,
+    subject,
+    html,
   });
+}
+
+export async function sendVerificationEmail(toEmail: string, token: string): Promise<void> {
+  const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:3000";
+  const link = `${frontendUrl}/ru/verify-email?token=${token}`;
+  const html = `
+    <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
+      <h2 style="color:#6366f1">Подтвердите email</h2>
+      <p>Нажмите кнопку ниже, чтобы подтвердить ваш адрес электронной почты в MetriqFlow.</p>
+      <a href="${link}" style="display:inline-block;margin:16px 0;padding:12px 24px;background:#6366f1;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">
+        Подтвердить email
+      </a>
+      <p style="color:#888;font-size:13px">Ссылка действительна 24 часа. Если вы не регистрировались — просто проигнорируйте это письмо.</p>
+    </div>
+  `;
+  await sendSimpleEmail(toEmail, "Подтвердите ваш email — MetriqFlow", html);
+}
+
+export async function sendDeleteConfirmationEmail(toEmail: string, confirmUrl: string): Promise<void> {
+  const html = `
+    <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
+      <h2 style="color:#ef4444">Удаление аккаунта</h2>
+      <p>Мы получили запрос на удаление вашего аккаунта MetriqFlow.</p>
+      <p>Если вы действительно хотите удалить аккаунт — нажмите кнопку ниже. <strong>Это действие необратимо.</strong></p>
+      <a href="${confirmUrl}" style="display:inline-block;margin:16px 0;padding:12px 24px;background:#ef4444;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">
+        Удалить аккаунт навсегда
+      </a>
+      <p style="color:#888;font-size:13px">Ссылка действительна 1 час. Если вы не запрашивали удаление — просто проигнорируйте это письмо.</p>
+    </div>
+  `;
+  await sendSimpleEmail(toEmail, "Подтверждение удаления аккаунта — MetriqFlow", html);
 }
