@@ -7,6 +7,7 @@ export interface User {
   phone?: string;
   is_profile_completed?: boolean;
   email_verified?: boolean;
+  password_length?: number;
 }
 
 export interface AuthResponse {

@@ -72,10 +72,10 @@ export const register = async (req: Request, res: Response) => {
 
     const result = await query(
       `INSERT INTO users (email, password, full_name, birth_date, organization, phone, agreed_to_processing, is_profile_completed,
-                          email_verified, email_verification_token, email_verification_expires_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, true, false, $8, NOW() + interval '24 hours')
+                          email_verified, email_verification_token, email_verification_expires_at, password_length)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, true, false, $8, NOW() + interval '24 hours', $9)
        RETURNING id, email, full_name, birth_date, organization, phone, is_profile_completed, email_verified`,
-      [normalizedEmail, hashed, fullName, birthDate, organization || null, phone, agreedToProcessing, verificationToken]
+      [normalizedEmail, hashed, fullName, birthDate, organization || null, phone, agreedToProcessing, verificationToken, password.length]
     );
 
     const user = result.rows[0] as UserRow | undefined;
@@ -428,7 +428,7 @@ export const changePassword = async (req: Request, res: Response) => {
     }
 
     const hashed = await bcrypt.hash(newPassword, 10);
-    await query("UPDATE users SET password = $1 WHERE id = $2", [hashed, userId]);
+    await query("UPDATE users SET password = $1, password_length = $2 WHERE id = $3", [hashed, newPassword.length, userId]);
 
     return res.json({ message: "Password updated" });
   } catch (err) {

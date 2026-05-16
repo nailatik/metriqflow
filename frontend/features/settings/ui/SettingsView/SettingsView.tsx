@@ -243,7 +243,7 @@ export const SettingsView = observer(() => {
               </form>
             ) : (
               <div className="flex items-center gap-3 mt-1">
-                <span className="tracking-widest text-textSecondary">••••••••</span>
+                <span className="tracking-widest text-textSecondary">{"•".repeat(user?.password_length ?? 8)}</span>
                 <button
                   onClick={() => setEditingPwd(true)}
                   className="text-xs text-accent hover:underline"

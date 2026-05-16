@@ -27,7 +27,7 @@ router.post("/resend-verification", authMiddleware, resendVerification);
 router.get("/me", authMiddleware, async (req: any, res: any) => {
   const userId = req.user.id;
   const result = await query(
-    "SELECT id, email, full_name, birth_date, organization, phone, email_verified FROM users WHERE id = $1",
+    "SELECT id, email, full_name, birth_date, organization, phone, email_verified, password_length FROM users WHERE id = $1",
     [userId]
   );
   res.json(result.rows[0] || req.user);
