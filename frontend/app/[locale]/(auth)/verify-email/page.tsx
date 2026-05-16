@@ -31,6 +31,14 @@ export default function VerifyEmailPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Redirect to app if email already verified (e.g. verified in another tab)
+  useEffect(() => {
+    if (userStore.user?.email_verified === true && status === "pending") {
+      router.replace("/app");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userStore.user, status]);
+
   useEffect(() => {
     if (!token) return;
     authService
