@@ -5,6 +5,9 @@ import { useTranslations, useLocale } from "next-intl";
 import { observer } from "mobx-react-lite";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUserStore } from "@/shared/store/StoreProvider";
+import { Link } from "@/i18n/navigation";
+import { usePlan } from "@/shared/hooks/usePlan";
+import { PLAN_NAMES } from "@/shared/lib/plans";
 
 export const SettingsView = observer(() => {
   const t = useTranslations("Settings");
@@ -13,6 +16,7 @@ export const SettingsView = observer(() => {
   const searchParams = useSearchParams();
   const userStore = useUserStore();
   const user = userStore.user;
+  const { plan } = usePlan();
 
   // ── Organization edit ──────────────────────────────────────────────────────
   const [editingOrg, setEditingOrg] = useState(false);
@@ -183,6 +187,20 @@ export const SettingsView = observer(() => {
           <div>
             <p className="text-sm font-medium text-textMain">{t("account.phone")}</p>
             <p className="mt-1">{user?.phone ?? "—"}</p>
+          </div>
+
+          {/* Subscription */}
+          <div>
+            <p className="text-sm font-medium text-textMain">{t("account.subscription")}</p>
+            <div className="mt-1">
+              <Link
+                href="/app/billing"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+              >
+                {PLAN_NAMES[plan]}
+                <span className="text-xs opacity-60">→</span>
+              </Link>
+            </div>
           </div>
 
           {/* Password */}

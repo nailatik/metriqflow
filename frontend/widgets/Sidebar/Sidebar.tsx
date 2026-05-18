@@ -4,6 +4,8 @@ import { observer } from "mobx-react-lite";
 import { useTranslations, useLocale } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { useUserStore } from "@/shared/store/StoreProvider";
+import { usePlan } from "@/shared/hooks/usePlan";
+import { PLAN_NAMES } from "@/shared/lib/plans";
 import type { Locale } from "@/i18n/routing";
 
 const navLinks = [
@@ -20,6 +22,7 @@ export const Sidebar = observer(() => {
   const router = useRouter();
   const locale = useLocale() as Locale;
   const userStore = useUserStore();
+  const { plan } = usePlan();
 
   const switchLocale = () => {
     const next = locale === "en" ? "ru" : "en";
@@ -54,6 +57,23 @@ export const Sidebar = observer(() => {
       </div>
 
       <div className="flex flex-col gap-2 text-sm">
+        {/* Plan badge + upgrade link */}
+        <Link
+          href="/app/billing"
+          className={`px-3 py-2 rounded-lg flex items-center justify-between hover:bg-border transition ${
+            pathname.startsWith("/app/billing") ? "bg-primary text-white" : "text-textSecondary"
+          }`}
+        >
+          <span>{t("billing")}</span>
+          <span className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${
+            plan === "free"
+              ? "bg-border text-textSecondary"
+              : "bg-primary/10 text-primary border border-primary/20"
+          }`}>
+            {PLAN_NAMES[plan]}
+          </span>
+        </Link>
+
         {/* Language toggle */}
         <button
           onClick={switchLocale}

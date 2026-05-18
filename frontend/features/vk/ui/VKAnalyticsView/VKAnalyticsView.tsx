@@ -6,6 +6,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { http } from "@/shared/lib/axios";
+import { UpgradeBanner } from "@/features/billing/ui/UpgradeBanner/UpgradeBanner";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -65,6 +66,7 @@ type HeatCell = { day_of_week: number; hour: number; avg_views: number; post_cou
 type Analytics = {
   community: Community & { member_count: number };
   period: string;
+  history_capped?: boolean;
   summary: Summary;
   growth: Growth;
   stats_by_day: StatDay[];
@@ -330,6 +332,10 @@ export function VKAnalyticsView() {
           <p className="text-sm font-semibold text-error">{t("loadError")}</p>
           <p className="text-sm text-textSecondary">{fetchError}</p>
         </div>
+      )}
+
+      {analytics?.history_capped && (
+        <UpgradeBanner compact reason={t("historyCapped")} />
       )}
 
       {loading && !analytics && (

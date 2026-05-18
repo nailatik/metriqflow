@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
 import { query } from "../db";
+import { getUserPlan } from "../lib/getUserPlan";
+import { getLimits } from "../config/plans";
 
 const VK_API_V  = "5.199";
 const VK_BASE   = "https://api.vk.com/method";
-
-const COMMUNITY_LIMIT = 5;
 
 /* Single app-wide service token. Reads public community data (wall.get,
  * groups.getById). VK disabled all user-token OAuth flows on 2024-06-25, and
@@ -111,14 +111,18 @@ export const addVkCommunity = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Could not parse community ID. Use numeric id, screen name, or vk.com URL." });
     }
 
-    // Enforce limit
-    const countRes = await query(
-      "SELECT COUNT(*) FROM vk_communities WHERE user_id = $1 AND is_active = TRUE",
-      [userId]
-    );
-    const count = parseInt((countRes.rows[0] as { count: string }).count, 10);
-    if (count >= COMMUNITY_LIMIT) {
-      return res.status(400).json({ message: `Community limit reached (${COMMUNITY_LIMIT} max)` });
+    // Enforce plan limit
+    const plan   = await getUserPlan(userId);
+    const limits = getLimits(plan);
+    if (limits.vk_communities !== null) {
+      const countRes = await query(
+        "SELECT COUNT(*) FROM vk_communities WHERE user_id = $1 AND is_active = TRUE",
+        [userId]
+      );
+      const count = parseInt((countRes.rows[0] as { count: string }).count, 10);
+      if (count >= limits.vk_communities) {
+        return res.status(403).json({ message: "limit", upgrade: true, limit: limits.vk_communities });
+      }
     }
 
     // Resolve community meta. v5.199 groups.getById → { groups: [...] }
@@ -253,10 +257,14 @@ export const getVkCommunityAnalytics = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid communityId" });
     }
 
-    const period = typeof req.query.period === "string" ? req.query.period : "7d";
-    if (!VALID_PERIODS.has(period)) {
+    const rawPeriod = typeof req.query.period === "string" ? req.query.period : "7d";
+    if (!VALID_PERIODS.has(rawPeriod)) {
       return res.status(400).json({ message: "Invalid period" });
     }
+
+    const planLimits = getLimits(await getUserPlan(userId));
+    const historyCapped = planLimits.history_days !== null && rawPeriod === "all";
+    const period = historyCapped ? "30d" : rawPeriod;
 
     const row = await query(
       `SELECT community_id, name, screen_name, photo_url, member_count, community_token
@@ -480,6 +488,7 @@ export const getVkCommunityAnalytics = async (req: Request, res: Response) => {
         member_count: currentMemberCount,
       },
       period,
+      history_capped: historyCapped,
       summary: { ...summary, member_count: currentMemberCount, engagement_rate },
       stats_by_day: statsByDay,
       top_posts: topPosts,

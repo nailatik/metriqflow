@@ -3,11 +3,15 @@
 import { useTranslations } from "next-intl";
 import { observer } from "mobx-react-lite";
 import { useUserStore } from "@/shared/store/StoreProvider";
+import { Link } from "@/i18n/navigation";
+import { usePlan } from "@/shared/hooks/usePlan";
+import { PLAN_NAMES } from "@/shared/lib/plans";
 
 export const ProfileView = observer(() => {
   const t = useTranslations("Profile");
   const userStore = useUserStore();
   const user = userStore.user;
+  const { plan } = usePlan();
 
   const initials = user?.full_name
     ?.split(" ")
@@ -30,6 +34,13 @@ export const ProfileView = observer(() => {
           {user?.organization && (
             <p className="text-textSecondary text-sm mt-1">{user.organization}</p>
           )}
+          <Link
+            href="/app/billing"
+            className="inline-flex items-center gap-1.5 mt-3 text-xs font-medium text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full hover:bg-primary/15 transition-colors"
+          >
+            {t("subscription")}: {PLAN_NAMES[plan]}
+            <span className="opacity-60">→</span>
+          </Link>
         </div>
       </div>
 

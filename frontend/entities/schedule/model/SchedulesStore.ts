@@ -19,12 +19,16 @@ export class SchedulesStore {
     }
   }
 
-  async createSchedule(data: CreateSchedule): Promise<Schedule | null> {
+  async createSchedule(data: CreateSchedule): Promise<Schedule | { upgrade: true } | null> {
     try {
       const res = await schedulesService.createSchedule(data);
       runInAction(() => { this.list.unshift(res.data); });
       return res.data;
-    } catch {
+    } catch (e: unknown) {
+      const resp = (e as { response?: { status?: number; data?: { upgrade?: boolean } } })?.response;
+      if (resp?.status === 403 && resp?.data?.upgrade) {
+        return { upgrade: true };
+      }
       this.root.uiStore.setError("Failed to create schedule");
       return null;
     }

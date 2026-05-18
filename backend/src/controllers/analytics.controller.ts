@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { query } from "../db";
+import { getUserPlan } from "../lib/getUserPlan";
+import { getLimits } from "../config/plans";
 
 const VALID_PERIODS = new Set(["24h", "7d", "30d", "all"]);
 type Period = "24h" | "7d" | "30d" | "all";
@@ -76,8 +78,12 @@ export const getChannelAnalytics = async (req: Request, res: Response) => {
     const channelId = parsePositiveInt(req.params.channelId);
     if (!channelId) return res.status(400).json({ message: "Invalid channelId" });
 
-    const period = parsePeriod(req.query.period ?? "7d");
-    if (!period) return res.status(400).json({ message: "Invalid period. Use: 24h, 7d, 30d, all" });
+    const rawPeriod = parsePeriod(req.query.period ?? "7d");
+    if (!rawPeriod) return res.status(400).json({ message: "Invalid period. Use: 24h, 7d, 30d, all" });
+
+    const planLimits = getLimits(await getUserPlan(userId));
+    const historyCapped = planLimits.history_days !== null && rawPeriod === "all";
+    const period: Period = historyCapped ? "30d" : rawPeriod;
 
     const periodFilter = getPeriodFilter(period);
     const growthIntervals = getGrowthIntervals(period);
@@ -245,6 +251,7 @@ export const getChannelAnalytics = async (req: Request, res: Response) => {
     return res.json({
       channel,
       period,
+      history_capped: historyCapped,
       summary: summaryResult.rows[0],
       views_by_day: viewsByDayResult.rows,
       top_posts: topPostsResult.rows,

@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { query } from "../db";
+import { getUserPlan } from "../lib/getUserPlan";
+import { getLimits } from "../config/plans";
 
 function parseId(raw: unknown): number | null {
   const n = parseInt(String(raw), 10);
@@ -95,6 +97,20 @@ export const createSchedule = async (req: Request, res: Response) => {
     );
     if (existing.rows.length > 0) {
       return res.status(409).json({ message: "Schedule for this source already exists" });
+    }
+
+    // Enforce plan autoreport limit
+    const plan   = await getUserPlan(userId);
+    const limits = getLimits(plan);
+    if (limits.autoreports !== null) {
+      const countRes = await query(
+        "SELECT COUNT(*) FROM report_schedules WHERE user_id = $1",
+        [userId]
+      );
+      const count = parseInt((countRes.rows[0] as { count: string }).count, 10);
+      if (count >= limits.autoreports) {
+        return res.status(403).json({ message: "limit", upgrade: true, limit: limits.autoreports });
+      }
     }
 
     // $7 = sendHour (column), $8 = timezone (column + AT TIME ZONE), $9 = sendHour (CASE calc)

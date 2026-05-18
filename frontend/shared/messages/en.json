@@ -183,7 +183,8 @@
     "save": "Save",
     "noSchedules": "No schedules",
     "schedulesCount": "{n} schedules",
-    "sourceUsed": "already set"
+    "sourceUsed": "already set",
+    "limitAutoreports": "Free plan autoreport limit reached"
   },
   "Reports": {
     "title": "Reports",
@@ -300,7 +301,8 @@
     "heatmapHint": "Colour = avg views. Darker = better time to post.",
     "comments": "Comments",
     "loadError": "Failed to load analytics",
-    "loadChannelsError": "Failed to load channels"
+    "loadChannelsError": "Failed to load channels",
+    "historyCapped": "Free plan: history limited to 30 days"
   },
   "VKAnalytics": {
     "title": "VK Analytics",
@@ -326,6 +328,7 @@
     "heatmap": "Best posting time",
     "noHeatmapData": "Not enough data yet.",
     "heatmapHint": "Colour = avg views. Darker = better time to post.",
+    "historyCapped": "Free plan: history limited to 30 days",
     "loadError": "Could not load analytics",
     "tokenInvalid": "The saved token no longer works. Remove the community in Integrations and add it again with a new user token."
   },
@@ -346,6 +349,7 @@
       "saveError": "Failed to save",
       "verified": "Verified",
       "notVerified": "Not verified",
+      "subscription": "Subscription",
       "password": "Password"
     },
     "security": {
@@ -447,7 +451,8 @@
     "phone": "Phone",
     "birthDate": "Date of birth",
     "organization": "Organization",
-    "accountId": "Account ID"
+    "accountId": "Account ID",
+    "subscription": "Subscription"
   },
   "Sidebar": {
     "dashboard": "Dashboard",
@@ -456,8 +461,48 @@
     "integrations": "Integrations",
     "settings": "Settings",
     "profile": "Profile",
+    "billing": "Billing",
     "support": "Support",
     "logout": "Logout"
+  },
+  "Billing": {
+    "title": "Billing",
+    "subtitle": "Choose a plan for your account",
+    "currentPlan": "Current plan",
+    "freePlanNote": "Start for free — upgrade when you're ready",
+    "current": "Active",
+    "perMonth": "RUB/mo",
+    "free": "Free",
+    "channels": "channels",
+    "communities": "communities",
+    "history": "History",
+    "days": "days",
+    "fullHistory": "Full history",
+    "autoreport": "autoreport/mo",
+    "unlimitedAutoreports": "Unlimited autoreports",
+    "aiInsights": "AI insights",
+    "exportCsvPdf": "CSV/PDF export",
+    "upgrade": "Upgrade plan",
+    "upgradeDesc": "Upgrade to Pro or Agency to remove limits",
+    "limitReached": "Free plan limit reached",
+    "comingSoon": "Coming soon",
+    "paymentNote": "Payment will be available soon. Contact us: support@metriqflow.com",
+    "popular": "Popular",
+    "taglineFree": "Start for free",
+    "taglinePro": "For active creators",
+    "taglineAgency": "For teams & agencies",
+    "feat": {
+      "tgN": "{n} TG channel{n, plural, one {} other {s}}",
+      "tgUnlimited": "Unlimited TG channels",
+      "vkN": "{n} VK {n, plural, one {community} other {communities}}",
+      "vkUnlimited": "Unlimited VK communities",
+      "historyFull": "Full history",
+      "historyN": "History: {n} days",
+      "autoUnlimited": "Unlimited autoreports",
+      "autoN": "{n} autoreport{n, plural, one {} other {s}}/mo",
+      "ai": "AI insights",
+      "export": "CSV / PDF export"
+    }
   },
   "ErrorModal": {
     "title": "Something went wrong",

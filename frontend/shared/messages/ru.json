@@ -183,7 +183,8 @@
     "save": "Сохранить",
     "noSchedules": "Нет расписаний",
     "schedulesCount": "{n} расписаний",
-    "sourceUsed": "уже создан"
+    "sourceUsed": "уже создан",
+    "limitAutoreports": "Достигнут лимит авторепортов бесплатного плана"
   },
   "Reports": {
     "title": "Отчёты",
@@ -300,7 +301,8 @@
     "heatmapHint": "Цвет = avg просмотры. Темнее = лучшее время.",
     "comments": "Комментарии",
     "loadError": "Не удалось загрузить аналитику",
-    "loadChannelsError": "Не удалось загрузить каналы"
+    "loadChannelsError": "Не удалось загрузить каналы",
+    "historyCapped": "Бесплатный план: история ограничена 30 днями"
   },
   "VKAnalytics": {
     "title": "VK Аналитика",
@@ -326,6 +328,7 @@
     "heatmap": "Лучшее время для постинга",
     "noHeatmapData": "Пока недостаточно данных.",
     "heatmapHint": "Цвет = avg просмотры. Темнее = лучшее время.",
+    "historyCapped": "Бесплатный план: история ограничена 30 днями",
     "loadError": "Не удалось загрузить аналитику",
     "tokenInvalid": "Токен сообщества больше не подходит. Удалите сообщество в Интеграциях и добавьте заново с новым пользовательским токеном."
   },
@@ -346,6 +349,7 @@
       "saveError": "Ошибка сохранения",
       "verified": "Подтверждён",
       "notVerified": "Не подтверждён",
+      "subscription": "Подписка",
       "password": "Пароль"
     },
     "security": {
@@ -447,7 +451,8 @@
     "phone": "Телефон",
     "birthDate": "Дата рождения",
     "organization": "Организация",
-    "accountId": "ID аккаунта"
+    "accountId": "ID аккаунта",
+    "subscription": "Подписка"
   },
   "Sidebar": {
     "dashboard": "Дашборд",
@@ -456,8 +461,48 @@
     "integrations": "Интеграции",
     "settings": "Настройки",
     "profile": "Профиль",
+    "billing": "Подписка",
     "support": "Поддержка",
     "logout": "Выйти"
+  },
+  "Billing": {
+    "title": "Подписка",
+    "subtitle": "Выберите план для вашего аккаунта",
+    "currentPlan": "Текущий план",
+    "freePlanNote": "Начните с бесплатного — переходите когда будете готовы",
+    "current": "Активен",
+    "perMonth": "руб/мес",
+    "free": "Бесплатно",
+    "channels": "каналов",
+    "communities": "сообществ",
+    "history": "История",
+    "days": "дней",
+    "fullHistory": "Полная история",
+    "autoreport": "авторепорт/мес",
+    "unlimitedAutoreports": "Авторепорты без лимита",
+    "aiInsights": "AI инсайты",
+    "exportCsvPdf": "Экспорт CSV/PDF",
+    "upgrade": "Улучшить план",
+    "upgradeDesc": "Перейдите на Pro или Agency для снятия ограничений",
+    "limitReached": "Достигнут лимит бесплатного плана",
+    "comingSoon": "Скоро",
+    "paymentNote": "Оплата будет доступна в ближайшее время. Написать нам: support@metriqflow.com",
+    "popular": "Популярный",
+    "taglineFree": "Начните бесплатно",
+    "taglinePro": "Для активных авторов",
+    "taglineAgency": "Для команд и агентств",
+    "feat": {
+      "tgN": "{n, plural, one {# TG-канал} few {# TG-канала} other {# TG-каналов}}",
+      "tgUnlimited": "TG-каналы без лимита",
+      "vkN": "{n, plural, one {# VK-сообщество} few {# VK-сообщества} other {# VK-сообществ}}",
+      "vkUnlimited": "VK-сообщества без лимита",
+      "historyFull": "Полная история",
+      "historyN": "История: {n} дней",
+      "autoUnlimited": "Авторепорты без лимита",
+      "autoN": "{n, plural, one {# авторепорт/мес} few {# авторепорта/мес} other {# авторепортов/мес}}",
+      "ai": "AI-инсайты",
+      "export": "Экспорт CSV / PDF"
+    }
   },
   "ErrorModal": {
     "title": "Что-то пошло не так",

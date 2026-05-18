@@ -1,3 +1,5 @@
+export type Plan = "free" | "pro" | "agency" | "unlimited";
+
 export interface User {
   id: number;
   email: string;
@@ -8,6 +10,8 @@ export interface User {
   is_profile_completed?: boolean;
   email_verified?: boolean;
   password_length?: number;
+  plan?: Plan;
+  plan_expires_at?: string | null;
 }
 
 export interface AuthResponse {

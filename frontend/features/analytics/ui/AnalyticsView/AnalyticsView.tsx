@@ -7,6 +7,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { http } from "@/shared/lib/axios";
+import { UpgradeBanner } from "@/features/billing/ui/UpgradeBanner/UpgradeBanner";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -49,6 +50,7 @@ type HeatCell   = { day_of_week: number; hour: number; avg_views: number; post_c
 type Analytics = {
   channel: Channel;
   period: string;
+  history_capped?: boolean;
   summary: Summary;
   growth: Growth;
   views_by_day: ViewsByDay[];
@@ -346,6 +348,10 @@ export function AnalyticsView() {
           <p className="text-sm font-semibold text-primary">{t("newChannelBanner")}</p>
           <p className="text-xs text-textSecondary mt-1">{t("newChannelBannerDesc")}</p>
         </div>
+      )}
+
+      {analytics?.history_capped && (
+        <UpgradeBanner compact reason={t("historyCapped")} />
       )}
 
       {loading && !analytics && (

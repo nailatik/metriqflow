@@ -34,10 +34,11 @@ async def bot_status_in_channel(update: ChatMemberUpdated, db: asyncpg.Pool) -> 
             return
 
         channel_count = await queries.get_active_channel_count(db, linked["id"])
-        if channel_count >= 5:
+        limit = await queries.get_user_tg_channel_limit(db, linked["id"])
+        if limit is not None and channel_count >= limit:
             logger.info(
-                "Channel limit reached for user_id=%s, ignoring channel %s",
-                linked["id"], channel.id,
+                "Channel limit reached (plan limit=%s) for user_id=%s, ignoring channel %s",
+                limit, linked["id"], channel.id,
             )
             return
 

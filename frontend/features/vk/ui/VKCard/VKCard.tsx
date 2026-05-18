@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { http } from "@/shared/lib/axios";
 import { Button } from "@/shared/ui/Button/Button";
+import { UpgradeBanner } from "@/features/billing/ui/UpgradeBanner/UpgradeBanner";
+import { usePlan } from "@/shared/hooks/usePlan";
 
 type Community = {
   id: number;
@@ -16,16 +18,16 @@ type Community = {
 
 type CardState = "loading" | "idle" | "adding";
 
-const COMMUNITY_LIMIT = 5;
-
 export function VKCard() {
   const t = useTranslations("Integrations");
+  const { limits } = usePlan();
 
   const [state,       setState]       = useState<CardState>("loading");
   const [communities, setCommunities] = useState<Community[]>([]);
   const [groupInput,  setGroupInput]  = useState("");
   const [busy,        setBusy]        = useState(false);
   const [error,       setError]       = useState<string | null>(null);
+  const [planLimit,   setPlanLimit]   = useState(false);
   const [removeId,    setRemoveId]    = useState<number | null>(null);
 
   const loadCommunities = () => {
@@ -66,7 +68,13 @@ export function VKCard() {
       setGroupInput("");
       setState("idle");
     } catch (e: unknown) {
-      const data = (e as { response?: { data?: { message?: string; code?: number } } })?.response?.data;
+      const resp = (e as { response?: { status?: number; data?: { message?: string; code?: number; upgrade?: boolean } } })?.response;
+      if (resp?.status === 403 && resp?.data?.upgrade) {
+        setPlanLimit(true);
+        setState("idle");
+        return;
+      }
+      const data = resp?.data;
       const msg  = data?.message ?? "";
       if (msg.includes("limit")) {
         setError(t("vkLimitReached"));
@@ -95,7 +103,7 @@ export function VKCard() {
     }
   };
 
-  const canAdd = communities.length < COMMUNITY_LIMIT;
+  const canAdd = limits.vk_communities === null || communities.length < limits.vk_communities;
 
   return (
     <div className="bg-surface border border-border rounded-xl p-6 flex flex-col gap-4">
@@ -117,8 +125,9 @@ export function VKCard() {
         )}
       </div>
 
-      {/* Error */}
-      {error && <p className="text-xs text-error">{error}</p>}
+      {/* Error / upgrade */}
+      {planLimit && <UpgradeBanner compact reason={t("vkLimitReached")} />}
+      {error && !planLimit && <p className="text-xs text-error">{error}</p>}
 
       {/* Loading */}
       {state === "loading" && (

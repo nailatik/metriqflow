@@ -7,6 +7,7 @@ import { useSchedulesStore, useUserStore } from "@/shared/store/StoreProvider";
 import type { ReportSource, ReportFormat } from "@/entities/report/types";
 import type { ScheduleFrequency } from "@/entities/schedule/types";
 import { Button } from "@/shared/ui/Button/Button";
+import { UpgradeBanner } from "@/features/billing/ui/UpgradeBanner/UpgradeBanner";
 
 interface Props {
   open: boolean;
@@ -59,6 +60,7 @@ export const CreateScheduleModal = observer(({ open, onClose, onCreated }: Props
   const [emailEnabled, setEmail]  = useState(false);
   const [emailAddr, setEmailAddr] = useState("");
   const [loading, setLoading]     = useState(false);
+  const [planLimitHit, setPlanLimitHit] = useState(false);
 
   const overlayRef = useRef<HTMLDivElement>(null);
 
@@ -91,7 +93,8 @@ export const CreateScheduleModal = observer(({ open, onClose, onCreated }: Props
       channels,
     });
     setLoading(false);
-    if (result) { onCreated?.(); onClose(); }
+    if (result && !("upgrade" in result)) { onCreated?.(); onClose(); }
+    if (result && "upgrade" in result) { setPlanLimitHit(true); }
   };
 
   const handleOverlay = (e: React.MouseEvent) => {
@@ -111,6 +114,10 @@ export const CreateScheduleModal = observer(({ open, onClose, onCreated }: Props
         </div>
 
         <div className="px-6 py-5 space-y-5">
+          {planLimitHit && (
+            <UpgradeBanner reason={t("limitAutoreports" as Parameters<typeof t>[0])} />
+          )}
+
           {/* Source */}
           <div>
             <p className="text-sm font-medium text-textSecondary mb-2">{t("labelSource")}</p>

@@ -126,6 +126,51 @@ async def get_active_channel_count(pool: asyncpg.Pool, user_id: int) -> int:
         ) or 0
 
 
+import datetime
+import logging
+
+_plan_logger = logging.getLogger(__name__)
+
+PLAN_TG_LIMITS: dict[str, int | None] = {
+    "free":      1,
+    "pro":       5,
+    "agency":    20,
+    "unlimited": None,
+}
+
+
+async def get_user_tg_channel_limit(pool: asyncpg.Pool, user_id: int) -> int | None:
+    try:
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow(
+                "SELECT plan, plan_expires_at FROM users WHERE id = $1",
+                user_id,
+            )
+    except Exception:
+        _plan_logger.exception("get_user_tg_channel_limit: DB error for user_id=%s, defaulting to free", user_id)
+        return PLAN_TG_LIMITS["free"]
+
+    if not row:
+        return PLAN_TG_LIMITS["free"]
+
+    plan = row["plan"] or "free"
+    expires = row["plan_expires_at"]
+
+    if plan not in PLAN_TG_LIMITS:
+        _plan_logger.warning("get_user_tg_channel_limit: unknown plan %r for user_id=%s, treating as free", plan, user_id)
+        plan = "free"
+
+    if plan not in ("free", "unlimited") and expires is not None:
+        now_utc = datetime.datetime.now(datetime.timezone.utc)
+        # asyncpg returns TIMESTAMPTZ as aware datetime; guard against naive just in case
+        if expires.tzinfo is None:
+            expires = expires.replace(tzinfo=datetime.timezone.utc)
+        if expires < now_utc:
+            plan = "free"
+
+    return PLAN_TG_LIMITS[plan]
+
+
 async def deactivate_channel(pool: asyncpg.Pool, channel_id: int) -> None:
     async with pool.acquire() as conn:
         await conn.execute(
