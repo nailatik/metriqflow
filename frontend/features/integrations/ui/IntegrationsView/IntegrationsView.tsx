@@ -25,6 +25,7 @@ function TelegramCard() {
   const [copied,         setCopied]         = useState(false);
   const [unlinkConfirm,  setUnlinkConfirm]  = useState(false);
   const [busy,           setBusy]           = useState(false);
+  const [cardError,      setCardError]      = useState<string | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -77,11 +78,14 @@ function TelegramCard() {
 
   const handleConnect = async () => {
     setBusy(true);
+    setCardError(null);
     try {
       const res = await http.post<TokenData>("/integrations/telegram/token");
       localStorage.setItem(LS_KEY, JSON.stringify(res.data));
       setTokenData(res.data);
       setState("has_token");
+    } catch {
+      setCardError(t("connectError"));
     } finally {
       setBusy(false);
     }
@@ -90,12 +94,16 @@ function TelegramCard() {
   const handleUnlink = async () => {
     if (!unlinkConfirm) { setUnlinkConfirm(true); return; }
     setBusy(true);
+    setCardError(null);
     try {
       await http.delete("/integrations/telegram/unlink");
       localStorage.removeItem(LS_KEY);
       setAccount(null);
       setUnlinkConfirm(false);
       setState("idle");
+    } catch {
+      setCardError(t("unlinkError"));
+      setUnlinkConfirm(false);
     } finally {
       setBusy(false);
     }
@@ -129,6 +137,8 @@ function TelegramCard() {
           </span>
         )}
       </div>
+
+      {cardError && <p className="text-xs text-error">{cardError}</p>}
 
       {/* Actions */}
       {state === "loading" && (

@@ -63,12 +63,14 @@ function CombinedSummary() {
   const [period, setPeriod] = useState<"24h" | "7d" | "30d">("7d");
   const [data, setData] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
 
   const fetchSummary = useCallback(() => {
     setLoading(true);
+    setFetchError(false);
     http.get<Summary>(`/integrations/analytics/summary?period=${period}`)
-      .then((r) => setData(r.data))
-      .catch(() => setData(null))
+      .then((r) => { setData(r.data); })
+      .catch(() => { setData(null); setFetchError(true); })
       .finally(() => setLoading(false));
   }, [period]);
 
@@ -94,6 +96,10 @@ function CombinedSummary() {
       </div>
 
       {loading && !data && <p className="text-textSecondary text-sm">{t("loadingData")}</p>}
+
+      {!loading && fetchError && (
+        <p className="text-sm text-error">{t("loadError")}</p>
+      )}
 
       {data && (
         <>

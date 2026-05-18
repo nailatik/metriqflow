@@ -21,6 +21,10 @@ export const LoginForm = observer(() => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError(t("invalidEmailFormat"));
+      return;
+    }
     const ok = await userStore.login(email, password);
     if (ok) {
       router.push("/app");
@@ -39,7 +43,7 @@ export const LoginForm = observer(() => {
       <div className="space-y-4">
         <Input
           label={t("email")}
-          type="email"
+          type="text"
           placeholder="you@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}

@@ -61,7 +61,8 @@
     "loading": "Signing in...",
     "noAccount": "Don't have an account?",
     "signUp": "Sign up",
-    "invalidCredentials": "Invalid email or password"
+    "invalidCredentials": "Invalid email or password",
+    "invalidEmailFormat": "Please enter a valid email"
   },
   "Register": {
     "step1": {
@@ -247,7 +248,9 @@
     "vkRemoveConfirm": "Are you sure?",
     "vkErrPrivate": "This is a private community. Analytics is available for public communities only.",
     "vkErrGroupNotFound": "Community not found. Check the link or ID.",
-    "vkAddError": "Could not connect the community. Check the link or ID."
+    "vkAddError": "Could not connect the community. Check the link or ID.",
+    "connectError": "Could not connect Telegram. Please try again.",
+    "unlinkError": "Could not unlink account."
   },
   "Analytics": {
     "title": "Analytics",
@@ -295,7 +298,9 @@
     "noPostsInPeriod": "No posts in this period.",
     "noHeatmapData": "Not enough data yet.",
     "heatmapHint": "Colour = avg views. Darker = better time to post.",
-    "comments": "Comments"
+    "comments": "Comments",
+    "loadError": "Failed to load analytics",
+    "loadChannelsError": "Failed to load channels"
   },
   "VKAnalytics": {
     "title": "VK Analytics",

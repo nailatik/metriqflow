@@ -187,6 +187,8 @@ export function AnalyticsView() {
   const [channelsLoading, setChannelsLoading] = useState(true);
   const [lastUpdated, setLastUpdated]         = useState<Date | null>(null);
   const [minutesAgo, setMinutesAgo]           = useState(0);
+  const [fetchError, setFetchError]           = useState<string | null>(null);
+  const [channelsError, setChannelsError]     = useState(false);
 
   const autoRefreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const tickRef        = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -197,20 +199,27 @@ export function AnalyticsView() {
         setChannels(r.data);
         if (r.data.length > 0) setSelectedId(r.data[0].id);
       })
+      .catch(() => setChannelsError(true))
       .finally(() => setChannelsLoading(false));
   }, []);
 
   const fetchAnalytics = useCallback(() => {
     if (!selectedId) return;
     setLoading(true);
+    setFetchError(null);
     http.get<Analytics>(`/integrations/telegram/channels/${selectedId}/analytics?period=${period}`)
       .then((r) => {
         setAnalytics(r.data);
         setLastUpdated(new Date());
         setMinutesAgo(0);
       })
+      .catch((e: unknown) => {
+        const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message;
+        setFetchError(msg ?? t("loadError"));
+        setAnalytics(null);
+      })
       .finally(() => setLoading(false));
-  }, [selectedId, period]);
+  }, [selectedId, period, t]);
 
   useEffect(() => {
     setAnalytics(null);
@@ -239,6 +248,15 @@ export function AnalyticsView() {
 
   if (channelsLoading) {
     return <p className="text-textSecondary text-sm">{t("loadingChannels")}</p>;
+  }
+
+  if (channelsError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-center gap-2">
+        <p className="text-3xl">⚠️</p>
+        <p className="text-textMain font-semibold">{t("loadChannelsError")}</p>
+      </div>
+    );
   }
 
   if (channels.length === 0) {
@@ -313,6 +331,13 @@ export function AnalyticsView() {
         <div className="flex items-center gap-1.5 text-xs text-textSecondary">
           <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
           {t("autoRefresh")}
+        </div>
+      )}
+
+      {fetchError && !loading && (
+        <div className="bg-error/5 border border-error/30 rounded-xl px-5 py-4 flex flex-col gap-2">
+          <p className="text-sm font-semibold text-error">{t("loadError")}</p>
+          <p className="text-sm text-textSecondary">{fetchError}</p>
         </div>
       )}
 
