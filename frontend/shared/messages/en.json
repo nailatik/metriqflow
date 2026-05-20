@@ -85,7 +85,7 @@
       "loading": "Creating account..."
     },
     "validation": {
-      "minLength": "At least 6 characters",
+      "minLength": "At least 8 characters",
       "uppercase": "One uppercase letter",
       "special": "One special character"
     },
@@ -97,7 +97,7 @@
       "emailRequired": "Email is required",
       "emailInvalid": "Invalid email format",
       "passwordRequired": "Password is required",
-      "passwordMinLength": "Password must be at least 6 characters",
+      "passwordMinLength": "Password must be at least 8 characters",
       "passwordUppercase": "Must contain at least one uppercase letter",
       "passwordSpecial": "Must contain at least one special character"
     }
@@ -399,7 +399,7 @@
       "weak": "Password does not meet requirements",
       "wrongOld": "Current password is incorrect",
       "error": "Failed to change password",
-      "checkLength": "At least 6 characters",
+      "checkLength": "At least 8 characters",
       "checkUpper": "One uppercase letter",
       "checkSpecial": "One special character"
     },

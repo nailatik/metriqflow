@@ -86,7 +86,7 @@ export const CreateScheduleModal = observer(({ open, onClose, onCreated }: Props
     if (channels.length === 0) return;
 
     setLoading(true);
-    const result = await schedulesStore.createSchedule({
+    const result = await schedulesStore.create({
       title: title.trim() || undefined,
       source, format, frequency_days: freq, locale,
       send_hour: sendHour, timezone,

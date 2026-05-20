@@ -63,7 +63,7 @@ export const CreateReportModal = observer(({ open, defaultSource = "all", onClos
 
   const handleSubmit = async () => {
     setLoading(true);
-    const report = await reportsStore.createReport({ title, source, format, period_days: period, locale });
+    const report = await reportsStore.create({ title, source, format, period_days: period, locale });
     setLoading(false);
     if (report) {
       onClose();

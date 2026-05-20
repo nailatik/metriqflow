@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { observer } from "mobx-react-lite";
 import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
-import { http } from "@/shared/lib/axios";
+import { useIntegrationsStore, useCommunitiesStore } from "@/shared/store/StoreProvider";
 import { AnalyticsView } from "../AnalyticsView/AnalyticsView";
 import { AllAnalyticsView } from "../AllAnalyticsView/AllAnalyticsView";
 import { VKAnalyticsView } from "@/features/vk/ui/VKAnalyticsView/VKAnalyticsView";
@@ -12,27 +13,24 @@ import type { ReportSource } from "@/entities/report/types";
 
 type Tab = "all" | "telegram" | "vk";
 
-export function AnalyticsTabView() {
+export const AnalyticsTabView = observer(function AnalyticsTabView() {
   const t = useTranslations("Analytics");
   const locale = useLocale();
+  const integrationsStore = useIntegrationsStore();
+  const communitiesStore = useCommunitiesStore();
 
   const [tab, setTab]             = useState<Tab>("all");
-  const [hasTelegram, setHasTg]   = useState(false);
-  const [hasVk, setHasVk]         = useState(false);
-  const [statusLoaded, setLoaded] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalSource, setModalSource] = useState<ReportSource>("all");
 
   useEffect(() => {
-    Promise.all([
-      http.get<{ linked: boolean }>("/integrations/telegram/status")
-        .then((r) => setHasTg(r.data.linked))
-        .catch(() => {}),
-      http.get<{ id: number }[]>("/vk/communities")
-        .then((r) => setHasVk(r.data.length > 0))
-        .catch(() => {}),
-    ]).finally(() => setLoaded(true));
-  }, []);
+    integrationsStore.fetchStatus();
+    communitiesStore.fetch();
+  }, [integrationsStore, communitiesStore]);
+
+  const hasTelegram = integrationsStore.tgLinked;
+  const hasVk = communitiesStore.list.length > 0;
+  const statusLoaded = integrationsStore.statusLoaded && communitiesStore.loaded;
 
   const openModal = (source: ReportSource) => {
     setModalSource(source);
@@ -115,4 +113,4 @@ export function AnalyticsTabView() {
       />
     </div>
   );
-}
+});

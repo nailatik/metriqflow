@@ -1,23 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { observer } from "mobx-react-lite";
 import { useTranslations } from "next-intl";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { http } from "@/shared/lib/axios";
 import { UpgradeBanner } from "@/features/billing/ui/UpgradeBanner/UpgradeBanner";
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-type Community = {
-  id: number;
-  community_id: string;
-  name: string;
-  screen_name: string;
-  photo_url: string | null;
-  member_count: number | null;
-};
+import { useCommunitiesStore } from "@/shared/store/StoreProvider";
+import type { Community } from "@/entities/community/types";
 
 type Summary = {
   total_reach: number;
@@ -193,15 +185,14 @@ function Heatmap({ data, hint }: { data: HeatCell[]; hint: string }) {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-export function VKAnalyticsView() {
+export const VKAnalyticsView = observer(function VKAnalyticsView() {
   const t = useTranslations("VKAnalytics");
+  const communitiesStore = useCommunitiesStore();
 
-  const [communities,        setCommunities]        = useState<Community[]>([]);
   const [selectedId,         setSelectedId]         = useState<number | null>(null);
   const [period,             setPeriod]             = useState<"24h" | "7d" | "30d" | "all">("7d");
   const [analytics,          setAnalytics]          = useState<Analytics | null>(null);
   const [loading,            setLoading]            = useState(false);
-  const [communitiesLoading, setCommunitiesLoading] = useState(true);
   const [lastUpdated,        setLastUpdated]        = useState<Date | null>(null);
   const [minutesAgo,         setMinutesAgo]         = useState(0);
   const [fetchError,         setFetchError]         = useState<string | null>(null);
@@ -210,25 +201,30 @@ export function VKAnalyticsView() {
   const autoRefreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    http.get<Community[]>("/vk/communities")
-      .then((r) => {
-        setCommunities(r.data);
-        if (r.data.length > 0) setSelectedId(r.data[0].id);
-      })
-      .finally(() => setCommunitiesLoading(false));
-  }, []);
+    communitiesStore.fetch();
+  }, [communitiesStore]);
 
-  const fetchAnalytics = useCallback(() => {
+  const communities = communitiesStore.list;
+  const communitiesLoading = !communitiesStore.loaded;
+
+  useEffect(() => {
+    if (selectedId === null && communities.length > 0) {
+      setSelectedId(communities[0].id);
+    }
+  }, [communities, selectedId]);
+
+  const fetchAnalytics = useCallback((signal?: AbortSignal) => {
     if (!selectedId) return;
     setLoading(true);
     setFetchError(null);
-    http.get<Analytics>(`/vk/communities/${selectedId}/analytics?period=${period}`)
+    http.get<Analytics>(`/vk/communities/${selectedId}/analytics?period=${period}`, { signal })
       .then((r) => {
         setAnalytics(r.data);
         setLastUpdated(new Date());
         setMinutesAgo(0);
       })
       .catch((e: unknown) => {
+        if ((e as { code?: string })?.code === "ERR_CANCELED") return;
         const payload = (e as { response?: { data?: { message?: string } } })?.response?.data;
         setFetchError(payload?.message ?? t("loadError"));
         setAnalytics(null);
@@ -238,13 +234,15 @@ export function VKAnalyticsView() {
 
   useEffect(() => {
     setAnalytics(null);
-    fetchAnalytics();
+    const controller = new AbortController();
+    fetchAnalytics(controller.signal);
+    return () => controller.abort();
   }, [fetchAnalytics]);
 
   // Auto-refresh every 10 min (mirrors Telegram analytics)
   useEffect(() => {
     if (autoRefreshRef.current) clearInterval(autoRefreshRef.current);
-    autoRefreshRef.current = setInterval(fetchAnalytics, AUTO_REFRESH_MS);
+    autoRefreshRef.current = setInterval(() => fetchAnalytics(), AUTO_REFRESH_MS);
     return () => { if (autoRefreshRef.current) clearInterval(autoRefreshRef.current); };
   }, [fetchAnalytics]);
 
@@ -303,7 +301,7 @@ export function VKAnalyticsView() {
             </span>
           )}
           <button
-            onClick={fetchAnalytics}
+            onClick={() => fetchAnalytics()}
             disabled={loading}
             className="text-xs text-primary hover:underline disabled:opacity-50"
           >
@@ -437,4 +435,4 @@ export function VKAnalyticsView() {
       )}
     </div>
   );
-}
+});

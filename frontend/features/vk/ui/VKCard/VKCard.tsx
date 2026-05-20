@@ -1,48 +1,33 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { observer } from "mobx-react-lite";
 import { useTranslations } from "next-intl";
-import { http } from "@/shared/lib/axios";
 import { Button } from "@/shared/ui/Button/Button";
 import { UpgradeBanner } from "@/features/billing/ui/UpgradeBanner/UpgradeBanner";
-import { usePlan } from "@/shared/hooks/usePlan";
+import { useCommunitiesStore, useBillingStore } from "@/shared/store/StoreProvider";
 
-type Community = {
-  id: number;
-  community_id: string;
-  name: string;
-  screen_name: string;
-  photo_url: string | null;
-  member_count: number | null;
-};
+type CardState = "idle" | "adding";
 
-type CardState = "loading" | "idle" | "adding";
-
-export function VKCard() {
+export const VKCard = observer(function VKCard() {
   const t = useTranslations("Integrations");
-  const { limits } = usePlan();
+  const communitiesStore = useCommunitiesStore();
+  const billingStore = useBillingStore();
+  const limits = billingStore.limits;
 
-  const [state,       setState]       = useState<CardState>("loading");
-  const [communities, setCommunities] = useState<Community[]>([]);
-  const [groupInput,  setGroupInput]  = useState("");
-  const [busy,        setBusy]        = useState(false);
-  const [error,       setError]       = useState<string | null>(null);
-  const [planLimit,   setPlanLimit]   = useState(false);
-  const [removeId,    setRemoveId]    = useState<number | null>(null);
-
-  const loadCommunities = () => {
-    http.get<Community[]>("/vk/communities")
-      .then((r) => {
-        setCommunities(r.data);
-        setState("idle");
-      })
-      .catch(() => setState("idle"));
-  };
+  const [state,      setState]      = useState<CardState>("idle");
+  const [groupInput, setGroupInput] = useState("");
+  const [busy,       setBusy]       = useState(false);
+  const [error,      setError]      = useState<string | null>(null);
+  const [planLimit,  setPlanLimit]  = useState(false);
+  const [removeId,   setRemoveId]   = useState<number | null>(null);
 
   useEffect(() => {
-    loadCommunities();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    communitiesStore.fetch();
+  }, [communitiesStore]);
+
+  const communities = communitiesStore.list;
+  const loaded = communitiesStore.loaded;
 
   const handleStartAdding = () => {
     setGroupInput("");
@@ -62,45 +47,40 @@ export function VKCard() {
 
     setBusy(true);
     setError(null);
-    try {
-      const res = await http.post<Community>("/vk/communities", { group_id });
-      setCommunities((prev) => [res.data, ...prev]);
+    const result = await communitiesStore.add(group_id);
+    setBusy(false);
+
+    if (result.ok) {
       setGroupInput("");
       setState("idle");
-    } catch (e: unknown) {
-      const resp = (e as { response?: { status?: number; data?: { message?: string; code?: number; upgrade?: boolean } } })?.response;
-      if (resp?.status === 403 && resp?.data?.upgrade) {
-        setPlanLimit(true);
-        setState("idle");
-        return;
-      }
-      const data = resp?.data;
-      const msg  = data?.message ?? "";
-      if (msg.includes("limit")) {
-        setError(t("vkLimitReached"));
-      } else if (data?.code === 15) {
-        setError(t("vkErrPrivate"));
-      } else if (data?.code === 100 || data?.code === 113 || msg.includes("not found") || msg.includes("parse")) {
-        setError(t("vkErrGroupNotFound"));
-      } else if (msg) {
-        setError(msg);
-      } else {
-        setError(t("vkAddError"));
-      }
-    } finally {
-      setBusy(false);
+      return;
+    }
+
+    if ("upgrade" in result) {
+      setPlanLimit(true);
+      setState("idle");
+      return;
+    }
+
+    const msg = result.message ?? "";
+    const code = result.code;
+    if (msg.includes("limit")) {
+      setError(t("vkLimitReached"));
+    } else if (code === 15) {
+      setError(t("vkErrPrivate"));
+    } else if (code === 100 || code === 113 || msg.includes("not found") || msg.includes("parse")) {
+      setError(t("vkErrGroupNotFound"));
+    } else if (msg) {
+      setError(msg);
+    } else {
+      setError(t("vkAddError"));
     }
   };
 
   const handleRemove = async (id: number) => {
     if (removeId !== id) { setRemoveId(id); return; }
-    try {
-      await http.delete(`/vk/communities/${id}`);
-      setCommunities((prev) => prev.filter((c) => c.id !== id));
-      setRemoveId(null);
-    } catch {
-      setRemoveId(null);
-    }
+    await communitiesStore.remove(id);
+    setRemoveId(null);
   };
 
   const canAdd = limits.vk_communities === null || communities.length < limits.vk_communities;
@@ -130,12 +110,12 @@ export function VKCard() {
       {error && !planLimit && <p className="text-xs text-error">{error}</p>}
 
       {/* Loading */}
-      {state === "loading" && (
+      {!loaded && (
         <div className="h-9 w-32 bg-border rounded-lg animate-pulse" />
       )}
 
       {/* Communities list */}
-      {state === "idle" && communities.length > 0 && (
+      {loaded && state === "idle" && communities.length > 0 && (
         <div className="flex flex-col gap-2">
           {communities.map((c) => (
             <div key={c.id} className="flex items-center gap-2">
@@ -179,7 +159,7 @@ export function VKCard() {
       )}
 
       {/* Add button (idle state) */}
-      {state === "idle" && (
+      {loaded && state === "idle" && (
         canAdd ? (
           <Button variant="primary" onClick={handleStartAdding}>
             {t("vkAddCommunity")}
@@ -230,4 +210,4 @@ export function VKCard() {
       )}
     </div>
   );
-}
+});

@@ -4,7 +4,7 @@ import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { validateEmail, validatePassword } from "../utils/validation";
 import { createAccessToken, createRefreshToken } from "../auth/auth.tokens";
-import { setRefreshCookie } from "../auth/auth.cookies";
+import { setRefreshCookie, clearRefreshCookie } from "../auth/auth.cookies";
 import { UserDB, UserRow } from "../types/express";
 import jwt from "jsonwebtoken";
 import { sendVerificationEmail, sendDeleteConfirmationEmail } from "../services/delivery.service";
@@ -23,6 +23,29 @@ type AuthBody = {
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
 const generateToken = () => crypto.randomBytes(32).toString("hex");
+
+/* ---------------- ME ---------------- */
+
+export const me = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+    const result = await query(
+      "SELECT id, email, full_name, birth_date, organization, phone, email_verified, password_length, plan, plan_expires_at FROM users WHERE id = $1",
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.json(result.rows[0]);
+  } catch (err) {
+    console.error("ME ERROR:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 /* ---------------- REGISTER ---------------- */
 
@@ -251,11 +274,7 @@ export const logout = async (req: Request, res: Response) => {
       );
     }
 
-    res.clearCookie("refreshToken", {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-    });
+    clearRefreshCookie(res);
 
     return res.json({ message: "Logged out" });
   } catch (err) {
@@ -430,6 +449,12 @@ export const changePassword = async (req: Request, res: Response) => {
     const hashed = await bcrypt.hash(newPassword, 10);
     await query("UPDATE users SET password = $1, password_length = $2 WHERE id = $3", [hashed, newPassword.length, userId]);
 
+    // Invalidate all existing refresh tokens — forces re-auth on other devices.
+    await query(
+      "UPDATE refresh_tokens SET revoked_at = NOW() WHERE user_id = $1 AND revoked_at IS NULL",
+      [userId]
+    );
+
     return res.json({ message: "Password updated" });
   } catch (err) {
     console.error("CHANGE PASSWORD ERROR:", err);
@@ -487,11 +512,7 @@ export const deleteUser = async (req: Request, res: Response) => {
     await query("DELETE FROM refresh_tokens WHERE user_id = $1", [userId]);
     await query("DELETE FROM users WHERE id = $1", [userId]);
 
-    res.clearCookie("refreshToken", {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-    });
+    clearRefreshCookie(res);
 
     return res.json({ message: "User deleted" });
   } catch (err) {

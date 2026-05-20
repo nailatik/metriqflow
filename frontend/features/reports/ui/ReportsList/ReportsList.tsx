@@ -118,7 +118,7 @@ export const ReportsList = observer(() => {
   const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
-    reportsStore.fetchReports();
+    reportsStore.fetch();
   }, [reportsStore]);
 
   return (
@@ -149,7 +149,7 @@ export const ReportsList = observer(() => {
           <ReportCard
             key={report.id}
             report={report}
-            onDelete={(id) => reportsStore.deleteReport(id)}
+            onDelete={(id) => reportsStore.remove(id)}
             t={t}
           />
         ))}

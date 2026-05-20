@@ -4,8 +4,13 @@ import { useEffect, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { useUserStore, useReportsStore, useSchedulesStore } from "@/shared/store/StoreProvider";
-import { http } from "@/shared/lib/axios";
+import {
+  useUserStore,
+  useReportsStore,
+  useSchedulesStore,
+  useIntegrationsStore,
+  useCommunitiesStore,
+} from "@/shared/store/StoreProvider";
 
 function InfoField({ label, value }: { label: string; value?: string | number | null }) {
   return (
@@ -193,11 +198,10 @@ export default observer(function ProfilePage() {
   const userStore = useUserStore();
   const reportsStore = useReportsStore();
   const schedulesStore = useSchedulesStore();
+  const integrationsStore = useIntegrationsStore();
+  const communitiesStore = useCommunitiesStore();
   const user = userStore.user;
 
-  const [integrationsCount, setIntegrationsCount] = useState<number | null>(null);
-  const [tgChannelsCount, setTgChannelsCount] = useState<number | null>(null);
-  const [vkCount, setVkCount] = useState<number | null>(null);
   const [onboardingDismissed, setOnboardingDismissed] = useState(false);
 
   // load dismissed flag per-user (after user is known)
@@ -210,29 +214,16 @@ export default observer(function ProfilePage() {
   }, [user?.id]);
 
   useEffect(() => {
-    if (reportsStore.list.length === 0) reportsStore.fetchReports();
-  }, [reportsStore]);
+    reportsStore.fetch();
+    schedulesStore.fetch();
+    integrationsStore.fetchStatus();
+    integrationsStore.fetchChannels();
+    communitiesStore.fetch();
+  }, [reportsStore, schedulesStore, integrationsStore, communitiesStore]);
 
-  useEffect(() => {
-    if (schedulesStore.list.length === 0) schedulesStore.fetchSchedules();
-  }, [schedulesStore]);
-
-  useEffect(() => {
-    http
-      .get<{ linked: boolean }>("/integrations/telegram/status")
-      .then((r) => setIntegrationsCount(r.data.linked ? 1 : 0))
-      .catch(() => setIntegrationsCount(0));
-
-    http
-      .get<{ id: number }[]>("/integrations/telegram/channels")
-      .then((r) => setTgChannelsCount(r.data.length))
-      .catch(() => setTgChannelsCount(0));
-
-    http
-      .get<{ id: number }[]>("/vk/communities")
-      .then((r) => setVkCount(r.data.length))
-      .catch(() => setVkCount(0));
-  }, []);
+  const integrationsCount = integrationsStore.statusLoaded ? (integrationsStore.tgLinked ? 1 : 0) : null;
+  const tgChannelsCount = integrationsStore.channelsLoaded ? integrationsStore.tgChannels.length : null;
+  const vkCount = communitiesStore.loaded ? communitiesStore.list.length : null;
 
   const handleDismiss = () => {
     if (!user?.id) return;

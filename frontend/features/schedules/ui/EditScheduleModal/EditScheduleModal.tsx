@@ -69,7 +69,7 @@ export const EditScheduleModal = observer(({ open, schedule, onClose }: Props) =
       { channel: "email", email: emailAddr, enabled: emailEnabled },
     ];
 
-    await schedulesStore.updateSchedule({
+    await schedulesStore.update({
       id: schedule.id,
       title: title.trim() || schedule.title,
       frequency_days: freq,

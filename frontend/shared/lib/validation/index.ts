@@ -12,7 +12,7 @@ export function validateEmail(email: string): ValidationResult {
 
 export function validatePassword(password: string): ValidationResult {
   if (!password) return "passwordRequired";
-  if (password.length < 6) return "passwordMinLength";
+  if (password.length < 8) return "passwordMinLength";
   if (!UPPER_RE.test(password)) return "passwordUppercase";
   if (!SPECIAL_RE.test(password)) return "passwordSpecial";
   return null;
@@ -20,7 +20,7 @@ export function validatePassword(password: string): ValidationResult {
 
 export function getPasswordChecks(password: string) {
   return {
-    minLength: password.length >= 6,
+    minLength: password.length >= 8,
     uppercase: UPPER_RE.test(password),
     special: SPECIAL_RE.test(password),
   };

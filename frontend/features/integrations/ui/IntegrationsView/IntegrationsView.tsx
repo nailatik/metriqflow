@@ -1,26 +1,26 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { observer } from "mobx-react-lite";
 import { useTranslations } from "next-intl";
-import { http } from "@/shared/lib/axios";
 import { Button } from "@/shared/ui/Button/Button";
 import { VKCard } from "@/features/vk/ui/VKCard/VKCard";
+import { useIntegrationsStore } from "@/shared/store/StoreProvider";
+import type { TgTokenData } from "@/entities/integration/types";
 
 const BOT_USERNAME  = process.env.NEXT_PUBLIC_BOT_USERNAME ?? "";
 const LS_KEY        = "metriq_tg_link";
 
-type TgAccount = { telegram_username: string | null; first_name: string; linked_at: string };
-type TokenData  = { token: string; expiresAt: string };
 type CardState  = "loading" | "linked" | "has_token" | "idle";
 
 // ─── Telegram card ────────────────────────────────────────────────────────────
 
-function TelegramCard() {
+const TelegramCard = observer(function TelegramCard() {
   const t = useTranslations("Integrations");
+  const integrationsStore = useIntegrationsStore();
 
   const [state,          setState]          = useState<CardState>("loading");
-  const [account,        setAccount]        = useState<TgAccount | null>(null);
-  const [tokenData,      setTokenData]      = useState<TokenData | null>(null);
+  const [tokenData,      setTokenData]      = useState<TgTokenData | null>(null);
   const [timeLeft,       setTimeLeft]       = useState(0);
   const [copied,         setCopied]         = useState(false);
   const [unlinkConfirm,  setUnlinkConfirm]  = useState(false);
@@ -29,31 +29,36 @@ function TelegramCard() {
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Fetch status on mount
   useEffect(() => {
-    http.get<{ linked: boolean; account: TgAccount | null }>("/integrations/telegram/status")
-      .then((r) => {
-        if (r.data.linked) {
-          setAccount(r.data.account);
-          setState("linked");
-        } else {
-          const raw = localStorage.getItem(LS_KEY);
-          if (raw) {
-            const parsed: TokenData = JSON.parse(raw);
-            if (new Date(parsed.expiresAt).getTime() > Date.now()) {
-              setTokenData(parsed);
-              setState("has_token");
-            } else {
-              localStorage.removeItem(LS_KEY);
-              setState("idle");
-            }
-          } else {
-            setState("idle");
-          }
+    integrationsStore.fetchStatus();
+  }, [integrationsStore]);
+
+  useEffect(() => {
+    if (!integrationsStore.statusLoaded) return;
+
+    if (integrationsStore.tgLinked) {
+      setState("linked");
+      return;
+    }
+
+    const raw = typeof window !== "undefined" ? localStorage.getItem(LS_KEY) : null;
+    if (raw) {
+      try {
+        const parsed: TgTokenData = JSON.parse(raw);
+        if (new Date(parsed.expiresAt).getTime() > Date.now()) {
+          setTokenData(parsed);
+          setState("has_token");
+          return;
         }
-      })
-      .catch(() => setState("idle"));
-  }, []);
+        localStorage.removeItem(LS_KEY);
+      } catch {
+        localStorage.removeItem(LS_KEY);
+      }
+    }
+    setState("idle");
+  }, [integrationsStore.statusLoaded, integrationsStore.tgLinked]);
+
+  const account = integrationsStore.tgAccount;
 
   // Countdown timer
   useEffect(() => {
@@ -79,34 +84,34 @@ function TelegramCard() {
   const handleConnect = async () => {
     setBusy(true);
     setCardError(null);
-    try {
-      const res = await http.post<TokenData>("/integrations/telegram/token");
-      localStorage.setItem(LS_KEY, JSON.stringify(res.data));
-      setTokenData(res.data);
-      setState("has_token");
-    } catch {
+    const data = await integrationsStore.createToken();
+    setBusy(false);
+    if (!data) {
       setCardError(t("connectError"));
-    } finally {
-      setBusy(false);
+      return;
     }
+    if (typeof window !== "undefined") {
+      localStorage.setItem(LS_KEY, JSON.stringify(data));
+    }
+    setTokenData(data);
+    setState("has_token");
   };
 
   const handleUnlink = async () => {
     if (!unlinkConfirm) { setUnlinkConfirm(true); return; }
     setBusy(true);
     setCardError(null);
-    try {
-      await http.delete("/integrations/telegram/unlink");
-      localStorage.removeItem(LS_KEY);
-      setAccount(null);
-      setUnlinkConfirm(false);
-      setState("idle");
-    } catch {
+    const ok = await integrationsStore.unlink();
+    setBusy(false);
+    setUnlinkConfirm(false);
+    if (!ok) {
       setCardError(t("unlinkError"));
-      setUnlinkConfirm(false);
-    } finally {
-      setBusy(false);
+      return;
     }
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(LS_KEY);
+    }
+    setState("idle");
   };
 
   const handleCopy = async () => {
@@ -221,7 +226,7 @@ function TelegramCard() {
       )}
     </div>
   );
-}
+});
 
 // ─── Stub card ────────────────────────────────────────────────────────────────
 

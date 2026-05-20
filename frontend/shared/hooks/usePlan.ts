@@ -1,13 +1,12 @@
 "use client";
 
-import { useUserStore } from "@/shared/store/StoreProvider";
-import { getLimits, PLAN_NAMES } from "@/shared/lib/plans";
-import type { Plan } from "@/entities/user/types";
+import { useBillingStore } from "@/shared/store/StoreProvider";
+import { PLAN_NAMES } from "@/shared/lib/plans";
 
 export function usePlan() {
-  const userStore = useUserStore();
-  const plan: Plan = (userStore.user?.plan as Plan) ?? "free";
-  const limits = getLimits(plan);
+  const billingStore = useBillingStore();
+  const plan = billingStore.plan;
+  const limits = billingStore.limits;
   const planName = PLAN_NAMES[plan];
 
   return {

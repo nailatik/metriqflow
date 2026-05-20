@@ -168,7 +168,7 @@ export const SchedulesList = observer(() => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Schedule | null>(null);
 
-  useEffect(() => { schedulesStore.fetchSchedules(); }, [schedulesStore]);
+  useEffect(() => { schedulesStore.fetch(); }, [schedulesStore]);
 
   return (
     <div className="space-y-8">
@@ -198,9 +198,9 @@ export const SchedulesList = observer(() => {
             key={s.id}
             schedule={s}
             t={t}
-            onToggle={(id, enabled) => schedulesStore.updateSchedule({ id, enabled })}
-            onPause={(id, paused) => schedulesStore.updateSchedule({ id, paused })}
-            onDelete={(id) => schedulesStore.deleteSchedule(id)}
+            onToggle={(id, enabled) => schedulesStore.update({ id, enabled })}
+            onPause={(id, paused) => schedulesStore.update({ id, paused })}
+            onDelete={(id) => schedulesStore.remove(id)}
             onEdit={(s) => setEditTarget(s)}
           />
         ))}

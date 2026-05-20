@@ -1,21 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useTheme } from "@/widgets/ThemeProvider/ThemeProvider";
+import { observer } from "mobx-react-lite";
+import { useSettingsStore } from "@/shared/store/StoreProvider";
 
-export function ThemeToggle() {
-  const { theme, toggle } = useTheme();
-  const [mounted, setMounted] = useState(false);
+export const ThemeToggle = observer(function ThemeToggle() {
+  const settingsStore = useSettingsStore();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  if (!settingsStore.hydrated) return null;
 
-  if (!mounted) return null;
+  const theme = settingsStore.theme;
 
   return (
     <button
-      onClick={toggle}
+      onClick={() => settingsStore.toggleTheme()}
       aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
       className="
         fixed bottom-6 right-6 z-50
@@ -34,7 +31,7 @@ export function ThemeToggle() {
       )}
     </button>
   );
-}
+});
 
 function MoonIcon() {
   return (

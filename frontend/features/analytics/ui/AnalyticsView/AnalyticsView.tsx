@@ -196,26 +196,32 @@ export function AnalyticsView() {
   const tickRef        = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    http.get<Channel[]>("/integrations/telegram/channels")
+    const controller = new AbortController();
+    http.get<Channel[]>("/integrations/telegram/channels", { signal: controller.signal })
       .then((r) => {
         setChannels(r.data);
         if (r.data.length > 0) setSelectedId(r.data[0].id);
       })
-      .catch(() => setChannelsError(true))
+      .catch((e: unknown) => {
+        if ((e as { code?: string })?.code === "ERR_CANCELED") return;
+        setChannelsError(true);
+      })
       .finally(() => setChannelsLoading(false));
+    return () => controller.abort();
   }, []);
 
-  const fetchAnalytics = useCallback(() => {
+  const fetchAnalytics = useCallback((signal?: AbortSignal) => {
     if (!selectedId) return;
     setLoading(true);
     setFetchError(null);
-    http.get<Analytics>(`/integrations/telegram/channels/${selectedId}/analytics?period=${period}`)
+    http.get<Analytics>(`/integrations/telegram/channels/${selectedId}/analytics?period=${period}`, { signal })
       .then((r) => {
         setAnalytics(r.data);
         setLastUpdated(new Date());
         setMinutesAgo(0);
       })
       .catch((e: unknown) => {
+        if ((e as { code?: string })?.code === "ERR_CANCELED") return;
         const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message;
         setFetchError(msg ?? t("loadError"));
         setAnalytics(null);
@@ -225,13 +231,15 @@ export function AnalyticsView() {
 
   useEffect(() => {
     setAnalytics(null);
-    fetchAnalytics();
+    const controller = new AbortController();
+    fetchAnalytics(controller.signal);
+    return () => controller.abort();
   }, [fetchAnalytics]);
 
   useEffect(() => {
     if (autoRefreshRef.current) clearInterval(autoRefreshRef.current);
     if (period === "24h") {
-      autoRefreshRef.current = setInterval(fetchAnalytics, AUTO_REFRESH_MS);
+      autoRefreshRef.current = setInterval(() => fetchAnalytics(), AUTO_REFRESH_MS);
     }
     return () => { if (autoRefreshRef.current) clearInterval(autoRefreshRef.current); };
   }, [period, fetchAnalytics]);
@@ -305,7 +313,7 @@ export function AnalyticsView() {
             </span>
           )}
           <button
-            onClick={fetchAnalytics}
+            onClick={() => fetchAnalytics()}
             disabled={loading}
             className="text-xs text-primary hover:underline disabled:opacity-50"
           >

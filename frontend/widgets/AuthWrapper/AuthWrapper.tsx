@@ -25,6 +25,16 @@ export const AuthWrapper = observer(({
     setMounted(true);
   }, []);
 
+  // Fetch /auth/me only when this wrapper actually guards an authenticated route
+  // and we have a token but no user yet. Single source of truth — no duplicates.
+  useEffect(() => {
+    if (!mounted) return;
+    if (!requireAuth) return;
+    if (userStore.token && !userStore.user) {
+      userStore.fetchMe();
+    }
+  }, [mounted, requireAuth, userStore, userStore.token, userStore.user]);
+
   useEffect(() => {
     if (!mounted) return;
     if (requireAuth && !userStore.token) {
