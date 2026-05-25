@@ -39,6 +39,7 @@ export const Header = observer(() => {
         {/* Language switcher — single toggle */}
         <button
           onClick={() => switchLocale(locale === "en" ? "ru" : "en")}
+          aria-label={locale === "en" ? "Switch to Russian" : "Switch to English"}
           title={locale === "en" ? "Switch to Русский" : "Switch to English"}
           className="px-2.5 py-1 rounded-lg border border-border text-sm font-medium text-textSecondary hover:text-textMain hover:border-primary transition-colors"
         >

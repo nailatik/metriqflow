@@ -105,7 +105,14 @@ export const EditScheduleModal = observer(({ open, schedule, onClose }: Props) =
               </span>
             </div>
           </div>
-          <button onClick={onClose} className="text-textSecondary hover:text-textMain text-xl leading-none">&times;</button>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close dialog"
+            className="text-textSecondary hover:text-textMain text-xl leading-none"
+          >
+            &times;
+          </button>
         </div>
 
         <div className="px-6 py-5 space-y-5">

@@ -77,6 +77,7 @@ export const Sidebar = observer(() => {
         {/* Language toggle */}
         <button
           onClick={switchLocale}
+          aria-label={locale === "en" ? "Switch to Russian" : "Switch to English"}
           title={locale === "en" ? "Switch to Русский" : "Switch to English"}
           className="text-left px-3 py-2 rounded-lg hover:bg-border text-textSecondary font-medium"
         >

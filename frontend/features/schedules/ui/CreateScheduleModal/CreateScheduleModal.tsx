@@ -110,7 +110,14 @@ export const CreateScheduleModal = observer(({ open, onClose, onCreated }: Props
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <h2 className="text-lg font-semibold text-textMain">{t("modalTitle")}</h2>
-          <button onClick={onClose} className="text-textSecondary hover:text-textMain text-xl leading-none">&times;</button>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close dialog"
+            className="text-textSecondary hover:text-textMain text-xl leading-none"
+          >
+            &times;
+          </button>
         </div>
 
         <div className="px-6 py-5 space-y-5">
