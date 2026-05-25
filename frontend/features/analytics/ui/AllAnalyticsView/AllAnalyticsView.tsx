@@ -2,9 +2,18 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import dynamic from "next/dynamic";
 import { http } from "@/shared/lib/axios";
-import { AnalyticsView } from "../AnalyticsView/AnalyticsView";
-import { VKAnalyticsView } from "@/features/vk/ui/VKAnalyticsView/VKAnalyticsView";
+
+// Lazy-load recharts views — see AnalyticsTabView for rationale.
+const AnalyticsView = dynamic(
+  () => import("../AnalyticsView/AnalyticsView").then((m) => m.AnalyticsView),
+  { ssr: false },
+);
+const VKAnalyticsView = dynamic(
+  () => import("@/features/vk/ui/VKAnalyticsView/VKAnalyticsView").then((m) => m.VKAnalyticsView),
+  { ssr: false },
+);
 
 type Props = {
   hasTelegram: boolean;

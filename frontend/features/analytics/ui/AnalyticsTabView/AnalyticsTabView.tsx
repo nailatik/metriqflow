@@ -2,14 +2,36 @@
 
 import { useEffect, useState } from "react";
 import { observer } from "mobx-react-lite";
+import dynamic from "next/dynamic";
 import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
 import { useIntegrationsStore, useCommunitiesStore } from "@/shared/store/StoreProvider";
-import { AnalyticsView } from "../AnalyticsView/AnalyticsView";
-import { AllAnalyticsView } from "../AllAnalyticsView/AllAnalyticsView";
-import { VKAnalyticsView } from "@/features/vk/ui/VKAnalyticsView/VKAnalyticsView";
 import { CreateReportModal } from "@/features/reports/ui/CreateReportModal/CreateReportModal";
 import type { ReportSource } from "@/entities/report/types";
+
+// Heavy views (recharts ~150kb) are lazy-loaded so the analytics tab and any
+// page that imports it transitively don't pay the chart bundle on first paint.
+// ssr:false because recharts touches `window` during measurement.
+const AnalyticsView = dynamic(
+  () => import("../AnalyticsView/AnalyticsView").then((m) => m.AnalyticsView),
+  { ssr: false, loading: () => <ViewLoader /> },
+);
+const AllAnalyticsView = dynamic(
+  () => import("../AllAnalyticsView/AllAnalyticsView").then((m) => m.AllAnalyticsView),
+  { ssr: false, loading: () => <ViewLoader /> },
+);
+const VKAnalyticsView = dynamic(
+  () => import("@/features/vk/ui/VKAnalyticsView/VKAnalyticsView").then((m) => m.VKAnalyticsView),
+  { ssr: false, loading: () => <ViewLoader /> },
+);
+
+function ViewLoader() {
+  return (
+    <div className="flex items-center justify-center py-20">
+      <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
 
 type Tab = "all" | "telegram" | "vk";
 
