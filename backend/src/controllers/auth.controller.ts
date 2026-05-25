@@ -5,6 +5,7 @@ import crypto from "crypto";
 import { validateEmail, validatePassword } from "../utils/validation";
 import { createAccessToken, createRefreshToken } from "../auth/auth.tokens";
 import { setRefreshCookie, clearRefreshCookie } from "../auth/auth.cookies";
+import { hashRefreshToken } from "../auth/auth.refreshHash";
 import { UserDB, UserRow } from "../types/express";
 import jwt from "jsonwebtoken";
 import { sendVerificationEmail, sendDeleteConfirmationEmail } from "../services/delivery.service";
@@ -23,6 +24,8 @@ type AuthBody = {
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
 const generateToken = () => crypto.randomBytes(32).toString("hex");
+
+const BCRYPT_ROUNDS = 12;
 
 /* ---------------- ME ---------------- */
 
@@ -90,7 +93,7 @@ export const register = async (req: Request, res: Response) => {
       return res.status(409).json({ message: "User already exists" });
     }
 
-    const hashed = await bcrypt.hash(password, 10);
+    const hashed = await bcrypt.hash(password, BCRYPT_ROUNDS);
     const verificationToken = generateToken();
 
     const result = await query(
@@ -117,9 +120,9 @@ export const register = async (req: Request, res: Response) => {
     const refreshToken = createRefreshToken(user);
 
     await query(
-      `INSERT INTO refresh_tokens (user_id, token, expires_at)
+      `INSERT INTO refresh_tokens (user_id, token_hash, expires_at)
        VALUES ($1, $2, NOW() + interval '7 days')`,
-      [user.id, refreshToken]
+      [user.id, hashRefreshToken(refreshToken)]
     );
 
     setRefreshCookie(res, refreshToken);
@@ -175,9 +178,9 @@ export const login = async (req: Request, res: Response) => {
     const refreshToken = createRefreshToken(user);
 
     await query(
-      `INSERT INTO refresh_tokens (user_id, token, expires_at)
+      `INSERT INTO refresh_tokens (user_id, token_hash, expires_at)
        VALUES ($1, $2, NOW() + interval '7 days')`,
-      [user.id, refreshToken]
+      [user.id, hashRefreshToken(refreshToken)]
     );
 
     setRefreshCookie(res, refreshToken);
@@ -213,9 +216,11 @@ export const refresh = async (req: Request, res: Response) => {
       process.env.JWT_REFRESH_SECRET!
     ) as { id: number };
 
+    const tokenHash = hashRefreshToken(token);
+
     const tokenCheck = await query(
-      "SELECT id, user_id FROM refresh_tokens WHERE token = $1 AND revoked_at IS NULL AND expires_at > NOW()",
-      [token]
+      "SELECT id, user_id FROM refresh_tokens WHERE token_hash = $1 AND revoked_at IS NULL AND expires_at > NOW()",
+      [tokenHash]
     );
 
     if (tokenCheck.rows.length === 0) {
@@ -236,17 +241,17 @@ export const refresh = async (req: Request, res: Response) => {
 
     // 🔥 ROTATION (IMPORTANT)
     await query(
-      "UPDATE refresh_tokens SET revoked_at = NOW() WHERE token = $1",
-      [token]
+      "UPDATE refresh_tokens SET revoked_at = NOW() WHERE token_hash = $1",
+      [tokenHash]
     );
 
     const newAccessToken = createAccessToken(user);
     const newRefreshToken = createRefreshToken(user);
 
     await query(
-      `INSERT INTO refresh_tokens (user_id, token, expires_at)
+      `INSERT INTO refresh_tokens (user_id, token_hash, expires_at)
        VALUES ($1, $2, NOW() + interval '7 days')`,
-      [user.id, newRefreshToken]
+      [user.id, hashRefreshToken(newRefreshToken)]
     );
 
     setRefreshCookie(res, newRefreshToken);
@@ -269,8 +274,8 @@ export const logout = async (req: Request, res: Response) => {
 
     if (token) {
       await query(
-        "UPDATE refresh_tokens SET revoked_at = NOW() WHERE token = $1",
-        [token]
+        "UPDATE refresh_tokens SET revoked_at = NOW() WHERE token_hash = $1",
+        [hashRefreshToken(token)]
       );
     }
 
@@ -446,7 +451,7 @@ export const changePassword = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Current password is incorrect" });
     }
 
-    const hashed = await bcrypt.hash(newPassword, 10);
+    const hashed = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
     await query("UPDATE users SET password = $1, password_length = $2 WHERE id = $3", [hashed, newPassword.length, userId]);
 
     // Invalidate all existing refresh tokens — forces re-auth on other devices.

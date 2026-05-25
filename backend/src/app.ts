@@ -11,16 +11,35 @@ import vkRoutes from "./routes/vk.routes";
 import { globalLimiter, authLimiter, analyticsLimiter } from "./middleware/rateLimit.middleware";
 import { startScheduler } from "./services/scheduler.service";
 
-const ALLOWED_ORIGINS = (process.env.FRONTEND_URL ?? "http://localhost:3000")
+// CORS_ORIGINS is the single source of truth — comma-separated list of allowed
+// origins. Falls back to FRONTEND_URL for backwards compatibility, then to a
+// safe dev default. Do NOT add hardcoded localhost ports here: list them in
+// .env for dev (e.g. CORS_ORIGINS="http://localhost:3000,http://localhost:5173").
+const ALLOWED_ORIGINS = (
+  process.env.CORS_ORIGINS ??
+  process.env.FRONTEND_URL ??
+  "http://localhost:3000"
+)
   .split(",")
   .map((s) => s.trim())
-  .concat(["http://localhost:5173", "http://localhost:4173"]);
+  .filter(Boolean);
 
 const app = express();
 
 app.set("trust proxy", 1);
 
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'none'"],
+        frameAncestors: ["'none'"],
+      },
+    },
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    crossOriginEmbedderPolicy: false,
+  }),
+);
 app.use(cors({ origin: ALLOWED_ORIGINS, credentials: true }));
 app.use(express.json({ limit: "64kb" }));
 app.use(cookieParser());
