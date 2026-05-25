@@ -11,6 +11,7 @@ import integrationsRoutes from "./routes/integrations.routes";
 import vkRoutes from "./routes/vk.routes";
 import healthRoutes from "./routes/health.routes";
 import { globalLimiter, authLimiter, analyticsLimiter } from "./middleware/rateLimit.middleware";
+import { requestId } from "./middleware/requestId.middleware";
 
 // CORS_ORIGINS is the single source of truth — comma-separated list of allowed
 // origins. Falls back to FRONTEND_URL for backwards compatibility, then to a
@@ -28,6 +29,8 @@ const ALLOWED_ORIGINS = (
 const app = express();
 
 app.set("trust proxy", 1);
+
+app.use(requestId);
 
 app.use(
   helmet({
