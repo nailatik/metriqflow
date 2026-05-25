@@ -8,19 +8,13 @@ import {
 } from "recharts";
 import { http } from "@/shared/lib/axios";
 import { UpgradeBanner } from "@/features/billing/ui/UpgradeBanner/UpgradeBanner";
+import type { TgChannel } from "@/entities/integration/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Channel = {
-  id: number;
-  channel_id: string;
-  title: string;
-  username: string | null;
-  member_count: number | null;
-  post_count: number;
-  total_views: number;
-  added_at: string;
-};
+// Alias for readability inside the component. TgChannel is the entity shape
+// returned by /integrations/telegram/channels (id + meta + aggregated stats).
+type Channel = TgChannel;
 
 type Summary = {
   post_count: number;
