@@ -3,13 +3,14 @@ import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
 
+import { logger } from "./lib/logger";
 import authRoutes from "./routes/auth.routes";
 import reportsRoutes from "./routes/reports.routes";
 import schedulesRoutes from "./routes/schedules.routes";
 import integrationsRoutes from "./routes/integrations.routes";
 import vkRoutes from "./routes/vk.routes";
+import healthRoutes from "./routes/health.routes";
 import { globalLimiter, authLimiter, analyticsLimiter } from "./middleware/rateLimit.middleware";
-import { startScheduler } from "./services/scheduler.service";
 
 // CORS_ORIGINS is the single source of truth — comma-separated list of allowed
 // origins. Falls back to FRONTEND_URL for backwards compatibility, then to a
@@ -43,6 +44,11 @@ app.use(
 app.use(cors({ origin: ALLOWED_ORIGINS, credentials: true }));
 app.use(express.json({ limit: "64kb" }));
 app.use(cookieParser());
+
+// Health routes mounted BEFORE rate limiter so liveness/readiness probes
+// from k8s/docker/uptime monitors are never throttled.
+app.use("/health", healthRoutes);
+
 app.use(globalLimiter);
 
 app.use("/auth",             authLimiter,      authRoutes);
@@ -51,15 +57,13 @@ app.use("/report-schedules", schedulesRoutes);
 app.use("/integrations",    analyticsLimiter, integrationsRoutes);
 app.use("/vk",              analyticsLimiter, vkRoutes);
 
-startScheduler();
-
 app.use((_req: Request, res: Response) => {
   res.status(404).json({ message: "Not found" });
 });
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  console.error("Unhandled error:", err);
+  logger.error({ err }, "Unhandled error");
   res.status(500).json({ message: "Internal server error" });
 });
 

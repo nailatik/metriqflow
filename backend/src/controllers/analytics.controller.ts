@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { query } from "../db";
 import { getUserPlan } from "../lib/getUserPlan";
 import { getLimits } from "../config/plans";
+import { logger } from "../lib/logger";
 
 const VALID_PERIODS = new Set(["24h", "7d", "30d", "all"]);
 type Period = "24h" | "7d" | "30d" | "all";
@@ -64,7 +65,7 @@ export const getUserChannels = async (req: Request, res: Response) => {
 
     return res.json(result.rows);
   } catch (err) {
-    console.error("GET CHANNELS ERROR:", err);
+    logger.error({ err }, "GET CHANNELS ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -259,7 +260,7 @@ export const getChannelAnalytics = async (req: Request, res: Response) => {
       growth,
     });
   } catch (err) {
-    console.error("CHANNEL ANALYTICS ERROR:", err);
+    logger.error({ err }, "CHANNEL ANALYTICS ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -435,7 +436,7 @@ export const getCombinedSummary = async (req: Request, res: Response) => {
 
     return res.json({ period, combined, telegram, vk });
   } catch (err) {
-    console.error("COMBINED SUMMARY ERROR:", err);
+    logger.error({ err }, "COMBINED SUMMARY ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };

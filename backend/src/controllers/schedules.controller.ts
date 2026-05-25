@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { query } from "../db";
 import { getUserPlan } from "../lib/getUserPlan";
 import { getLimits } from "../config/plans";
+import { logger } from "../lib/logger";
 
 function parseId(raw: unknown): number | null {
   const n = parseInt(String(raw), 10);
@@ -46,7 +47,7 @@ export const getSchedules = async (req: Request, res: Response) => {
 
     return res.json(result);
   } catch (err) {
-    console.error("GET SCHEDULES ERROR:", err);
+    logger.error({ err }, "GET SCHEDULES ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -147,7 +148,7 @@ export const createSchedule = async (req: Request, res: Response) => {
 
     return res.status(201).json({ ...schedule, channels: channelRows });
   } catch (err) {
-    console.error("CREATE SCHEDULE ERROR:", err);
+    logger.error({ err }, "CREATE SCHEDULE ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -226,7 +227,7 @@ export const updateSchedule = async (req: Request, res: Response) => {
 
     return res.json(updated.rows[0] ?? {});
   } catch (err) {
-    console.error("UPDATE SCHEDULE ERROR:", err);
+    logger.error({ err }, "UPDATE SCHEDULE ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -250,7 +251,7 @@ export const deleteSchedule = async (req: Request, res: Response) => {
 
     return res.json({ message: "Schedule deleted" });
   } catch (err) {
-    console.error("DELETE SCHEDULE ERROR:", err);
+    logger.error({ err }, "DELETE SCHEDULE ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -279,7 +280,7 @@ export const toggleScheduleChannel = async (req: Request, res: Response) => {
 
     return res.json({ message: "Updated" });
   } catch (err) {
-    console.error("TOGGLE CHANNEL ERROR:", err);
+    logger.error({ err }, "TOGGLE CHANNEL ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };

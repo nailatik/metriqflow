@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { query } from "../db";
 import { getUserPlan } from "../lib/getUserPlan";
 import { getLimits } from "../config/plans";
+import { logger } from "../lib/logger";
 
 const VK_API_V  = "5.199";
 const VK_BASE   = "https://api.vk.com/method";
@@ -96,7 +97,7 @@ export const addVkCommunity = async (req: Request, res: Response) => {
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
     if (!VK_SERVICE_TOKEN) {
-      console.error("VK ADD COMMUNITY: VK_SERVICE_TOKEN not configured");
+      logger.error("VK ADD COMMUNITY: VK_SERVICE_TOKEN not configured");
       return res.status(500).json({ message: "VK integration is not configured on the server" });
     }
 
@@ -149,7 +150,7 @@ export const addVkCommunity = async (req: Request, res: Response) => {
       group = groups[0]!;
     } catch (err) {
       const mapped = vkErrorMessage(err);
-      console.error("VK ADD COMMUNITY (groups.getById):", err);
+      logger.error({ err }, "VK ADD COMMUNITY (groups.getById):");
       return res.status(mapped.status).json({ message: mapped.message, code: mapped.code });
     }
 
@@ -198,7 +199,7 @@ export const addVkCommunity = async (req: Request, res: Response) => {
       member_count: group.members_count ?? null,
     });
   } catch (err) {
-    console.error("VK ADD COMMUNITY ERROR:", err);
+    logger.error({ err }, "VK ADD COMMUNITY ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -218,7 +219,7 @@ export const removeVkCommunity = async (req: Request, res: Response) => {
     );
     return res.json({ message: "Removed" });
   } catch (err) {
-    console.error("VK REMOVE COMMUNITY ERROR:", err);
+    logger.error({ err }, "VK REMOVE COMMUNITY ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -239,7 +240,7 @@ export const getVkCommunities = async (req: Request, res: Response) => {
 
     return res.json(result.rows);
   } catch (err) {
-    console.error("VK COMMUNITIES ERROR:", err);
+    logger.error({ err }, "VK COMMUNITIES ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -327,7 +328,7 @@ export const getVkCommunityAnalytics = async (req: Request, res: Response) => {
       ]);
     } catch (err) {
       const mapped = vkErrorMessage(err);
-      console.error("VK ANALYTICS (vk api):", err);
+      logger.error({ err }, "VK ANALYTICS (vk api):");
       return res.status(mapped.status).json({ message: mapped.message, code: mapped.code });
     }
 
@@ -496,7 +497,7 @@ export const getVkCommunityAnalytics = async (req: Request, res: Response) => {
       growth,
     });
   } catch (err) {
-    console.error("VK ANALYTICS ERROR:", err);
+    logger.error({ err }, "VK ANALYTICS ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };

@@ -4,6 +4,7 @@ import https from "https";
 import http from "http";
 import FormData from "form-data";
 import nodemailer from "nodemailer";
+import { logger } from "../lib/logger";
 
 const BOT_TOKEN = process.env.BOT_TOKEN ?? "";
 
@@ -88,7 +89,7 @@ export async function sendReportViaEmail(
 async function sendSimpleEmail(to: string, subject: string, html: string): Promise<void> {
   const smtpUser = process.env.SMTP_USER;
   if (!smtpUser) {
-    console.log(`[DEV] Email to ${to} | Subject: ${subject}\n${html}`);
+    logger.debug({ to, subject, html }, "[DEV] Email");
     return;
   }
   const transport = createTransport();

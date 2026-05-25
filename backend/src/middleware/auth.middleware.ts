@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
+import { logger } from "../lib/logger";
 
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -22,7 +23,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
     return next();
   } catch (err) {
     const name = err instanceof Error ? err.name : "UnknownError";
-    console.error("AUTH_MIDDLEWARE:", name);
+    logger.warn({ errName: name }, "AUTH_MIDDLEWARE rejected");
     return res.status(401).json({ message: "Unauthorized" });
   }
 };

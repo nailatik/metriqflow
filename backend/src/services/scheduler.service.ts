@@ -3,6 +3,7 @@ import path from "path";
 import fs from "fs";
 import { query, pool } from "../db";
 import { sendReportViaTelegram, sendReportViaEmail } from "./delivery.service";
+import { logger } from "../lib/logger";
 
 // Reuse generators from reports controller by importing shared logic
 import { generateScheduledReport } from "../controllers/reports.controller";
@@ -30,9 +31,13 @@ type UserRow = {
   telegram_id: number | null;
 };
 
+// Keep the cron task reference so we can stop it during graceful shutdown.
+let schedulerTask: ReturnType<typeof cron.schedule> | null = null;
+
 export function startScheduler(): void {
+  if (schedulerTask) return; // idempotent — protects against double-start
   // Run every minute
-  cron.schedule("* * * * *", async () => {
+  schedulerTask = cron.schedule("* * * * *", async () => {
     try {
       const due = await query(
         `SELECT id, user_id, title, source, format, frequency_days, locale, send_hour, timezone
@@ -44,15 +49,22 @@ export function startScheduler(): void {
 
       for (const sched of due.rows as ScheduleRow[]) {
         await processSchedule(sched).catch((err) => {
-          console.error(`SCHEDULER: failed schedule ${sched.id}:`, err);
+          logger.error({ err }, `SCHEDULER: failed schedule ${sched.id}:`);
         });
       }
     } catch (err) {
-      console.error("SCHEDULER TICK ERROR:", err);
+      logger.error({ err }, "SCHEDULER TICK ERROR:");
     }
   });
 
-  console.log("📅 Report scheduler started");
+  logger.info("📅 Report scheduler started");
+}
+
+export function stopScheduler(): void {
+  if (!schedulerTask) return;
+  schedulerTask.stop();
+  schedulerTask = null;
+  logger.info("📅 Report scheduler stopped");
 }
 
 async function processSchedule(sched: ScheduleRow): Promise<void> {
@@ -136,7 +148,7 @@ async function processSchedule(sched: ScheduleRow): Promise<void> {
         delivered++;
       }
     } catch (err) {
-      console.error(`SCHEDULER: delivery via ${ch.channel} failed for schedule ${sched.id}:`, err);
+      logger.error({ err }, `SCHEDULER: delivery via ${ch.channel} failed for schedule ${sched.id}:`);
     }
   }
 

@@ -3,6 +3,7 @@ import path from "path";
 import fs from "fs";
 import PDFDocument from "pdfkit";
 import { query } from "../db";
+import { logger } from "../lib/logger";
 
 const STORAGE_ROOT = path.resolve(__dirname, "../../storage/reports");
 
@@ -400,7 +401,7 @@ export const getReports = async (req: Request, res: Response) => {
 
     return res.json(result.rows);
   } catch (err) {
-    console.error("GET REPORTS ERROR:", err);
+    logger.error({ err }, "GET REPORTS ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -457,12 +458,12 @@ export const createReport = async (req: Request, res: Response) => {
       );
       return res.status(201).json(updated.rows[0]);
     } catch (genErr) {
-      console.error("REPORT GENERATION ERROR:", genErr);
+      logger.error({ err: genErr }, "REPORT GENERATION ERROR:");
       await query("UPDATE reports SET status = 'failed' WHERE id = $1", [report.id]);
       return res.status(201).json({ ...report, status: "failed" });
     }
   } catch (err) {
-    console.error("CREATE REPORT ERROR:", err);
+    logger.error({ err }, "CREATE REPORT ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -503,7 +504,7 @@ export const downloadReport = async (req: Request, res: Response) => {
     res.setHeader("Content-Disposition", `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`);
     fs.createReadStream(report.file_path).pipe(res);
   } catch (err) {
-    console.error("DOWNLOAD REPORT ERROR:", err);
+    logger.error({ err }, "DOWNLOAD REPORT ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -530,7 +531,7 @@ export const deleteReport = async (req: Request, res: Response) => {
 
     return res.json({ message: "Report deleted" });
   } catch (err) {
-    console.error("DELETE REPORT ERROR:", err);
+    logger.error({ err }, "DELETE REPORT ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };

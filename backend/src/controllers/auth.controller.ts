@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { query } from "../db";
+import { query, pool } from "../db";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { validateEmail, validatePassword } from "../utils/validation";
@@ -9,6 +9,7 @@ import { hashRefreshToken } from "../auth/auth.refreshHash";
 import { UserDB, UserRow } from "../types/express";
 import jwt from "jsonwebtoken";
 import { sendVerificationEmail, sendDeleteConfirmationEmail } from "../services/delivery.service";
+import { logger } from "../lib/logger";
 
 type AuthBody = {
   email: string;
@@ -45,7 +46,7 @@ export const me = async (req: Request, res: Response) => {
 
     return res.json(result.rows[0]);
   } catch (err) {
-    console.error("ME ERROR:", err);
+    logger.error({ err }, "ME ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -129,7 +130,7 @@ export const register = async (req: Request, res: Response) => {
 
     // Send verification email (non-blocking — don't fail registration if email fails)
     sendVerificationEmail(normalizedEmail, verificationToken, locale).catch((err) =>
-      console.error("Failed to send verification email:", err)
+      logger.error({ err }, "Failed to send verification email:")
     );
 
     return res.json({
@@ -137,7 +138,7 @@ export const register = async (req: Request, res: Response) => {
       accessToken,
     });
   } catch (err) {
-    console.error("REGISTER ERROR:", err);
+    logger.error({ err }, "REGISTER ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -196,73 +197,81 @@ export const login = async (req: Request, res: Response) => {
       accessToken,
     });
   } catch (err) {
-    console.error("LOGIN ERROR:", err);
+    logger.error({ err }, "LOGIN ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };
 
-/* ---------------- REFRESH (ROTATION FIXED) ---------------- */
+/* ---------------- REFRESH (ROTATION + TRANSACTIONAL) ---------------- */
 
 export const refresh = async (req: Request, res: Response) => {
+  const token = req.cookies.refreshToken;
+  if (!token) {
+    return res.status(401).json({ message: "No refresh token" });
+  }
+
+  let payload: { id: number };
   try {
-    const token = req.cookies.refreshToken;
+    payload = jwt.verify(token, process.env.JWT_REFRESH_SECRET!) as { id: number };
+  } catch (err) {
+    logger.warn({ err }, "REFRESH invalid jwt");
+    return res.status(401).json({ message: "Invalid refresh token" });
+  }
 
-    if (!token) {
-      return res.status(401).json({ message: "No refresh token" });
-    }
+  const tokenHash = hashRefreshToken(token);
+  const client = await pool.connect();
+  try {
+    // Atomic rotation: SELECT … FOR UPDATE ensures concurrent /refresh calls
+    // serialize on the same token row; the loser sees revoked_at already set
+    // and bails out with 401 instead of double-rotating into two live sessions.
+    await client.query("BEGIN");
 
-    const payload = jwt.verify(
-      token,
-      process.env.JWT_REFRESH_SECRET!
-    ) as { id: number };
-
-    const tokenHash = hashRefreshToken(token);
-
-    const tokenCheck = await query(
-      "SELECT id, user_id FROM refresh_tokens WHERE token_hash = $1 AND revoked_at IS NULL AND expires_at > NOW()",
-      [tokenHash]
+    const tokenCheck = await client.query(
+      `SELECT id FROM refresh_tokens
+       WHERE token_hash = $1 AND revoked_at IS NULL AND expires_at > NOW()
+       FOR UPDATE`,
+      [tokenHash],
     );
-
     if (tokenCheck.rows.length === 0) {
+      await client.query("ROLLBACK");
       return res.status(401).json({ message: "Token revoked" });
     }
 
-    const result = await query(
+    const userResult = await client.query(
       `SELECT id, email, created_at, is_profile_completed, email_verified
        FROM users WHERE id = $1`,
-      [payload.id]
+      [payload.id],
     );
-
-    const user = result.rows[0] as UserRow | undefined;
-
+    const user = userResult.rows[0] as UserRow | undefined;
     if (!user) {
+      await client.query("ROLLBACK");
       return res.status(401).json({ message: "User not found" });
     }
 
-    // 🔥 ROTATION (IMPORTANT)
-    await query(
+    await client.query(
       "UPDATE refresh_tokens SET revoked_at = NOW() WHERE token_hash = $1",
-      [tokenHash]
+      [tokenHash],
     );
 
     const newAccessToken = createAccessToken(user);
     const newRefreshToken = createRefreshToken(user);
 
-    await query(
+    await client.query(
       `INSERT INTO refresh_tokens (user_id, token_hash, expires_at)
        VALUES ($1, $2, NOW() + interval '7 days')`,
-      [user.id, hashRefreshToken(newRefreshToken)]
+      [user.id, hashRefreshToken(newRefreshToken)],
     );
 
-    setRefreshCookie(res, newRefreshToken);
+    await client.query("COMMIT");
 
-    return res.json({
-      user,
-      accessToken: newAccessToken,
-    });
+    setRefreshCookie(res, newRefreshToken);
+    return res.json({ user, accessToken: newAccessToken });
   } catch (err) {
-    console.error("REFRESH ERROR:", err);
+    await client.query("ROLLBACK").catch(() => undefined);
+    logger.error({ err }, "REFRESH ERROR:");
     return res.status(401).json({ message: "Invalid refresh token" });
+  } finally {
+    client.release();
   }
 };
 
@@ -283,7 +292,7 @@ export const logout = async (req: Request, res: Response) => {
 
     return res.json({ message: "Logged out" });
   } catch (err) {
-    console.error("LOGOUT ERROR:", err);
+    logger.error({ err }, "LOGOUT ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -319,7 +328,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
 
     return res.json({ message: "Email verified" });
   } catch (err) {
-    console.error("VERIFY EMAIL ERROR:", err);
+    logger.error({ err }, "VERIFY EMAIL ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -360,12 +369,12 @@ export const resendVerification = async (req: Request, res: Response) => {
 
     const resendLocale = (req.body as { locale?: string }).locale ?? "ru";
     sendVerificationEmail(user.email as string, verificationToken, resendLocale).catch((err) =>
-      console.error("Failed to send verification email:", err)
+      logger.error({ err }, "Failed to send verification email:")
     );
 
     return res.json({ message: "Verification email sent" });
   } catch (err) {
-    console.error("RESEND VERIFICATION ERROR:", err);
+    logger.error({ err }, "RESEND VERIFICATION ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -419,7 +428,7 @@ export const updateProfile = async (req: Request, res: Response) => {
 
     return res.json(user);
   } catch (err) {
-    console.error("UPDATE PROFILE ERROR:", err);
+    logger.error({ err }, "UPDATE PROFILE ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -462,7 +471,7 @@ export const changePassword = async (req: Request, res: Response) => {
 
     return res.json({ message: "Password updated" });
   } catch (err) {
-    console.error("CHANGE PASSWORD ERROR:", err);
+    logger.error({ err }, "CHANGE PASSWORD ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -488,7 +497,7 @@ export const requestDeleteAccount = async (req: Request, res: Response) => {
 
     return res.json({ message: "Confirmation email sent" });
   } catch (err) {
-    console.error("REQUEST DELETE ERROR:", err);
+    logger.error({ err }, "REQUEST DELETE ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -521,7 +530,7 @@ export const deleteUser = async (req: Request, res: Response) => {
 
     return res.json({ message: "User deleted" });
   } catch (err) {
-    console.error("DELETE USER ERROR:", err);
+    logger.error({ err }, "DELETE USER ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };

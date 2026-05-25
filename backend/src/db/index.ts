@@ -1,5 +1,6 @@
 import { Pool, QueryResult } from "pg";
 import dotenv from "dotenv";
+import { logger } from "../lib/logger";
 
 dotenv.config();
 
@@ -15,7 +16,7 @@ export const pool = new Pool({
 });
 
 pool.on("error", (err) => {
-  console.error("Unexpected DB pool error:", err);
+  logger.error({ err }, "Unexpected DB pool error");
 });
 
 export const query = async (

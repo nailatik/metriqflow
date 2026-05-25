@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import crypto from "crypto";
 import { query, pool } from "../db";
+import { logger } from "../lib/logger";
 
 export const generateTelegramToken = async (req: Request, res: Response) => {
   try {
@@ -55,7 +56,7 @@ export const generateTelegramToken = async (req: Request, res: Response) => {
 
     return res.json({ token, expiresAt });
   } catch (err) {
-    console.error("TELEGRAM TOKEN ERROR:", err);
+    logger.error({ err }, "TELEGRAM TOKEN ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -74,7 +75,7 @@ export const unlinkTelegram = async (req: Request, res: Response) => {
 
     return res.json({ message: "Unlinked" });
   } catch (err) {
-    console.error("UNLINK ERROR:", err);
+    logger.error({ err }, "UNLINK ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -94,7 +95,7 @@ export const getTelegramStatus = async (req: Request, res: Response) => {
     const linked = result.rows[0] ?? null;
     return res.json({ linked: !!linked, account: linked });
   } catch (err) {
-    console.error("TELEGRAM STATUS ERROR:", err);
+    logger.error({ err }, "TELEGRAM STATUS ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };
