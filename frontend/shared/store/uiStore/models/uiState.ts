@@ -1,7 +1,11 @@
-import type { UiState } from "../types";
+import { makeAutoObservable } from "mobx";
 
-export const initialUiState: UiState = {
-  loading: false,
-  error: null,
-  isErrorModalOpen: false,
-};
+export class UiState {
+  loading: boolean = false;
+  error: string | null = null;
+  isErrorModalOpen: boolean = false;
+
+  constructor() {
+    makeAutoObservable(this);
+  }
+}

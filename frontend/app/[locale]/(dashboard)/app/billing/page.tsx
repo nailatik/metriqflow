@@ -35,7 +35,7 @@ function Feature({ ok, label }: { ok: boolean; label: string }) {
 export default observer(function BillingPage() {
   const t = useTranslations("Billing");
   const userStore = useUserStore();
-  const currentPlan: Plan = (userStore.user?.plan as Plan) ?? "free";
+  const currentPlan: Plan = (userStore.state.user?.plan as Plan) ?? "free";
 
   return (
     <div className="flex flex-col gap-10 max-w-4xl">

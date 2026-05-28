@@ -26,8 +26,8 @@ export const VKCard = observer(function VKCard() {
     communitiesStore.fetch();
   }, [communitiesStore]);
 
-  const communities = communitiesStore.list;
-  const loaded = communitiesStore.loaded;
+  const communities = communitiesStore.state.list;
+  const loaded = communitiesStore.state.loaded;
 
   const handleStartAdding = () => {
     setGroupInput("");

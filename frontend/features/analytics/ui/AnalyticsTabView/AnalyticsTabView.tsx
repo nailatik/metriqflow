@@ -50,9 +50,9 @@ export const AnalyticsTabView = observer(function AnalyticsTabView() {
     communitiesStore.fetch();
   }, [integrationsStore, communitiesStore]);
 
-  const hasTelegram = integrationsStore.tgLinked;
-  const hasVk = communitiesStore.list.length > 0;
-  const statusLoaded = integrationsStore.statusLoaded && communitiesStore.loaded;
+  const hasTelegram = integrationsStore.state.tgLinked;
+  const hasVk = communitiesStore.state.list.length > 0;
+  const statusLoaded = integrationsStore.state.statusLoaded && communitiesStore.state.loaded;
 
   const openModal = (source: ReportSource) => {
     setModalSource(source);

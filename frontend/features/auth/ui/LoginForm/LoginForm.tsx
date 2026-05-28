@@ -63,8 +63,8 @@ export const LoginForm = observer(() => {
           <p className="text-sm text-red-500 text-center -mb-1">{error}</p>
         )}
 
-        <Button variant="primary" disabled={uiStore.loading} type="submit" className="w-full">
-          {uiStore.loading ? t("loading") : t("submit")}
+        <Button variant="primary" disabled={uiStore.state.loading} type="submit" className="w-full">
+          {uiStore.state.loading ? t("loading") : t("submit")}
         </Button>
       </div>
 

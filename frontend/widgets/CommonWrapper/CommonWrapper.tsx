@@ -16,10 +16,10 @@ export const CommonWrapper = observer(({ children }: CommonWrapperProps) => {
   // Hydrate /auth/me whenever we have a token but no user yet — covers public
   // routes (landing) where AuthWrapper isn't mounted.
   useEffect(() => {
-    if (userStore.token && !userStore.user) {
+    if (userStore.state.token && !userStore.state.user) {
       userStore.fetchMe();
     }
-  }, [userStore, userStore.token, userStore.user]);
+  }, [userStore, userStore.state.token, userStore.state.user]);
 
   return (
     <>

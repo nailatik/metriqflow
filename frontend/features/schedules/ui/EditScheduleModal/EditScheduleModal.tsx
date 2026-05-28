@@ -53,7 +53,7 @@ export const EditScheduleModal = observer(({ open, schedule, onClose }: Props) =
     const emailCh = schedule.channels.find((c) => c.channel === "email");
     setTg(tgCh?.enabled ?? false);
     setEmail(emailCh?.enabled ?? false);
-    setEmailAddr(emailCh?.email ?? userStore.user?.email ?? "");
+    setEmailAddr(emailCh?.email ?? userStore.state.user?.email ?? "");
   }, [schedule, open]);
 
   if (!open || !schedule) return null;

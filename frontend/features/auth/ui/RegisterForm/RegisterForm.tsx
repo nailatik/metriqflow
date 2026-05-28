@@ -167,8 +167,8 @@ export const RegisterForm = observer(() => {
           </div>
           {errors.agreement && <p className="text-error text-sm">{errors.agreement}</p>}
 
-          <Button variant="primary" disabled={uiStore.loading} onClick={handleStep2} className="w-full">
-            {uiStore.loading ? t("step2.loading") : t("step2.submit")}
+          <Button variant="primary" disabled={uiStore.state.loading} onClick={handleStep2} className="w-full">
+            {uiStore.state.loading ? t("step2.loading") : t("step2.submit")}
           </Button>
         </div>
       </div>
@@ -216,8 +216,8 @@ export const RegisterForm = observer(() => {
           )}
         </div>
 
-        <Button variant="primary" disabled={uiStore.loading} onClick={handleStep1} className="w-full">
-          {uiStore.loading ? t("step1.loading") : t("step1.next")}
+        <Button variant="primary" disabled={uiStore.state.loading} onClick={handleStep1} className="w-full">
+          {uiStore.state.loading ? t("step1.loading") : t("step1.next")}
         </Button>
       </div>
 

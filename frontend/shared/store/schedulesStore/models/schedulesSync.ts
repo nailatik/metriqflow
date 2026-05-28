@@ -1,23 +1,32 @@
+import { runInAction } from "mobx";
 import type { Schedule } from "@/entities/schedule/types";
 import type { SchedulesStore } from "../schedulesStore";
 
 export const schedulesSync = {
   setList(store: SchedulesStore, list: Schedule[]): void {
-    store.list = list;
-    store.loaded = true;
+    runInAction(() => {
+      store.state.list = list;
+      store.state.loaded = true;
+    });
   },
 
   prepend(store: SchedulesStore, item: Schedule): void {
-    store.list.unshift(item);
+    runInAction(() => {
+      store.state.list.unshift(item);
+    });
   },
 
   replace(store: SchedulesStore, item: Schedule): void {
-    const i = store.list.findIndex((s) => s.id === item.id);
-    if (i !== -1) store.list[i] = item;
+    runInAction(() => {
+      const i = store.state.list.findIndex((s) => s.id === item.id);
+      if (i !== -1) store.state.list[i] = item;
+    });
   },
 
   removeById(store: SchedulesStore, id: number): void {
-    store.list = store.list.filter((s) => s.id !== id);
+    runInAction(() => {
+      store.state.list = store.state.list.filter((s) => s.id !== id);
+    });
   },
 
   setChannelEnabled(
@@ -26,14 +35,18 @@ export const schedulesSync = {
     channel: "telegram" | "email",
     enabled: boolean,
   ): void {
-    const sched = store.list.find((s) => s.id === scheduleId);
-    if (!sched) return;
-    const ch = sched.channels.find((c) => c.channel === channel);
-    if (ch) ch.enabled = enabled;
+    runInAction(() => {
+      const sched = store.state.list.find((s) => s.id === scheduleId);
+      if (!sched) return;
+      const ch = sched.channels.find((c) => c.channel === channel);
+      if (ch) ch.enabled = enabled;
+    });
   },
 
   reset(store: SchedulesStore): void {
-    store.list = [];
-    store.loaded = false;
+    runInAction(() => {
+      store.state.list = [];
+      store.state.loaded = false;
+    });
   },
 };

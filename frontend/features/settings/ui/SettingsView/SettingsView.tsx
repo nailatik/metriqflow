@@ -15,7 +15,7 @@ export const SettingsView = observer(() => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const userStore = useUserStore();
-  const user = userStore.user;
+  const user = userStore.state.user;
   const { plan } = usePlan();
 
   // ── Organization edit ──────────────────────────────────────────────────────

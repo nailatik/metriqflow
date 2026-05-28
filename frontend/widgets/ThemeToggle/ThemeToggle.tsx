@@ -6,9 +6,9 @@ import { useSettingsStore } from "@/shared/store/StoreProvider";
 export const ThemeToggle = observer(function ThemeToggle() {
   const settingsStore = useSettingsStore();
 
-  if (!settingsStore.hydrated) return null;
+  if (!settingsStore.state.hydrated) return null;
 
-  const theme = settingsStore.theme;
+  const theme = settingsStore.state.theme;
 
   return (
     <button

@@ -200,7 +200,7 @@ export default observer(function ProfilePage() {
   const schedulesStore = useSchedulesStore();
   const integrationsStore = useIntegrationsStore();
   const communitiesStore = useCommunitiesStore();
-  const user = userStore.user;
+  const user = userStore.state.user;
 
   const [onboardingDismissed, setOnboardingDismissed] = useState(false);
 
@@ -221,9 +221,9 @@ export default observer(function ProfilePage() {
     communitiesStore.fetch();
   }, [reportsStore, schedulesStore, integrationsStore, communitiesStore]);
 
-  const integrationsCount = integrationsStore.statusLoaded ? (integrationsStore.tgLinked ? 1 : 0) : null;
-  const tgChannelsCount = integrationsStore.channelsLoaded ? integrationsStore.tgChannels.length : null;
-  const vkCount = communitiesStore.loaded ? communitiesStore.list.length : null;
+  const integrationsCount = integrationsStore.state.statusLoaded ? (integrationsStore.state.tgLinked ? 1 : 0) : null;
+  const tgChannelsCount = integrationsStore.state.channelsLoaded ? integrationsStore.state.tgChannels.length : null;
+  const vkCount = communitiesStore.state.loaded ? communitiesStore.state.list.length : null;
 
   const handleDismiss = () => {
     if (!user?.id) return;
@@ -234,8 +234,8 @@ export default observer(function ProfilePage() {
   const onboardingSteps: OnboardingStep[] = [
     { done: (tgChannelsCount ?? 0) > 0, titleKey: "step1Title", descKey: "step1Desc", href: "/app/integrations" },
     { done: (vkCount ?? 0) > 0,         titleKey: "step2Title", descKey: "step2Desc", href: "/app/integrations" },
-    { done: reportsStore.list.length > 0,   titleKey: "step3Title", descKey: "step3Desc", href: "/app/reports" },
-    { done: schedulesStore.list.length > 0, titleKey: "step4Title", descKey: "step4Desc", href: "/app/reports" },
+    { done: reportsStore.state.list.length > 0,   titleKey: "step3Title", descKey: "step3Desc", href: "/app/reports" },
+    { done: schedulesStore.state.list.length > 0, titleKey: "step4Title", descKey: "step4Desc", href: "/app/reports" },
   ];
 
   const initials =
@@ -285,7 +285,7 @@ export default observer(function ProfilePage() {
 
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-4">
-        <StatCard label={tD("stats.reports")} value={reportsStore.list.length} href="/app/reports" />
+        <StatCard label={tD("stats.reports")} value={reportsStore.state.list.length} href="/app/reports" />
         <StatCard label={tD("stats.integrations")} value={integrationsCount ?? "—"} href="/app/integrations" />
         <StatCard label={tD("stats.activity")} value={tD("stats.active")} accent />
       </div>
@@ -313,11 +313,11 @@ export default observer(function ProfilePage() {
           <h2 className="text-xs font-semibold text-textSecondary uppercase tracking-widest mb-4">
             {tD("recentActivity.title")}
           </h2>
-          {reportsStore.list.length === 0 ? (
+          {reportsStore.state.list.length === 0 ? (
             <p className="text-sm text-textSecondary">{tD("recentActivity.empty")}</p>
           ) : (
             <div className="space-y-3">
-              {reportsStore.list.slice(0, 5).map((r) => (
+              {reportsStore.state.list.slice(0, 5).map((r) => (
                 <div key={r.id} className="flex items-start gap-3">
                   <span className={`mt-0.5 w-2 h-2 rounded-full flex-shrink-0 ${
                     r.status === "ready" ? "bg-green-500" :
@@ -331,9 +331,9 @@ export default observer(function ProfilePage() {
                   </div>
                 </div>
               ))}
-              {reportsStore.list.length > 5 && (
+              {reportsStore.state.list.length > 5 && (
                 <Link href="/app/reports" className="text-xs text-primary hover:underline block pt-1">
-                  + {reportsStore.list.length - 5} more
+                  + {reportsStore.state.list.length - 5} more
                 </Link>
               )}
             </div>

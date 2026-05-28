@@ -204,8 +204,8 @@ export const VKAnalyticsView = observer(function VKAnalyticsView() {
     communitiesStore.fetch();
   }, [communitiesStore]);
 
-  const communities = communitiesStore.list;
-  const communitiesLoading = !communitiesStore.loaded;
+  const communities = communitiesStore.state.list;
+  const communitiesLoading = !communitiesStore.state.loaded;
 
   useEffect(() => {
     if (selectedId === null && communities.length > 0) {

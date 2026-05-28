@@ -1,5 +1,10 @@
-import type { BillingState } from "../types";
+import { makeAutoObservable } from "mobx";
+import type { Plan } from "@/entities/user/types";
 
-export const initialBillingState: BillingState = {
-  currentPlan: "free",
-};
+export class BillingState {
+  currentPlan: Plan = "free";
+
+  constructor() {
+    makeAutoObservable(this);
+  }
+}

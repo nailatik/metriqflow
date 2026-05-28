@@ -1,9 +1,14 @@
-import type { IntegrationsState } from "../types";
+import { makeAutoObservable } from "mobx";
+import type { TgAccount, TgChannel } from "@/entities/integration/types";
 
-export const initialIntegrationsState: IntegrationsState = {
-  tgLinked: false,
-  tgAccount: null,
-  tgChannels: [],
-  statusLoaded: false,
-  channelsLoaded: false,
-};
+export class IntegrationsState {
+  tgLinked: boolean = false;
+  tgAccount: TgAccount | null = null;
+  tgChannels: TgChannel[] = [];
+  statusLoaded: boolean = false;
+  channelsLoaded: boolean = false;
+
+  constructor() {
+    makeAutoObservable(this);
+  }
+}

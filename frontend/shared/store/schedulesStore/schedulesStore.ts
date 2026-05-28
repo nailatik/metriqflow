@@ -1,17 +1,15 @@
-import { makeAutoObservable } from "mobx";
-import type { Schedule, CreateSchedule, UpdateSchedule } from "@/entities/schedule/types";
+import type { CreateSchedule, UpdateSchedule } from "@/entities/schedule/types";
 import type { RootStore } from "../RootStore";
-import { initialSchedulesState } from "./models/schedulesState";
+import { SchedulesState } from "./models/schedulesState";
 import { schedulesAsync } from "./models/schedulesAsync";
 import { schedulesSync } from "./models/schedulesSync";
 
 export class SchedulesStore {
-  list: Schedule[] = initialSchedulesState.list;
-  loaded: boolean = initialSchedulesState.loaded;
+  state: SchedulesState;
   inflight: Promise<void> | null = null;
 
   constructor(public root: RootStore) {
-    makeAutoObservable(this, { root: false, inflight: false });
+    this.state = new SchedulesState();
   }
 
   fetch(force = false) {

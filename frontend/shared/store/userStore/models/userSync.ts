@@ -1,3 +1,4 @@
+import { runInAction } from "mobx";
 import type { User } from "@/entities/user/types";
 import type { UserStore } from "../userStore";
 
@@ -8,7 +9,6 @@ function persistToken(token: string | null): void {
   const secure = window.location.protocol === "https:" ? "; Secure" : "";
   if (token) {
     localStorage.setItem(TOKEN_KEY, token);
-    // Cookie needed by next.js middleware (proxy.ts) for server-side route gating.
     document.cookie = `${TOKEN_KEY}=${token}; path=/; max-age=86400; SameSite=Lax${secure}`;
   } else {
     localStorage.removeItem(TOKEN_KEY);
@@ -38,31 +38,41 @@ export const userSync = {
       persistToken(null);
       return;
     }
-    store.token = token;
-    store.isAuth = true;
+    runInAction(() => {
+      store.state.token = token;
+      store.state.isAuth = true;
+    });
   },
 
   setToken(store: UserStore, token: string): void {
     persistToken(token);
-    store.token = token;
-    store.isAuth = true;
+    runInAction(() => {
+      store.state.token = token;
+      store.state.isAuth = true;
+    });
   },
 
   setSession(store: UserStore, token: string, user: User | null): void {
     persistToken(token);
-    store.token = token;
-    store.user = user;
-    store.isAuth = true;
+    runInAction(() => {
+      store.state.token = token;
+      store.state.user = user;
+      store.state.isAuth = true;
+    });
   },
 
   setUser(store: UserStore, user: User | null): void {
-    store.user = user;
+    runInAction(() => {
+      store.state.user = user;
+    });
   },
 
   logout(store: UserStore): void {
-    store.token = null;
-    store.user = null;
-    store.isAuth = false;
+    runInAction(() => {
+      store.state.token = null;
+      store.state.user = null;
+      store.state.isAuth = false;
+    });
     persistToken(null);
   },
 };

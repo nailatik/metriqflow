@@ -27,27 +27,27 @@ export const AuthWrapper = observer(({
 
   useEffect(() => {
     if (!mounted) return;
-    if (requireAuth && !userStore.token) {
+    if (requireAuth && !userStore.state.token) {
       router.replace("/login");
       return;
     }
-    if (redirectIfAuth && userStore.token) {
+    if (redirectIfAuth && userStore.state.token) {
       router.replace("/app");
       return;
     }
     if (
       requireAuth &&
-      userStore.user &&
-      userStore.user.email_verified === false &&
+      userStore.state.user &&
+      userStore.state.user.email_verified === false &&
       !pathname.startsWith("/verify-email")
     ) {
       router.replace("/verify-email");
     }
-  }, [mounted, userStore.token, userStore.user, requireAuth, redirectIfAuth, router, pathname]);
+  }, [mounted, userStore.state.token, userStore.state.user, requireAuth, redirectIfAuth, router, pathname]);
 
   if (!mounted) return null;
-  if (requireAuth && !userStore.token) return null;
-  if (redirectIfAuth && userStore.token) return null;
+  if (requireAuth && !userStore.state.token) return null;
+  if (redirectIfAuth && userStore.state.token) return null;
 
   return <>{children}</>;
 });

@@ -1,6 +1,11 @@
-import type { CommunitiesState } from "../types";
+import { makeAutoObservable } from "mobx";
+import type { Community } from "@/entities/community/types";
 
-export const initialCommunitiesState: CommunitiesState = {
-  list: [],
-  loaded: false,
-};
+export class CommunitiesState {
+  list: Community[] = [];
+  loaded: boolean = false;
+
+  constructor() {
+    makeAutoObservable(this);
+  }
+}

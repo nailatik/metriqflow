@@ -47,7 +47,7 @@ export const CreateScheduleModal = observer(({ open, onClose, onCreated }: Props
   const schedulesStore = useSchedulesStore();
   const userStore = useUserStore();
 
-  const usedSources = new Set(schedulesStore.list.map((s) => s.source));
+  const usedSources = new Set(schedulesStore.state.list.map((s) => s.source));
   const firstFreeSource = (["all", "telegram", "vk"] as ReportSource[]).find((s) => !usedSources.has(s)) ?? "all";
 
   const [source, setSource]       = useState<ReportSource>(firstFreeSource);
@@ -70,7 +70,7 @@ export const CreateScheduleModal = observer(({ open, onClose, onCreated }: Props
       setSource(free);
       const src = free === "all" ? (locale === "ru" ? "Все" : "All") : free === "telegram" ? "Telegram" : "VK";
       setTitle(`${src} · ${freq}d auto`);
-      setEmailAddr(userStore.user?.email ?? "");
+      setEmailAddr(userStore.state.user?.email ?? "");
     }
   }, [open]);
 

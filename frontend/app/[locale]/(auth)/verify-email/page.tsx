@@ -25,7 +25,7 @@ export default function VerifyEmailPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (userStore.token && !userStore.user) {
+    if (userStore.state.token && !userStore.state.user) {
       userStore.fetchMe();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -33,11 +33,11 @@ export default function VerifyEmailPage() {
 
   // Redirect to app if email already verified (e.g. verified in another tab)
   useEffect(() => {
-    if (userStore.user?.email_verified === true && status === "pending") {
+    if (userStore.state.user?.email_verified === true && status === "pending") {
       router.replace("/app");
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userStore.user, status]);
+  }, [userStore.state.user, status]);
 
   const verifyCalledRef = useRef(false);
   useEffect(() => {
@@ -70,7 +70,7 @@ export default function VerifyEmailPage() {
     }
   };
 
-  const email = userStore.user?.email ?? "";
+  const email = userStore.state.user?.email ?? "";
 
   if (status === "verifying") {
     return (

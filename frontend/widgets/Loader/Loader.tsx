@@ -8,7 +8,7 @@ export const Loader = observer(() => {
   const t = useTranslations("Common");
   const uiStore = useUiStore();
 
-  if (!uiStore.loading) return null;
+  if (!uiStore.state.loading) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">

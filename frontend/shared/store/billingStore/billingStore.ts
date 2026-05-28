@@ -1,15 +1,23 @@
-import { makeAutoObservable } from "mobx";
+import { computed, makeObservable } from "mobx";
 import type { Plan } from "@/entities/user/types";
 import { PLAN_LIMITS, type PlanLimits } from "@/shared/lib/plans";
 import type { RootStore } from "../RootStore";
+import { BillingState } from "./models/billingState";
 
 export class BillingStore {
+  state: BillingState;
+
   constructor(public root: RootStore) {
-    makeAutoObservable(this, { root: false });
+    this.state = new BillingState();
+    makeObservable(this, {
+      plan: computed,
+      limits: computed,
+      planExpiresAt: computed,
+    });
   }
 
   get plan(): Plan {
-    return (this.root.userStore.user?.plan as Plan) ?? "free";
+    return (this.root.userStore.state.user?.plan as Plan) ?? "free";
   }
 
   get limits(): PlanLimits {
@@ -17,6 +25,6 @@ export class BillingStore {
   }
 
   get planExpiresAt(): string | null {
-    return this.root.userStore.user?.plan_expires_at ?? null;
+    return this.root.userStore.state.user?.plan_expires_at ?? null;
   }
 }

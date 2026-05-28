@@ -34,9 +34,9 @@ const TelegramCard = observer(function TelegramCard() {
   }, [integrationsStore]);
 
   useEffect(() => {
-    if (!integrationsStore.statusLoaded) return;
+    if (!integrationsStore.state.statusLoaded) return;
 
-    if (integrationsStore.tgLinked) {
+    if (integrationsStore.state.tgLinked) {
       setState("linked");
       return;
     }
@@ -56,9 +56,9 @@ const TelegramCard = observer(function TelegramCard() {
       }
     }
     setState("idle");
-  }, [integrationsStore.statusLoaded, integrationsStore.tgLinked]);
+  }, [integrationsStore.state.statusLoaded, integrationsStore.state.tgLinked]);
 
-  const account = integrationsStore.tgAccount;
+  const account = integrationsStore.state.tgAccount;
 
   // Countdown timer
   useEffect(() => {

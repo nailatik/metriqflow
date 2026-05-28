@@ -1,7 +1,12 @@
-import type { UserState } from "../types";
+import { makeAutoObservable } from "mobx";
+import type { User } from "@/entities/user/types";
 
-export const initialUserState: UserState = {
-  user: null,
-  token: null,
-  isAuth: false,
-};
+export class UserState {
+  user: User | null = null;
+  token: string | null = null;
+  isAuth: boolean = false;
+
+  constructor() {
+    makeAutoObservable(this);
+  }
+}

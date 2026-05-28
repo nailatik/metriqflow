@@ -18,7 +18,7 @@ export const Header = observer(() => {
 
   useEffect(() => { setMounted(true); }, []);
 
-  const userFirstName = userStore.user?.full_name?.split(" ")[0] ?? "";
+  const userFirstName = userStore.state.user?.full_name?.split(" ")[0] ?? "";
 
   const switchLocale = (next: Locale) => {
     router.replace(pathname, { locale: next });
@@ -47,7 +47,7 @@ export const Header = observer(() => {
         </button>
 
         {/* Auth state — гостевое до монтирования, чтобы SSR совпадал */}
-        {mounted && userStore.isAuth ? (
+        {mounted && userStore.state.isAuth ? (
           <>
             <Link href="/app">
               <span className="text-textMain font-medium">{userFirstName || "User"}</span>

@@ -185,7 +185,7 @@ export const SchedulesList = observer(() => {
         </button>
       </div>
 
-      {schedulesStore.list.length === 0 && (
+      {schedulesStore.state.list.length === 0 && (
         <div className="text-center py-16">
           <p className="text-textSecondary">{t("empty")}</p>
           <p className="text-textSecondary/60 text-sm mt-1">{t("emptyHint")}</p>
@@ -193,7 +193,7 @@ export const SchedulesList = observer(() => {
       )}
 
       <div className="grid md:grid-cols-2 gap-4">
-        {schedulesStore.list.map((s) => (
+        {schedulesStore.state.list.map((s) => (
           <ScheduleCard
             key={s.id}
             schedule={s}

@@ -19,13 +19,12 @@ export const userAsync = {
   async login(store: UserStore, email: string, password: string): Promise<boolean> {
     try {
       const res = await authService.login(email, password);
-      // Persist token first so the subsequent /auth/me request carries Authorization
-      runInAction(() => userSync.setToken(store, res.data.accessToken));
+      userSync.setToken(store, res.data.accessToken);
       const meRes = await authService.me();
-      runInAction(() => userSync.setUser(store, meRes.data));
+      userSync.setUser(store, meRes.data);
       return true;
     } catch {
-      runInAction(() => userSync.logout(store));
+      userSync.logout(store);
       return false;
     }
   },
@@ -33,9 +32,7 @@ export const userAsync = {
   async register(store: UserStore, data: RegisterData): Promise<boolean> {
     try {
       const res = await authService.register(data);
-      runInAction(() => {
-        userSync.setSession(store, res.data.accessToken, res.data.user);
-      });
+      userSync.setSession(store, res.data.accessToken, res.data.user);
       return true;
     } catch {
       return false;
@@ -48,11 +45,11 @@ export const userAsync = {
       try {
         const res = await authService.me();
         runInAction(() => {
-          store.user = res.data;
-          store.isAuth = true;
+          store.state.user = res.data;
+          store.state.isAuth = true;
         });
       } catch {
-        runInAction(() => userSync.logout(store));
+        userSync.logout(store);
       } finally {
         fetchMeInFlight = null;
       }
@@ -61,17 +58,17 @@ export const userAsync = {
   },
 
   async updateOrganization(store: UserStore, organization: string): Promise<ActionResult> {
-    if (!store.user) return { success: false, error: "Not authenticated" };
+    if (!store.state.user) return { success: false, error: "Not authenticated" };
     try {
       const res = await authService.updateProfile({
-        fullName: store.user.full_name ?? "",
-        birthDate: store.user.birth_date ?? "",
+        fullName: store.state.user.full_name ?? "",
+        birthDate: store.state.user.birth_date ?? "",
         organization: organization || null,
-        phone: store.user.phone ?? "",
+        phone: store.state.user.phone ?? "",
         agreedToProcessing: true,
       });
       runInAction(() => {
-        store.user = res.data;
+        store.state.user = res.data;
       });
       return { success: true };
     } catch (err) {

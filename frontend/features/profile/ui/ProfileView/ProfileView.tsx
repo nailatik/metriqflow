@@ -10,7 +10,7 @@ import { PLAN_NAMES } from "@/shared/lib/plans";
 export const ProfileView = observer(() => {
   const t = useTranslations("Profile");
   const userStore = useUserStore();
-  const user = userStore.user;
+  const user = userStore.state.user;
   const { plan } = usePlan();
 
   const initials = user?.full_name

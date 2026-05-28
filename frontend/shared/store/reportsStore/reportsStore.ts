@@ -1,17 +1,15 @@
-import { makeAutoObservable } from "mobx";
-import type { Report, CreateReport } from "@/entities/report/types";
+import type { CreateReport } from "@/entities/report/types";
 import type { RootStore } from "../RootStore";
-import { initialReportsState } from "./models/reportsState";
+import { ReportsState } from "./models/reportsState";
 import { reportsAsync } from "./models/reportsAsync";
 import { reportsSync } from "./models/reportsSync";
 
 export class ReportsStore {
-  list: Report[] = initialReportsState.list;
-  loaded: boolean = initialReportsState.loaded;
+  state: ReportsState;
   inflight: Promise<void> | null = null;
 
   constructor(public root: RootStore) {
-    makeAutoObservable(this, { root: false, inflight: false });
+    this.state = new ReportsState();
   }
 
   fetch(force = false) {

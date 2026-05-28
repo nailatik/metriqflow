@@ -1,17 +1,14 @@
-import { makeAutoObservable } from "mobx";
 import type { User, RegisterData } from "@/entities/user/types";
 import type { RootStore } from "../RootStore";
-import { initialUserState } from "./models/userState";
+import { UserState } from "./models/userState";
 import { userSync } from "./models/userSync";
 import { userAsync } from "./models/userAsync";
 
 export class UserStore {
-  user: User | null = initialUserState.user;
-  token: string | null = initialUserState.token;
-  isAuth: boolean = initialUserState.isAuth;
+  state: UserState;
 
   constructor(public root: RootStore) {
-    makeAutoObservable(this, { root: false });
+    this.state = new UserState();
     userSync.hydrateFromStorage(this);
   }
 

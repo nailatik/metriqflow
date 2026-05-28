@@ -1,6 +1,11 @@
-import type { SettingsState } from "../types";
+import { makeAutoObservable } from "mobx";
+import type { Theme } from "../types";
 
-export const initialSettingsState: SettingsState = {
-  theme: "light",
-  hydrated: false,
-};
+export class SettingsState {
+  theme: Theme = "light";
+  hydrated: boolean = false;
+
+  constructor() {
+    makeAutoObservable(this);
+  }
+}

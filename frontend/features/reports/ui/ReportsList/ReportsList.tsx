@@ -133,11 +133,11 @@ export const ReportsList = observer(() => {
         </button>
       </div>
 
-      {uiStore.loading && reportsStore.list.length === 0 && (
+      {uiStore.state.loading && reportsStore.state.list.length === 0 && (
         <p className="text-textSecondary text-sm">{t("loading")}</p>
       )}
 
-      {!uiStore.loading && reportsStore.list.length === 0 && (
+      {!uiStore.state.loading && reportsStore.state.list.length === 0 && (
         <div className="text-center py-16">
           <p className="text-textSecondary">{t("empty")}</p>
           <p className="text-textSecondary/60 text-sm mt-1">{t("emptyHint")}</p>
@@ -145,7 +145,7 @@ export const ReportsList = observer(() => {
       )}
 
       <div className="grid md:grid-cols-3 gap-4">
-        {reportsStore.list.map((report) => (
+        {reportsStore.state.list.map((report) => (
           <ReportCard
             key={report.id}
             report={report}

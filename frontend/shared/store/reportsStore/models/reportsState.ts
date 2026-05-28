@@ -1,6 +1,11 @@
-import type { ReportsState } from "../types";
+import { makeAutoObservable } from "mobx";
+import type { Report } from "@/entities/report/types";
 
-export const initialReportsState: ReportsState = {
-  list: [],
-  loaded: false,
-};
+export class ReportsState {
+  list: Report[] = [];
+  loaded: boolean = false;
+
+  constructor() {
+    makeAutoObservable(this);
+  }
+}

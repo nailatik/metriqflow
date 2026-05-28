@@ -1,3 +1,4 @@
+import { runInAction } from "mobx";
 import type { SettingsStore } from "../settingsStore";
 import type { Theme } from "../types";
 
@@ -15,13 +16,17 @@ export const settingsSync = {
     const stored = localStorage.getItem(THEME_KEY) as Theme | null;
     const preferred: Theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     const resolved: Theme = stored ?? preferred;
-    store.theme = resolved;
-    store.hydrated = true;
+    runInAction(() => {
+      store.state.theme = resolved;
+      store.state.hydrated = true;
+    });
     applyDom(resolved);
   },
 
   setTheme(store: SettingsStore, theme: Theme): void {
-    store.theme = theme;
+    runInAction(() => {
+      store.state.theme = theme;
+    });
     if (typeof window !== "undefined") {
       localStorage.setItem(THEME_KEY, theme);
     }
@@ -29,7 +34,7 @@ export const settingsSync = {
   },
 
   toggleTheme(store: SettingsStore): void {
-    const next: Theme = store.theme === "light" ? "dark" : "light";
+    const next: Theme = store.state.theme === "light" ? "dark" : "light";
     settingsSync.setTheme(store, next);
   },
 };

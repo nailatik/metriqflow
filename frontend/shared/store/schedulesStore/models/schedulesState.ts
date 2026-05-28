@@ -1,6 +1,11 @@
-import type { SchedulesState } from "../types";
+import { makeAutoObservable } from "mobx";
+import type { Schedule } from "@/entities/schedule/types";
 
-export const initialSchedulesState: SchedulesState = {
-  list: [],
-  loaded: false,
-};
+export class SchedulesState {
+  list: Schedule[] = [];
+  loaded: boolean = false;
+
+  constructor() {
+    makeAutoObservable(this);
+  }
+}
