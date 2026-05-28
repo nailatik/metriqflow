@@ -301,17 +301,17 @@ export const logout = async (req: Request, res: Response) => {
 
 export const verifyEmail = async (req: Request, res: Response) => {
   try {
-    const { token } = req.query as { token: string };
+    const rawToken = (req.query.token as string) ?? "";
+    const token = rawToken.replace(/[^a-f0-9]/gi, "");
 
     if (!token) {
       return res.status(400).json({ message: "Token is required" });
     }
 
     const result = await query(
-      `SELECT id FROM users
-       WHERE email_verification_token = $1
-         AND email_verification_expires_at > NOW()
-         AND email_verified = false`,
+      `SELECT id, email_verified, email_verification_expires_at
+       FROM users
+       WHERE email_verification_token = $1`,
       [token]
     );
 
@@ -319,11 +319,21 @@ export const verifyEmail = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid or expired token" });
     }
 
+    const row = result.rows[0] as { id: number; email_verified: boolean; email_verification_expires_at: Date | string | null };
+
+    if (row.email_verified === true) {
+      return res.json({ message: "Email verified" });
+    }
+
+    if (row.email_verification_expires_at && new Date(row.email_verification_expires_at) <= new Date()) {
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
+
     await query(
       `UPDATE users
-       SET email_verified = true, email_verification_token = NULL, email_verification_expires_at = NULL
+       SET email_verified = true
        WHERE id = $1`,
-      [result.rows[0]!.id]
+      [row.id]
     );
 
     return res.json({ message: "Email verified" });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
@@ -39,8 +39,10 @@ export default function VerifyEmailPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userStore.user, status]);
 
+  const verifyCalledRef = useRef(false);
   useEffect(() => {
-    if (!token) return;
+    if (!token || verifyCalledRef.current) return;
+    verifyCalledRef.current = true;
     authService
       .verifyEmail(token)
       .then(() => {
