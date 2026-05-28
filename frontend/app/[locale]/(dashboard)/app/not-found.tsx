@@ -1,8 +1,10 @@
-import { getTranslations } from "next-intl/server";
+"use client";
+
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 
-export default async function DashboardNotFound() {
-  const t = await getTranslations("Common.notFound");
+export default function DashboardNotFound() {
+  const t = useTranslations("Common.notFound");
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
       <h1 className="text-5xl font-bold text-textMain">{t("code")}</h1>

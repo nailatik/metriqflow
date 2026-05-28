@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
-import { NextIntlClientProvider } from "next-intl";
-import { getMessages, getTranslations } from "next-intl/server";
+import { NextIntlClientProvider, createTranslator } from "next-intl";
+import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { routing, type Locale } from "@/i18n/routing";
+import { routing } from "@/i18n/routing";
 import { CommonWrapper } from "@/widgets/CommonWrapper/CommonWrapper";
 import { ThemeProvider } from "@/widgets/ThemeProvider/ThemeProvider";
 import { ThemeToggle } from "@/widgets/ThemeToggle/ThemeToggle";
@@ -14,13 +14,18 @@ interface LocaleLayoutProps {
   params: Promise<{ locale: string }>;
 }
 
+async function loadMessages(locale: string) {
+  return (await import(`@/messages/${locale}.json`)).default;
+}
+
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "Landing" });
+  const messages = await loadMessages(locale);
+  const t = createTranslator({ locale, namespace: "Landing", messages });
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -64,12 +69,20 @@ export default async function LocaleLayout({ children, params }: LocaleLayoutPro
     notFound();
   }
 
-  const messages = await getMessages();
+  setRequestLocale(locale);
+
+  const messages = await loadMessages(locale);
 
   return (
     <html lang={locale} suppressHydrationWarning>
       <body suppressHydrationWarning>
-        <NextIntlClientProvider messages={messages}>
+        <NextIntlClientProvider
+          locale={locale}
+          messages={messages}
+          timeZone="UTC"
+          now={new Date()}
+          formats={{}}
+        >
           <ThemeProvider>
             <CommonWrapper>
               {children}

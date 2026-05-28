@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslator } from "@/i18n/getTranslator";
 import { IntegrationsView } from "@/features/integrations/ui/IntegrationsView/IntegrationsView";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "Integrations" });
+  const t = await getTranslator(locale, "Integrations");
   return { title: t("title") };
 }
 

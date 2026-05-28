@@ -1,4 +1,5 @@
-import { getTranslations } from "next-intl/server";
+import { setRequestLocale } from "next-intl/server";
+import { getTranslator } from "@/i18n/getTranslator";
 import { Link } from "@/i18n/navigation";
 import { Header } from "@/widgets/Header/Header";
 
@@ -8,7 +9,8 @@ interface Props {
 
 export default async function LandingPage({ params }: Props) {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "Landing" });
+  setRequestLocale(locale);
+  const t = await getTranslator(locale, "Landing");
 
   const features = [
     t("features.dashboard.title"),

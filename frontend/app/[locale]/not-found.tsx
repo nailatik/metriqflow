@@ -1,8 +1,10 @@
-import { getTranslations } from "next-intl/server";
+"use client";
+
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 
-export default async function LocaleNotFound() {
-  const t = await getTranslations("Common.notFound");
+export default function LocaleNotFound() {
+  const t = useTranslations("Common.notFound");
   return (
     <div className="min-h-screen flex items-center justify-center bg-bg px-4">
       <div className="text-center max-w-md">
