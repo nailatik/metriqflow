@@ -1,11 +1,11 @@
-import { UiStore } from "./ui";
-import { UserStore } from "./user";
-import { ReportsStore } from "./reports";
-import { SchedulesStore } from "./schedules";
-import { IntegrationsStore } from "./integrations";
-import { CommunitiesStore } from "./communities";
-import { BillingStore } from "./billing";
-import { SettingsStore } from "./settings";
+import { UiStore } from "./uiStore/uiStore";
+import { UserStore } from "./userStore/userStore";
+import { ReportsStore } from "./reportsStore/reportsStore";
+import { SchedulesStore } from "./schedulesStore/schedulesStore";
+import { IntegrationsStore } from "./integrationsStore/integrationsStore";
+import { CommunitiesStore } from "./communitiesStore/communitiesStore";
+import { BillingStore } from "./billingStore/billingStore";
+import { SettingsStore } from "./settingsStore/settingsStore";
 
 export class RootStore {
   uiStore: UiStore;
