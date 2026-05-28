@@ -5,10 +5,10 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "prestart": "next build",
     "start": "next start",
+    "prod:all": "npm run build && npm run start",
     "lint": "next lint",
-    "test": "echo \"No tests configured\""
+    "test": "npm run build"
   },
   "dependencies": {
     "axios": "^1.7.9",
