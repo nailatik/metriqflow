@@ -1,3 +1,4 @@
+import "./lib/sentry";
 import app from "./app";
 import { logger } from "./lib/logger";
 import { pool } from "./db";

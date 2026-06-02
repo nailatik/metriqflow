@@ -1,11 +1,13 @@
 import type { NextConfig } from "next";
 import path from "path";
 import createNextIntlPlugin from "next-intl/plugin";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 const isDev = process.env.NODE_ENV !== "production";
 const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const sentryDsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
 
 const csp = [
   "default-src 'self'",
@@ -14,7 +16,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://*.userapi.com https://*.vk.com https://*.vk.me https://*.vkuser.net https://*.vkuserlive.net",
   "font-src 'self' data:",
-  `connect-src 'self' ${apiUrl}${isDev ? " ws: wss:" : ""}`,
+  `connect-src 'self' ${apiUrl}${isDev ? " ws: wss:" : ""}${sentryDsn ? " https://*.ingest.sentry.io https://*.ingest.us.sentry.io" : ""}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -50,4 +52,14 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withNextIntl(nextConfig);
+const baseConfig = withNextIntl(nextConfig);
+
+export default withSentryConfig(baseConfig, {
+  silent: true,
+  disableLogger: true,
+  // Source map upload requires SENTRY_AUTH_TOKEN — skip in dev/CI without it.
+  sourcemaps: {
+    disable: !process.env.SENTRY_AUTH_TOKEN,
+  },
+  autoInstrumentServerFunctions: false,
+});
