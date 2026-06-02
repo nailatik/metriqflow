@@ -2,6 +2,7 @@ import express, { NextFunction, Request, Response } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
+import * as Sentry from "@sentry/node";
 
 import { logger } from "./lib/logger";
 import authRoutes from "./routes/auth.routes";
@@ -63,6 +64,8 @@ app.use("/vk",              analyticsLimiter, vkRoutes);
 app.use((_req: Request, res: Response) => {
   res.status(404).json({ message: "Not found" });
 });
+
+Sentry.setupExpressErrorHandler(app);
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
