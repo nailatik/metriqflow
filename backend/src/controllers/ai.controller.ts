@@ -6,7 +6,7 @@ import { logger } from "../lib/logger";
 import { generateInsights, AiServiceError } from "../services/ai.service";
 import { buildTelegramInput, buildVkInput } from "../services/insightsBuilders";
 import { insightsBodySchema } from "../schemas/insights.schemas";
-import type { InsightsInput, InsightsPayload } from "../types/insights";
+import type { AiLocale, InsightsInput, InsightsPayload } from "../types/insights";
 
 async function runInsights(
   res: Response,
@@ -15,18 +15,19 @@ async function runInsights(
     network:    "telegram" | "vk";
     sourceId:   string;
     period:     string;
+    locale:     AiLocale;
     buildInput: () => Promise<InsightsInput>;
   },
 ): Promise<void> {
-  const { userId, network, sourceId, period, buildInput } = opts;
+  const { userId, network, sourceId, period, locale, buildInput } = opts;
 
-  // 1. Cache lookup — hits skip quota
+  // 1. Cache lookup — hits skip quota. locale in the key so EN users never read RU payloads.
   const cached = await query(
     `SELECT payload FROM ai_cache
-     WHERE network = $1 AND source_id = $2 AND period = $3
+     WHERE network = $1 AND source_id = $2 AND period = $3 AND locale = $4
        AND created_at > NOW() - INTERVAL '6 hours'
      ORDER BY created_at DESC LIMIT 1`,
-    [network, sourceId, period],
+    [network, sourceId, period, locale],
   );
   if (cached.rows.length > 0) {
     const payload = (cached.rows[0] as { payload: InsightsPayload }).payload;
@@ -70,8 +71,8 @@ async function runInsights(
 
   // 4. Persist cache + usage
   await query(
-    `INSERT INTO ai_cache (network, source_id, period, payload) VALUES ($1, $2, $3, $4)`,
-    [network, sourceId, period, JSON.stringify(payload)],
+    `INSERT INTO ai_cache (network, source_id, period, locale, payload) VALUES ($1, $2, $3, $4, $5)`,
+    [network, sourceId, period, locale, JSON.stringify(payload)],
   );
   await query(
     `INSERT INTO ai_usage (user_id, used_on, count) VALUES ($1, CURRENT_DATE, 1)
@@ -97,7 +98,7 @@ export const aiInsightsTelegram = async (req: Request, res: Response) => {
     if (!parsed.success) {
       return res.status(400).json({ message: "Invalid period. Use: 24h, 7d, 30d, all" });
     }
-    const { period } = parsed.data;
+    const { period, locale } = parsed.data;
 
     const ownerRes = await query(
       `SELECT channel_id, title, member_count
@@ -119,7 +120,8 @@ export const aiInsightsTelegram = async (req: Request, res: Response) => {
       network:  "telegram",
       sourceId: ch.channel_id,
       period,
-      buildInput: () => buildTelegramInput(ch, period),
+      locale,
+      buildInput: () => buildTelegramInput(ch, period, locale),
     });
   } catch (err) {
     logger.error({ err }, "AI INSIGHTS TG ERROR:");
@@ -142,7 +144,7 @@ export const aiInsightsVk = async (req: Request, res: Response) => {
     if (!parsed.success) {
       return res.status(400).json({ message: "Invalid period. Use: 24h, 7d, 30d, all" });
     }
-    const { period } = parsed.data;
+    const { period, locale } = parsed.data;
 
     const ownerRes = await query(
       `SELECT community_id, name, member_count
@@ -164,7 +166,8 @@ export const aiInsightsVk = async (req: Request, res: Response) => {
       network:  "vk",
       sourceId: comm.community_id,
       period,
-      buildInput: () => buildVkInput(comm, period),
+      locale,
+      buildInput: () => buildVkInput(comm, period, locale),
     });
   } catch (err) {
     logger.error({ err }, "AI INSIGHTS VK ERROR:");

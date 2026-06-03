@@ -1,9 +1,33 @@
 import { query } from "../db";
-import type { InsightsInput } from "../types/insights";
+import type { AiLocale, DataLevel, InsightsInput } from "../types/insights";
 import { logger } from "../lib/logger";
 
 const VK_SERVICE_TOKEN = process.env.VK_SERVICE_TOKEN ?? "";
 const VK_API_V = "5.199";
+
+// Per-period sufficiency thresholds — expected post volume scales with the window.
+// A post_count below `.low` → "low" (предварительно); below `.high` → "medium"; else "high".
+function dataLevel(period: string, postCount: number): DataLevel {
+  const t =
+    period === "24h" ? { low: 2, high: 5  } :
+    period === "7d"  ? { low: 3, high: 10 } :
+                       { low: 5, high: 20 }; // 30d, all
+  if (postCount < t.low)  return "low";
+  if (postCount < t.high) return "medium";
+  return "high";
+}
+
+// best_time is only meaningful with enough posts AND time variation. Suppress it on
+// low data or when the winning slot has a single post — keeps Claude from inventing
+// confident "publish Monday 18:00" advice from noise.
+function gateBestTime<T extends { avg_views: number }>(
+  level: DataLevel,
+  bestCellCount: number,
+  bestTime: T | null,
+): T | null {
+  if (level === "low" || bestCellCount < 2) return null;
+  return bestTime;
+}
 
 // ─── TG builder ──────────────────────────────────────────────────────────────
 
@@ -23,6 +47,7 @@ function pct(cur: number, prev: number): number | null {
 export async function buildTelegramInput(
   channel: { channel_id: string; title: string; member_count: number | null },
   period: string,
+  locale: AiLocale,
 ): Promise<InsightsInput> {
   const filter = tgPeriodFilter(period);
 
@@ -112,8 +137,11 @@ export async function buildTelegramInput(
     engagement: r.reactions_total + r.forwards,
   }));
 
+  const level = dataLevel(period, s.post_count);
+
   return {
     network:   "telegram",
+    locale,
     title:     channel.title,
     period,
     followers: channel.member_count,
@@ -122,10 +150,15 @@ export async function buildTelegramInput(
       avg_views:       Math.round(s.avg_views),
       engagement_rate: Math.round(s.engagement_rate * 10) / 10,
     },
+    data_quality: { level, post_count: s.post_count },
     growth,
-    best_time: bestCell
-      ? { day_of_week: bestCell.day_of_week, hour: bestCell.hour, avg_views: bestCell.avg_views }
-      : null,
+    best_time: gateBestTime(
+      level,
+      bestCell?.post_count ?? 0,
+      bestCell
+        ? { day_of_week: bestCell.day_of_week, hour: bestCell.hour, avg_views: bestCell.avg_views }
+        : null,
+    ),
     top_posts,
   };
 }
@@ -165,6 +198,7 @@ type VkPost = {
 export async function buildVkInput(
   community: { community_id: string; name: string; member_count: number | null },
   period: string,
+  locale: AiLocale,
 ): Promise<InsightsInput> {
   const groupId = Number(community.community_id);
 
@@ -233,6 +267,7 @@ export async function buildVkInput(
     heatMap.set(key, cell);
   }
   let best_time: InsightsInput["best_time"] = null;
+  let bestCellCount = 0;
   for (const [key, val] of heatMap.entries()) {
     const avg = val.count > 0 ? Math.round(val.total / val.count) : 0;
     if (best_time === null || avg > best_time.avg_views) {
@@ -240,6 +275,7 @@ export async function buildVkInput(
       const dow = Number(parts[0]);
       const hr  = Number(parts[1]);
       best_time = { day_of_week: dow, hour: hr, avg_views: avg };
+      bestCellCount = val.count;
     }
   }
 
@@ -252,14 +288,18 @@ export async function buildVkInput(
       engagement: p.likes + p.comments + p.reposts,
     }));
 
+  const level = dataLevel(period, post_count);
+
   return {
     network:   "vk",
+    locale,
     title:     community.name,
     period,
     followers: community.member_count,
     summary:   { post_count, avg_views, engagement_rate },
+    data_quality: { level, post_count },
     growth,
-    best_time,
+    best_time: gateBestTime(level, bestCellCount, best_time),
     top_posts,
   };
 }

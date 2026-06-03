@@ -317,7 +317,15 @@
     "error": "Failed to get insights",
     "upgradeRequired": "AI Insights are available on paid plans.",
     "upgradeLink": "View plans →",
-    "quotaExceeded": "Daily AI generation limit reached. Try again tomorrow."
+    "quotaExceeded": "Daily AI generation limit reached. Try again tomorrow.",
+    "keyTakeaway": "Key takeaway",
+    "dataLow": "Based on a small number of posts ({count}) — these conclusions are preliminary.",
+    "dataLowNudge": "Switch to the 7d or 30d period for a more reliable analysis.",
+    "confidence": {
+      "high": "high confidence",
+      "medium": "medium confidence",
+      "low": "low confidence"
+    }
   },
   "VKAnalytics": {
     "title": "VK Analytics",
