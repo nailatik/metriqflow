@@ -325,7 +325,15 @@
       "high": "high confidence",
       "medium": "medium confidence",
       "low": "low confidence"
-    }
+    },
+    "metriqsLeft": "{remaining} Metriqs",
+    "metriqSpent": "−1 Metriq · {remaining} left",
+    "metriqsEmpty": "Out of Metriqs. Resets at {time}.",
+    "quotaResetAt": "Resets at {time}.",
+    "confirmTitle": "Refresh insight?",
+    "confirmBody": "This will spend 1 Metriq. Remaining: {remaining}.",
+    "confirmYes": "Refresh (−1)",
+    "cancel": "Cancel"
   },
   "VKAnalytics": {
     "title": "VK Analytics",

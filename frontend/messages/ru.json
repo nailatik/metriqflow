@@ -325,7 +325,15 @@
       "high": "высокая достоверность",
       "medium": "средняя достоверность",
       "low": "низкая достоверность"
-    }
+    },
+    "metriqsLeft": "{remaining} Metriqs",
+    "metriqSpent": "−1 Metriq · осталось {remaining}",
+    "metriqsEmpty": "Metriqs закончились. Обновятся в {time}.",
+    "quotaResetAt": "Обновятся в {time}.",
+    "confirmTitle": "Обновить инсайт?",
+    "confirmBody": "Это спишет 1 Metriq. Осталось: {remaining}.",
+    "confirmYes": "Обновить (−1)",
+    "cancel": "Отмена"
   },
   "VKAnalytics": {
     "title": "VK Аналитика",

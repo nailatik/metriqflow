@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations, useLocale } from "next-intl";
 import { http } from "@/shared/lib/axios";
-import type { Confidence, InsightsPayload } from "./types";
+import { useUiStore } from "@/shared/store/StoreProvider";
+import type { Confidence, InsightsPayload, Metriqs } from "./types";
 
 type Props = {
   network:  "telegram" | "vk";
@@ -11,8 +13,15 @@ type Props = {
   period:   string;
 };
 
+type InsightsResponse = InsightsPayload & { cached: boolean; metriqs?: Metriqs };
+type ErrorData = { message?: string; code?: string; metriqs?: Metriqs };
+
 function minutesAgo(iso: string): number {
   return Math.floor((Date.now() - new Date(iso).getTime()) / 60_000);
+}
+
+function resetTime(iso: string, locale: string): string {
+  return new Date(iso).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
 }
 
 const CONFIDENCE_STYLES: Record<Confidence, string> = {
@@ -22,36 +31,58 @@ const CONFIDENCE_STYLES: Record<Confidence, string> = {
 };
 
 export function AiInsightsCard({ network, sourceId, period }: Props) {
-  const t      = useTranslations("aiInsights");
-  const locale = useLocale();
+  const t       = useTranslations("aiInsights");
+  const locale  = useLocale();
+  const uiStore = useUiStore();
 
-  const [loading,  setLoading]  = useState(false);
-  const [payload,  setPayload]  = useState<InsightsPayload | null>(null);
-  const [cached,   setCached]   = useState(false);
-  const [error,    setError]    = useState<{ message: string; code?: string } | null>(null);
+  const [loading,     setLoading]     = useState(false);
+  const [payload,     setPayload]     = useState<InsightsPayload | null>(null);
+  const [cached,      setCached]      = useState(false);
+  const [metriqs,     setMetriqs]     = useState<Metriqs | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [error,       setError]       = useState<{ message: string; code?: string } | null>(null);
 
   const endpoint =
     network === "telegram"
       ? `/integrations/telegram/channels/${sourceId}/ai-insights`
       : `/vk/communities/${sourceId}/ai-insights`;
 
-  const generate = async () => {
+  const generate = async (force: boolean) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await http.post<InsightsPayload & { cached: boolean }>(endpoint, { period, locale });
-      const { cached: isCached, ...rest } = res.data;
+      const res = await http.post<InsightsResponse>(endpoint, { period, locale, force });
+      const { cached: isCached, metriqs: m, ...rest } = res.data;
       setCached(isCached);
       setPayload(rest as InsightsPayload);
+      if (m) {
+        setMetriqs(m);
+        // A fresh generation (not a cache read) costs one Metriq — confirm it via toast.
+        if (!isCached) uiStore.showToast(t("metriqSpent", { remaining: m.remaining }), "success");
+      }
     } catch (e: unknown) {
-      const resp = (e as { response?: { data?: { message?: string; code?: string } } })?.response?.data;
+      const resp = (e as { response?: { data?: ErrorData } })?.response?.data;
+      if (resp?.metriqs) setMetriqs(resp.metriqs);
       setError({ message: resp?.message ?? t("error"), code: resp?.code });
     } finally {
       setLoading(false);
     }
   };
 
-  const isLowData = payload?.data_quality.level === "low";
+  // First generation → straight through. Explicit "Refresh" on an existing insight
+  // costs a Metriq, so ask for confirmation first.
+  const onPrimary = () => {
+    if (payload) setConfirmOpen(true);
+    else void generate(false);
+  };
+
+  const confirmRefresh = () => {
+    setConfirmOpen(false);
+    void generate(true);
+  };
+
+  const isLowData  = payload?.data_quality.level === "low";
+  const outOfQuota = metriqs?.remaining === 0;
 
   return (
     <div className="bg-surface border border-border rounded-xl p-6 flex flex-col gap-4">
@@ -61,13 +92,20 @@ export function AiInsightsCard({ network, sourceId, period }: Props) {
           <span className="text-lg">✨</span>
           <h3 className="text-base font-semibold text-textPrimary">{t("title")}</h3>
         </div>
-        {payload && (
-          <span className="text-xs text-textSecondary">
-            {cached
-              ? t("fromCache", { min: minutesAgo(payload.generated_at) })
-              : t("generated")}
-          </span>
-        )}
+        <div className="flex items-center gap-3">
+          {metriqs && (
+            <span className="text-xs font-medium text-textSecondary">
+              {t("metriqsLeft", { remaining: metriqs.remaining })}
+            </span>
+          )}
+          {payload && (
+            <span className="text-xs text-textSecondary">
+              {cached
+                ? t("fromCache", { min: minutesAgo(payload.generated_at) })
+                : t("generated")}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Content */}
@@ -92,7 +130,10 @@ export function AiInsightsCard({ network, sourceId, period }: Props) {
               </a>
             </p>
           ) : error.code === "quota_exceeded" ? (
-            <p className="text-sm text-textSecondary">{t("quotaExceeded")}</p>
+            <p className="text-sm text-textSecondary">
+              {t("quotaExceeded")}
+              {metriqs && <> {t("quotaResetAt", { time: resetTime(metriqs.resets_at, locale) })}</>}
+            </p>
           ) : (
             <p className="text-sm text-error">{error.message}</p>
           )}
@@ -145,13 +186,53 @@ export function AiInsightsCard({ network, sourceId, period }: Props) {
       )}
 
       {/* Action */}
-      <button
-        onClick={generate}
-        disabled={loading}
-        className="self-start px-4 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {loading ? t("generating") : payload ? t("regenerate") : t("generate")}
-      </button>
+      <div className="flex flex-col gap-1.5 items-start">
+        <button
+          onClick={onPrimary}
+          disabled={loading || (!!payload && outOfQuota)}
+          className="self-start px-4 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? t("generating") : payload ? t("regenerate") : t("generate")}
+        </button>
+        {payload && outOfQuota && metriqs && (
+          <p className="text-xs text-textSecondary">
+            {t("metriqsEmpty", { time: resetTime(metriqs.resets_at, locale) })}
+          </p>
+        )}
+      </div>
+
+      {/* Confirm modal */}
+      {confirmOpen && typeof document !== "undefined" && createPortal(
+        <div
+          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          onClick={() => setConfirmOpen(false)}
+        >
+          <div
+            className="w-full max-w-sm bg-surface rounded-2xl shadow-xl p-6 flex flex-col gap-4 mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-semibold text-textPrimary">{t("confirmTitle")}</h2>
+            <p className="text-sm text-textSecondary leading-relaxed">
+              {t("confirmBody", { remaining: metriqs?.remaining ?? 0 })}
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setConfirmOpen(false)}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-textSecondary hover:bg-textSecondary/10 transition-colors"
+              >
+                {t("cancel")}
+              </button>
+              <button
+                onClick={confirmRefresh}
+                className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:opacity-90 transition-opacity"
+              >
+                {t("confirmYes")}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
     </div>
   );
 }

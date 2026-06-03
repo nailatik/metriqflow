@@ -15,3 +15,11 @@ export type InsightsPayload = {
   generated_at: string;
   period: string;
 };
+
+// "Metriqs" — daily AI-generation currency, per user across all sections.
+export type Metriqs = {
+  remaining:  number;
+  limit:      number;
+  used:       number;
+  resets_at:  string;
+};

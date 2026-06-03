@@ -1,5 +1,5 @@
 import type { RootStore } from "../RootStore";
-import { UiState } from "./models/uiState";
+import { UiState, type ToastKind } from "./models/uiState";
 import { uiSync } from "./models/uiSync";
 
 export class UiStore {
@@ -19,5 +19,13 @@ export class UiStore {
 
   clearError(): void {
     uiSync.clearError(this);
+  }
+
+  showToast(message: string, kind: ToastKind = "info"): void {
+    uiSync.showToast(this, message, kind);
+  }
+
+  clearToast(id: number): void {
+    uiSync.clearToast(this, id);
   }
 }

@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import { observer } from "mobx-react-lite";
 import { Loader } from "@/widgets/Loader/Loader";
 import { ErrorModal } from "@/widgets/ErrorModal/ErrorModal";
+import { Toast } from "@/widgets/Toast/Toast";
 import { useUserStore } from "@/shared/store/StoreProvider";
 
 interface CommonWrapperProps {
@@ -25,6 +26,7 @@ export const CommonWrapper = observer(({ children }: CommonWrapperProps) => {
     <>
       <Loader />
       <ErrorModal />
+      <Toast />
       {children}
     </>
   );

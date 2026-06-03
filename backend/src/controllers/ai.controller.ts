@@ -8,6 +8,28 @@ import { buildTelegramInput, buildVkInput } from "../services/insightsBuilders";
 import { insightsBodySchema } from "../schemas/insights.schemas";
 import type { AiLocale, InsightsInput, InsightsPayload } from "../types/insights";
 
+// "Metriqs" — local currency for AI generations. Daily cap per user across all
+// sections (TG+VK), resets at local midnight. Cache hits do NOT cost a Metriq.
+type MetriqsState = { remaining: number; limit: number; used: number; resets_at: string };
+
+function nextResetISO(): string {
+  const d = new Date();
+  d.setHours(24, 0, 0, 0); // start of next local day
+  return d.toISOString();
+}
+
+function metriqsState(limit: number, used: number): MetriqsState {
+  return { remaining: Math.max(0, limit - used), limit, used, resets_at: nextResetISO() };
+}
+
+async function dailyUsage(userId: number): Promise<number> {
+  const usageRes = await query(
+    `SELECT count FROM ai_usage WHERE user_id = $1 AND used_on = CURRENT_DATE`,
+    [userId],
+  );
+  return usageRes.rows.length > 0 ? (usageRes.rows[0] as { count: number }).count : 0;
+}
+
 async function runInsights(
   res: Response,
   opts: {
@@ -16,47 +38,49 @@ async function runInsights(
     sourceId:   string;
     period:     string;
     locale:     AiLocale;
+    force:      boolean;
     buildInput: () => Promise<InsightsInput>;
   },
 ): Promise<void> {
-  const { userId, network, sourceId, period, locale, buildInput } = opts;
+  const { userId, network, sourceId, period, locale, force, buildInput } = opts;
 
-  // 1. Cache lookup — hits skip quota. locale in the key so EN users never read RU payloads.
-  const cached = await query(
-    `SELECT payload FROM ai_cache
-     WHERE network = $1 AND source_id = $2 AND period = $3 AND locale = $4
-       AND created_at > NOW() - INTERVAL '6 hours'
-     ORDER BY created_at DESC LIMIT 1`,
-    [network, sourceId, period, locale],
-  );
-  if (cached.rows.length > 0) {
-    const payload = (cached.rows[0] as { payload: InsightsPayload }).payload;
-    res.json({ cached: true, ...payload });
-    return;
-  }
-
-  // 2. Plan gate
+  // 1. Plan gate — free plan has no AI at all.
   const plan  = await getUserPlan(userId);
-  const limit = getLimits(plan).ai_daily;
+  const limit = getLimits(plan).ai_daily ?? 0;
   if (limit === 0) {
     res.status(403).json({ message: "AI-инсайты доступны на платных тарифах", code: "upgrade_required" });
     return;
   }
-  if (limit !== null) {
-    const usageRes = await query(
-      `SELECT count FROM ai_usage WHERE user_id = $1 AND used_on = CURRENT_DATE`,
-      [userId],
+
+  const used = await dailyUsage(userId);
+
+  // 2. Cache lookup (skipped on force). A hit is a free read — does not cost a Metriq.
+  if (!force) {
+    const cached = await query(
+      `SELECT payload FROM ai_cache
+       WHERE network = $1 AND source_id = $2 AND period = $3 AND locale = $4
+         AND created_at > NOW() - INTERVAL '6 hours'
+       ORDER BY created_at DESC LIMIT 1`,
+      [network, sourceId, period, locale],
     );
-    const used = usageRes.rows.length > 0
-      ? (usageRes.rows[0] as { count: number }).count
-      : 0;
-    if (used >= limit) {
-      res.status(429).json({ message: "Дневной лимит AI-генераций исчерпан", code: "quota_exceeded" });
+    if (cached.rows.length > 0) {
+      const payload = (cached.rows[0] as { payload: InsightsPayload }).payload;
+      res.json({ cached: true, ...payload, metriqs: metriqsState(limit, used) });
       return;
     }
   }
 
-  // 3. Build input + generate
+  // 3. Quota gate — a fresh generation (force or cache miss) costs one Metriq.
+  if (used >= limit) {
+    res.status(429).json({
+      message:  "Дневной лимит AI-генераций исчерпан",
+      code:     "quota_exceeded",
+      metriqs:  metriqsState(limit, used),
+    });
+    return;
+  }
+
+  // 4. Build input + generate
   let payload: InsightsPayload;
   try {
     const input = await buildInput();
@@ -69,7 +93,7 @@ async function runInsights(
     throw err;
   }
 
-  // 4. Persist cache + usage
+  // 5. Persist cache + charge one Metriq
   await query(
     `INSERT INTO ai_cache (network, source_id, period, locale, payload) VALUES ($1, $2, $3, $4, $5)`,
     [network, sourceId, period, locale, JSON.stringify(payload)],
@@ -80,7 +104,7 @@ async function runInsights(
     [userId],
   );
 
-  res.json({ cached: false, ...payload });
+  res.json({ cached: false, ...payload, metriqs: metriqsState(limit, used + 1) });
 }
 
 // POST /integrations/telegram/channels/:channelId/ai-insights
@@ -98,7 +122,7 @@ export const aiInsightsTelegram = async (req: Request, res: Response) => {
     if (!parsed.success) {
       return res.status(400).json({ message: "Invalid period. Use: 24h, 7d, 30d, all" });
     }
-    const { period, locale } = parsed.data;
+    const { period, locale, force } = parsed.data;
 
     const ownerRes = await query(
       `SELECT channel_id, title, member_count
@@ -121,6 +145,7 @@ export const aiInsightsTelegram = async (req: Request, res: Response) => {
       sourceId: ch.channel_id,
       period,
       locale,
+      force,
       buildInput: () => buildTelegramInput(ch, period, locale),
     });
   } catch (err) {
@@ -144,7 +169,7 @@ export const aiInsightsVk = async (req: Request, res: Response) => {
     if (!parsed.success) {
       return res.status(400).json({ message: "Invalid period. Use: 24h, 7d, 30d, all" });
     }
-    const { period, locale } = parsed.data;
+    const { period, locale, force } = parsed.data;
 
     const ownerRes = await query(
       `SELECT community_id, name, member_count
@@ -167,6 +192,7 @@ export const aiInsightsVk = async (req: Request, res: Response) => {
       sourceId: comm.community_id,
       period,
       locale,
+      force,
       buildInput: () => buildVkInput(comm, period, locale),
     });
   } catch (err) {
