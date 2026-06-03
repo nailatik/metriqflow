@@ -86,6 +86,40 @@ export async function sendReportViaEmail(
   });
 }
 
+export async function sendAlertEmail(to: string, subject: string, html: string): Promise<void> {
+  return sendSimpleEmail(to, subject, html);
+}
+
+export async function sendTelegramMessage(telegramId: number, html: string): Promise<void> {
+  if (!BOT_TOKEN) throw new Error("BOT_TOKEN not configured");
+
+  const body = JSON.stringify({ chat_id: String(telegramId), text: html, parse_mode: "HTML" });
+
+  await new Promise<void>((resolve, reject) => {
+    const url = new URL(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`);
+    const req = https.request(
+      {
+        hostname: url.hostname,
+        path:     url.pathname,
+        method:   "POST",
+        headers:  { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(body) },
+      },
+      (res) => {
+        let data = "";
+        res.on("data", (chunk) => (data += chunk));
+        res.on("end", () => {
+          const parsed = JSON.parse(data) as { ok: boolean; description?: string };
+          if (!parsed.ok) reject(new Error(`Telegram API error: ${parsed.description}`));
+          else resolve();
+        });
+      }
+    );
+    req.on("error", reject);
+    req.write(body);
+    req.end();
+  });
+}
+
 async function sendSimpleEmail(to: string, subject: string, html: string): Promise<void> {
   const smtpUser = process.env.SMTP_USER;
   if (!smtpUser) {

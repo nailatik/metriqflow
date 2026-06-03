@@ -12,6 +12,7 @@ export interface User {
   password_length?: number;
   plan?: Plan;
   plan_expires_at?: string | null;
+  alerts_enabled?: boolean;
 }
 
 export interface AuthResponse {

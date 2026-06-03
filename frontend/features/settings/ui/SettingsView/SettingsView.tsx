@@ -70,6 +70,27 @@ export const SettingsView = observer(() => {
     setPwdError("");
   };
 
+  // ── Alerts toggle ──────────────────────────────────────────────────────────
+  const [alertsEnabled, setAlertsEnabled] = useState<boolean>(user?.alerts_enabled ?? true);
+  const [alertsStatus, setAlertsStatus] = useState<"idle" | "saving" | "error">("idle");
+
+  useEffect(() => {
+    if (user?.alerts_enabled !== undefined) setAlertsEnabled(user.alerts_enabled);
+  }, [user?.alerts_enabled]);
+
+  const handleToggleAlerts = async () => {
+    const next = !alertsEnabled;
+    setAlertsEnabled(next);
+    setAlertsStatus("saving");
+    const result = await userStore.updateAlertsEnabled(next);
+    if (result.success) {
+      setAlertsStatus("idle");
+    } else {
+      setAlertsEnabled(!next);
+      setAlertsStatus("error");
+    }
+  };
+
   // ── Delete account ─────────────────────────────────────────────────────────
   const [deleteStep, setDeleteStep] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -273,6 +294,43 @@ export const SettingsView = observer(() => {
             )}
           </div>
 
+        </div>
+      </div>
+
+      {/* ── Notifications ───────────────────────────────────────────────────── */}
+      <div className="bg-surface border border-border rounded-xl p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-textMain mb-1">{t("notifications.title")}</h2>
+        <p className="text-sm text-textSecondary mb-4">{t("notifications.description")}</p>
+
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-textMain">{t("notifications.alertsLabel")}</p>
+            <p className="text-xs text-textSecondary mt-0.5">
+              {alertsStatus === "saving"
+                ? t("notifications.saving")
+                : alertsEnabled
+                  ? t("notifications.alertsOn")
+                  : t("notifications.alertsOff")}
+            </p>
+            {alertsStatus === "error" && (
+              <p className="text-xs text-red-500 mt-0.5">{t("notifications.saveError")}</p>
+            )}
+          </div>
+
+          <button
+            onClick={handleToggleAlerts}
+            disabled={alertsStatus === "saving"}
+            aria-label={t("notifications.alertsLabel")}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 disabled:opacity-50 ${
+              alertsEnabled ? "bg-accent" : "bg-border"
+            }`}
+          >
+            <span
+              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                alertsEnabled ? "translate-x-5" : "translate-x-0"
+              }`}
+            />
+          </button>
         </div>
       </div>
 

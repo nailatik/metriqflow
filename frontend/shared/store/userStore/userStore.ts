@@ -33,6 +33,9 @@ export class UserStore {
   deleteAccount(token: string) {
     return userAsync.deleteAccount(this, token);
   }
+  updateAlertsEnabled(enabled: boolean) {
+    return userAsync.updateAlertsEnabled(this, enabled);
+  }
   logout(): void {
     userSync.logout(this);
     this.root.reset();

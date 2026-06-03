@@ -3,6 +3,7 @@ import app from "./app";
 import { logger } from "./lib/logger";
 import { pool } from "./db";
 import { startScheduler, stopScheduler } from "./services/scheduler.service";
+import { startAlertScheduler, stopAlertScheduler } from "./services/alerts.service";
 
 const PORT = Number(process.env.PORT) || 8000;
 
@@ -11,6 +12,7 @@ const server = app.listen(PORT, () => {
 });
 
 startScheduler();
+startAlertScheduler();
 
 // Give in-flight requests this many ms to finish before we kill the process.
 // 10s is comfortable for typical request shapes (auth, /reports list); long
@@ -33,6 +35,7 @@ async function shutdown(signal: string): Promise<void> {
 
   try {
     stopScheduler();
+    stopAlertScheduler();
     await new Promise<void>((resolve, reject) => {
       server.close((err) => (err ? reject(err) : resolve()));
     });
