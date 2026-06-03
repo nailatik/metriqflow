@@ -32,7 +32,11 @@ export function stopAlertScheduler(): void {
   logger.info("🔔 Alert scheduler stopped");
 }
 
-async function runAlerts(): Promise<void> {
+export async function triggerAlertsRun(forUserId?: number): Promise<void> {
+  return runAlerts(forUserId);
+}
+
+async function runAlerts(forUserId?: number): Promise<void> {
   const usersResult = await query(
     `SELECT
        u.id,
@@ -45,8 +49,9 @@ async function runAlerts(): Promise<void> {
        ) AS locale
      FROM users u
      LEFT JOIN telegram_users tu ON tu.user_id = u.id
-     WHERE u.alerts_enabled = TRUE`,
-    []
+     WHERE u.alerts_enabled = TRUE
+       ${forUserId !== undefined ? "AND u.id = $1" : ""}`,
+    forUserId !== undefined ? [forUserId] : []
   );
 
   for (const user of usersResult.rows as AlertUser[]) {
