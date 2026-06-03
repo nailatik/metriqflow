@@ -13,13 +13,14 @@ export function usePlan() {
     plan,
     planName,
     limits,
-    isPro:       plan === "pro" || plan === "agency" || plan === "unlimited",
-    isAgency:    plan === "agency" || plan === "unlimited",
-    isUnlimited: plan === "unlimited",
+    isPro:       plan === "pro" || plan === "agency" || plan === "ultimate",
+    isAgency:    plan === "agency" || plan === "ultimate",
+    isUltimate:  plan === "ultimate",
     canAddTgChannel:     limits.tg_channels === null,
     canAddVkCommunity:   limits.vk_communities === null,
     canUseAI:            (limits.ai_daily ?? 0) > 0 || limits.ai_daily === null,
-    canExport:           limits.export,
+    canExport:           limits.export_formats.length > 1,
+    canExportFormat:     (fmt: string) => limits.export_formats.includes(fmt as "xml" | "csv" | "pdf"),
     hasFullHistory:      limits.history_days === null,
   };
 }

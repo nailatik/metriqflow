@@ -10,10 +10,10 @@ export async function getUserPlan(userId: number): Promise<Plan> {
     const row = result.rows[0] as { plan: string; plan_expires_at: Date | null } | undefined;
     if (!row) return "free";
 
-    const validPlans = new Set<string>(["free", "pro", "agency", "unlimited"]);
+    const validPlans = new Set<string>(["free", "pro", "agency", "ultimate"]);
     const plan = validPlans.has(row.plan) ? row.plan : "free";
 
-    if (plan !== "free" && plan !== "unlimited" && row.plan_expires_at) {
+    if (plan !== "free" && plan !== "ultimate" && row.plan_expires_at) {
       const expiresMs = new Date(row.plan_expires_at).getTime();
       if (expiresMs < Date.now()) return "free";
     }

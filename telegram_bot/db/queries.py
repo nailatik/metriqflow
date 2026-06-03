@@ -132,10 +132,10 @@ import logging
 _plan_logger = logging.getLogger(__name__)
 
 PLAN_TG_LIMITS: dict[str, int | None] = {
-    "free":      1,
-    "pro":       5,
-    "agency":    20,
-    "unlimited": None,
+    "free":     1,
+    "pro":      5,
+    "agency":   20,
+    "ultimate": None,
 }
 
 
@@ -160,7 +160,7 @@ async def get_user_tg_channel_limit(pool: asyncpg.Pool, user_id: int) -> int | N
         _plan_logger.warning("get_user_tg_channel_limit: unknown plan %r for user_id=%s, treating as free", plan, user_id)
         plan = "free"
 
-    if plan not in ("free", "unlimited") and expires is not None:
+    if plan not in ("free", "ultimate") and expires is not None:
         now_utc = datetime.datetime.now(datetime.timezone.utc)
         # asyncpg returns TIMESTAMPTZ as aware datetime; guard against naive just in case
         if expires.tzinfo is None:

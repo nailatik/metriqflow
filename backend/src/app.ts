@@ -11,6 +11,7 @@ import schedulesRoutes from "./routes/schedules.routes";
 import integrationsRoutes from "./routes/integrations.routes";
 import vkRoutes from "./routes/vk.routes";
 import healthRoutes from "./routes/health.routes";
+import subscriptionRoutes from "./routes/subscription.routes";
 import { globalLimiter, authLimiter, analyticsLimiter } from "./middleware/rateLimit.middleware";
 import { requestId } from "./middleware/requestId.middleware";
 
@@ -60,6 +61,7 @@ app.use("/reports",         reportsRoutes);
 app.use("/report-schedules", schedulesRoutes);
 app.use("/integrations",    analyticsLimiter, integrationsRoutes);
 app.use("/vk",              analyticsLimiter, vkRoutes);
+app.use("/subscription",   subscriptionRoutes);
 
 app.use((_req: Request, res: Response) => {
   res.status(404).json({ message: "Not found" });

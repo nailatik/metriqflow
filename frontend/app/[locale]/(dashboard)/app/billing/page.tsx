@@ -1,24 +1,26 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { observer } from "mobx-react-lite";
-import { useUserStore } from "@/shared/store/StoreProvider";
+import { useUserStore, useBillingStore } from "@/shared/store/StoreProvider";
 import { PLAN_LIMITS, PLAN_NAMES } from "@/shared/lib/plans";
 import type { Plan } from "@/entities/user/types";
 
 const VISIBLE_PLANS: Plan[] = ["free", "pro", "agency"];
 
 const PRICES: Record<Plan, string | null> = {
-  free:      null,
-  pro:       "590",
-  agency:    "1 990",
-  unlimited: null,
+  free:     null,
+  pro:      "590",
+  agency:   "1 990",
+  ultimate: null,
 };
 
-const TAGLINE_KEYS: Record<string, "taglineFree" | "taglinePro" | "taglineAgency"> = {
-  free:   "taglineFree",
-  pro:    "taglinePro",
-  agency: "taglineAgency",
+const TAGLINE_KEYS: Record<string, "taglineFree" | "taglinePro" | "taglineAgency" | "taglineUltimate"> = {
+  free:     "taglineFree",
+  pro:      "taglinePro",
+  agency:   "taglineAgency",
+  ultimate: "taglineUltimate",
 };
 
 function Feature({ ok, label }: { ok: boolean; label: string }) {
@@ -32,10 +34,72 @@ function Feature({ ok, label }: { ok: boolean; label: string }) {
   );
 }
 
+function PromoSection() {
+  const t = useTranslations("Billing");
+  const billingStore = useBillingStore();
+  const [code, setCode] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<{ type: "success" | "already" | "invalid" | "error"; plan?: string } | null>(null);
+
+  const handleRedeem = async () => {
+    if (!code.trim()) return;
+    setLoading(true);
+    setResult(null);
+    const res = await billingStore.redeem(code.trim());
+    setLoading(false);
+    if (res.ok) {
+      setResult({ type: res.already ? "already" : "success", plan: res.plan });
+      setCode("");
+    } else if (res.error === "code_invalid") {
+      setResult({ type: "invalid" });
+    } else {
+      setResult({ type: "error" });
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-3">
+      <h2 className="text-base font-semibold text-textMain">{t("promoTitle")}</h2>
+      <p className="text-sm text-textSecondary">{t("promoDesc")}</p>
+      <div className="flex gap-2 max-w-sm">
+        <input
+          type="text"
+          value={code}
+          onChange={(e) => setCode(e.target.value.toUpperCase())}
+          onKeyDown={(e) => e.key === "Enter" && handleRedeem()}
+          placeholder={t("promoPlaceholder")}
+          className="flex-1 px-3 py-2 text-sm rounded-lg border border-border bg-surface text-textMain placeholder:text-textSecondary focus:outline-none focus:ring-2 focus:ring-primary/30"
+          disabled={loading}
+        />
+        <button
+          onClick={handleRedeem}
+          disabled={loading || !code.trim()}
+          className="px-4 py-2 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition"
+        >
+          {loading ? t("promoActivating") : t("promoActivate")}
+        </button>
+      </div>
+      {result && (
+        <p className={`text-sm ${result.type === "success" ? "text-green-600" : result.type === "already" ? "text-textSecondary" : "text-red-500"}`}>
+          {result.type === "success" && t("promoSuccess", { plan: PLAN_NAMES[result.plan as Plan] ?? result.plan })}
+          {result.type === "already" && t("promoAlready")}
+          {result.type === "invalid" && t("promoInvalid")}
+          {result.type === "error" && t("promoError")}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default observer(function BillingPage() {
   const t = useTranslations("Billing");
   const userStore = useUserStore();
   const currentPlan: Plan = (userStore.state.user?.plan as Plan) ?? "free";
+  const planExpiresAt = userStore.state.user?.plan_expires_at;
+
+  const visiblePlans = currentPlan === "ultimate"
+    ? (["free", "pro", "agency", "ultimate"] as Plan[])
+    : VISIBLE_PLANS;
 
   return (
     <div className="flex flex-col gap-10 max-w-4xl">
@@ -44,12 +108,26 @@ export default observer(function BillingPage() {
         <p className="text-textSecondary text-sm mt-1">{t("subtitle")}</p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-5">
-        {VISIBLE_PLANS.map((plan) => {
+      {/* Current plan status */}
+      {currentPlan !== "free" && (
+        <div className="flex items-center gap-3 px-5 py-3 rounded-xl bg-primary/5 border border-primary/20 text-sm">
+          <span className="font-semibold text-primary">{PLAN_NAMES[currentPlan]}</span>
+          <span className="text-textSecondary">{t("planActive")}</span>
+          {planExpiresAt && (
+            <span className="text-textSecondary ml-auto">
+              {t("planExpires")} {new Date(planExpiresAt).toLocaleDateString()}
+            </span>
+          )}
+        </div>
+      )}
+
+      <div className={`grid gap-5 ${visiblePlans.length === 4 ? "md:grid-cols-4" : "md:grid-cols-3"}`}>
+        {visiblePlans.map((plan) => {
           const limits    = PLAN_LIMITS[plan];
           const price     = PRICES[plan];
           const isCurrent = plan === currentPlan;
           const isPopular = plan === "pro";
+          const isUltimate = plan === "ultimate";
 
           const features = [
             {
@@ -81,8 +159,8 @@ export default observer(function BillingPage() {
               label: t("feat.ai"),
             },
             {
-              ok: limits.export,
-              label: t("feat.export"),
+              ok: limits.export_formats.length > 1,
+              label: limits.export_formats.length > 1 ? t("feat.export") : t("feat.exportXmlOnly"),
             },
           ];
 
@@ -90,21 +168,31 @@ export default observer(function BillingPage() {
             <div
               key={plan}
               className={`relative flex flex-col overflow-hidden rounded-2xl bg-surface transition-shadow ${
-                isPopular && !isCurrent
-                  ? "border-2 border-primary shadow-[0_4px_24px_rgba(0,0,0,0.1)]"
-                  : isCurrent
-                    ? "border-2 border-primary/50"
-                    : "border border-border"
+                isUltimate && isCurrent
+                  ? "border-2 border-amber-400 shadow-[0_4px_24px_rgba(251,191,36,0.15)]"
+                  : isPopular && !isCurrent
+                    ? "border-2 border-primary shadow-[0_4px_24px_rgba(0,0,0,0.1)]"
+                    : isCurrent
+                      ? "border-2 border-primary/50"
+                      : "border border-border"
               }`}
             >
               {/* Top stripe */}
-              {isCurrent ? (
+              {isCurrent && isUltimate ? (
+                <div className="bg-amber-400/20 text-amber-600 text-xs font-semibold text-center py-1.5 tracking-wide border-b border-amber-400/30">
+                  {t("current")}
+                </div>
+              ) : isCurrent ? (
                 <div className="bg-primary/10 text-primary text-xs font-semibold text-center py-1.5 tracking-wide border-b border-primary/20">
                   {t("current")}
                 </div>
               ) : isPopular ? (
                 <div className="bg-primary text-white text-xs font-semibold text-center py-1.5 tracking-wide">
                   {t("popular")}
+                </div>
+              ) : isUltimate ? (
+                <div className="bg-amber-400 text-white text-xs font-semibold text-center py-1.5 tracking-wide">
+                  {t("exclusiveTag")}
                 </div>
               ) : (
                 <div className="py-1.5" />
@@ -113,7 +201,9 @@ export default observer(function BillingPage() {
               <div className="p-6 flex flex-col gap-5 flex-1">
                 {/* Name + tagline */}
                 <div>
-                  <h3 className="font-semibold text-lg text-textMain">{PLAN_NAMES[plan]}</h3>
+                  <h3 className={`font-semibold text-lg ${isUltimate ? "text-amber-600" : "text-textMain"}`}>
+                    {PLAN_NAMES[plan]}
+                  </h3>
                   <p className="text-xs text-textSecondary mt-0.5">{t(TAGLINE_KEYS[plan])}</p>
                 </div>
 
@@ -125,7 +215,9 @@ export default observer(function BillingPage() {
                       <span className="text-sm text-textSecondary pb-0.5">{t("perMonth")}</span>
                     </>
                   ) : (
-                    <span className="text-3xl font-bold text-textMain leading-none">{t("free")}</span>
+                    <span className={`text-3xl font-bold leading-none ${isUltimate ? "text-amber-600" : "text-textMain"}`}>
+                      {t("free")}
+                    </span>
                   )}
                 </div>
 
@@ -147,7 +239,7 @@ export default observer(function BillingPage() {
                     >
                       {t("currentPlan")}
                     </button>
-                  ) : plan !== "free" ? (
+                  ) : plan !== "free" && !isUltimate ? (
                     <button
                       disabled
                       className="w-full py-2 rounded-xl bg-primary text-white text-sm font-medium opacity-50 cursor-not-allowed"
@@ -161,6 +253,8 @@ export default observer(function BillingPage() {
           );
         })}
       </div>
+
+      <PromoSection />
 
       <p className="text-xs text-textSecondary">{t("paymentNote")}</p>
     </div>

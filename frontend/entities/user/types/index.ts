@@ -1,4 +1,4 @@
-export type Plan = "free" | "pro" | "agency" | "unlimited";
+export type Plan = "free" | "pro" | "agency" | "ultimate";
 
 export interface User {
   id: number;

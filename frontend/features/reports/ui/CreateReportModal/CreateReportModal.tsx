@@ -7,6 +7,8 @@ import { observer } from "mobx-react-lite";
 import { useReportsStore } from "@/shared/store/StoreProvider";
 import type { ReportSource, ReportFormat } from "@/entities/report/types";
 import { Button } from "@/shared/ui/Button/Button";
+import { usePlan } from "@/shared/hooks/usePlan";
+import { UpgradeBanner } from "@/features/billing/ui/UpgradeBanner/UpgradeBanner";
 
 interface Props {
   open: boolean;
@@ -39,9 +41,10 @@ export const CreateReportModal = observer(({ open, defaultSource = "all", onClos
   const locale = useLocale();
   const router = useRouter();
   const reportsStore = useReportsStore();
+  const { canExportFormat } = usePlan();
 
   const [source, setSource]   = useState<ReportSource>(defaultSource);
-  const [format, setFormat]   = useState<ReportFormat>("csv");
+  const [format, setFormat]   = useState<ReportFormat>("xml");
   const [period, setPeriod]   = useState<1 | 7 | 30>(7);
   const [title, setTitle]     = useState(() => autoTitle(defaultSource, 7));
   const [loading, setLoading] = useState(false);
@@ -120,25 +123,40 @@ export const CreateReportModal = observer(({ open, defaultSource = "all", onClos
           <div>
             <p className="text-sm font-medium text-textSecondary mb-2">{t("labelFormat")}</p>
             <div className="flex gap-2">
-              {FORMATS.map((f) => (
-                <button
-                  key={f.id}
-                  onClick={() => setFormat(f.id)}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition relative ${
-                    format === f.id
-                      ? "bg-primary text-white border-primary"
-                      : "border-border text-textSecondary hover:border-primary hover:text-primary"
-                  }`}
-                >
-                  {f.id.toUpperCase()}
-                  {f.recommended && (
-                    <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] bg-green-500 text-white px-1.5 rounded-full leading-4">
-                      {t("recommended")}
-                    </span>
-                  )}
-                </button>
-              ))}
+              {FORMATS.map((f) => {
+                const allowed = canExportFormat(f.id);
+                return (
+                  <button
+                    key={f.id}
+                    onClick={() => allowed && setFormat(f.id)}
+                    className={`flex-1 py-2 rounded-lg text-sm font-medium border transition relative ${
+                      !allowed
+                        ? "border-border text-textSecondary/40 cursor-not-allowed"
+                        : format === f.id
+                          ? "bg-primary text-white border-primary"
+                          : "border-border text-textSecondary hover:border-primary hover:text-primary"
+                    }`}
+                  >
+                    {f.id.toUpperCase()}
+                    {f.recommended && allowed && (
+                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] bg-green-500 text-white px-1.5 rounded-full leading-4">
+                        {t("recommended")}
+                      </span>
+                    )}
+                    {!allowed && (
+                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] bg-textSecondary/50 text-white px-1.5 rounded-full leading-4">
+                        Pro
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
+            {!canExportFormat(format) && (
+              <div className="mt-3">
+                <UpgradeBanner compact reason={t("exportLocked")} />
+              </div>
+            )}
           </div>
 
           {/* Period */}
@@ -181,7 +199,7 @@ export const CreateReportModal = observer(({ open, defaultSource = "all", onClos
           <Button
             variant="primary"
             onClick={handleSubmit}
-            disabled={loading || !title.trim()}
+            disabled={loading || !title.trim() || !canExportFormat(format)}
             className="flex-1"
           >
             {loading ? t("generating") : t("generate")}

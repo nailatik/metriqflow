@@ -216,7 +216,8 @@
     "recommended": "рек",
     "generate": "Сформировать",
     "generating": "Формируется...",
-    "schedulesTab": "Автоматические отчёты"
+    "schedulesTab": "Автоматические отчёты",
+    "exportLocked": "Экспорт CSV и PDF доступен на плане Pro и выше"
   },
   "Integrations": {
     "title": "Интеграции",
@@ -515,8 +516,22 @@
       "autoUnlimited": "Авторепорты без лимита",
       "autoN": "{n, plural, one {# авторепорт/мес} few {# авторепорта/мес} other {# авторепортов/мес}}",
       "ai": "AI-инсайты",
-      "export": "Экспорт CSV / PDF"
-    }
+      "export": "Экспорт CSV / PDF",
+      "exportXmlOnly": "Только экспорт XML"
+    },
+    "taglineUltimate": "Эксклюзивный доступ",
+    "exclusiveTag": "Эксклюзив",
+    "planActive": "план активен",
+    "planExpires": "Истекает:",
+    "promoTitle": "Промокод",
+    "promoDesc": "Есть промокод? Введите его ниже для активации плана.",
+    "promoPlaceholder": "ВВЕДИТЕ КОД",
+    "promoActivate": "Активировать",
+    "promoActivating": "Активация...",
+    "promoSuccess": "Активировано! План обновлён до {plan}.",
+    "promoAlready": "Этот код уже применён к вашему аккаунту.",
+    "promoInvalid": "Неверный или истёкший промокод.",
+    "promoError": "Что-то пошло не так. Попробуйте снова."
   },
   "ErrorModal": {
     "title": "Что-то пошло не так",

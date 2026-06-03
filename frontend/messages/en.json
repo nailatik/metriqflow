@@ -216,7 +216,8 @@
     "recommended": "rec",
     "generate": "Generate",
     "generating": "Generating...",
-    "schedulesTab": "Automatic reports"
+    "schedulesTab": "Automatic reports",
+    "exportLocked": "CSV and PDF export available on Pro and higher"
   },
   "Integrations": {
     "title": "Integrations",
@@ -515,8 +516,22 @@
       "autoUnlimited": "Unlimited autoreports",
       "autoN": "{n} autoreport{n, plural, one {} other {s}}/mo",
       "ai": "AI insights",
-      "export": "CSV / PDF export"
-    }
+      "export": "CSV / PDF export",
+      "exportXmlOnly": "XML export only"
+    },
+    "taglineUltimate": "Exclusive access",
+    "exclusiveTag": "Exclusive",
+    "planActive": "plan is active",
+    "planExpires": "Expires:",
+    "promoTitle": "Promo code",
+    "promoDesc": "Have a promo code? Enter it below to activate your plan.",
+    "promoPlaceholder": "ENTER CODE",
+    "promoActivate": "Activate",
+    "promoActivating": "Activating...",
+    "promoSuccess": "Activated! Plan upgraded to {plan}.",
+    "promoAlready": "This code has already been applied to your account.",
+    "promoInvalid": "Invalid or expired promo code.",
+    "promoError": "Something went wrong. Please try again."
   },
   "ErrorModal": {
     "title": "Something went wrong",

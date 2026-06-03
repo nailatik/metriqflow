@@ -4,6 +4,8 @@ import fs from "fs";
 import PDFDocument from "pdfkit";
 import { query } from "../db";
 import { logger } from "../lib/logger";
+import { getUserPlan } from "../lib/getUserPlan";
+import { canExportFormat } from "../config/plans";
 
 const STORAGE_ROOT = path.resolve(__dirname, "../../storage/reports");
 
@@ -424,7 +426,12 @@ export const createReport = async (req: Request, res: Response) => {
     const validLocales = new Set<string>(["en", "ru"]);
 
     const source    = validSources.has(rawSource) ? (rawSource as ReportSource) : "all";
-    const format    = validFormats.has(rawFormat) ? (rawFormat as ReportFormat) : "csv";
+    const format    = validFormats.has(rawFormat) ? (rawFormat as ReportFormat) : "xml";
+
+    const plan = await getUserPlan(userId);
+    if (!canExportFormat(plan, format)) {
+      return res.status(403).json({ upgrade: true, message: "export_format_not_allowed" });
+    }
     const periodDays = [1, 7, 30].includes(Number(rawPeriod)) ? Number(rawPeriod) : 7;
     const locale    = validLocales.has(rawLocale) ? rawLocale : "en";
 
