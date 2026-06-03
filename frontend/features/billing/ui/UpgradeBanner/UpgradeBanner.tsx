@@ -15,10 +15,11 @@ export function UpgradeBanner({ reason, compact = false }: Props) {
   if (compact) {
     return (
       <p className="text-xs text-textSecondary">
-        {reason ?? t("limitReached")}{" "}
+        {reason ?? t("limitReached")}{" "}{t("canUpgrade")}{" "}
         <Link href={`/${locale}/app/billing`} className="text-primary hover:underline font-medium">
-          {t("upgrade")} →
+          {t("upgradeLink")}
         </Link>
+        {t("canUpgradeSuffix")}
       </p>
     );
   }

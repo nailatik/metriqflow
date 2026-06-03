@@ -184,7 +184,7 @@
     "noSchedules": "No schedules",
     "schedulesCount": "{n} schedules",
     "sourceUsed": "already set",
-    "limitAutoreports": "Free plan autoreport limit reached"
+    "limitAutoreports": "Your autoreport plan limit reached."
   },
   "Reports": {
     "title": "Reports",
@@ -499,7 +499,7 @@
     "exportCsvPdf": "CSV/PDF export",
     "upgrade": "Upgrade plan",
     "upgradeDesc": "Upgrade to Pro or Agency to remove limits",
-    "limitReached": "Free plan limit reached",
+    "limitReached": "Your plan limit reached.",
     "comingSoon": "Coming soon",
     "paymentNote": "Payment will be available soon. Contact us: support@metriqflow.com",
     "popular": "Popular",
@@ -531,7 +531,10 @@
     "promoSuccess": "Activated! Plan upgraded to {plan}.",
     "promoAlready": "This code has already been applied to your account.",
     "promoInvalid": "Invalid or expired promo code.",
-    "promoError": "Something went wrong. Please try again."
+    "promoError": "Something went wrong. Please try again.",
+    "canUpgrade": "You can",
+    "upgradeLink": "upgrade",
+    "canUpgradeSuffix": " your plan."
   },
   "ErrorModal": {
     "title": "Something went wrong",
@@ -552,5 +555,8 @@
       "dashboardDesc": "This page doesn't exist in the dashboard.",
       "dashboardButton": "Back to Dashboard"
     }
+  },
+  "VK": {
+    "vkLimitReached": "Your VK community plan limit reached."
   }
 }

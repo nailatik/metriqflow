@@ -8,6 +8,7 @@ import type { ReportSource, ReportFormat } from "@/entities/report/types";
 import type { ScheduleFrequency } from "@/entities/schedule/types";
 import { Button } from "@/shared/ui/Button/Button";
 import { UpgradeBanner } from "@/features/billing/ui/UpgradeBanner/UpgradeBanner";
+import { usePlan } from "@/shared/hooks/usePlan";
 
 interface Props {
   open: boolean;
@@ -46,12 +47,13 @@ export const CreateScheduleModal = observer(({ open, onClose, onCreated }: Props
   const locale = useLocale();
   const schedulesStore = useSchedulesStore();
   const userStore = useUserStore();
+  const { canExportFormat } = usePlan();
 
   const usedSources = new Set(schedulesStore.state.list.map((s) => s.source));
   const firstFreeSource = (["all", "telegram", "vk"] as ReportSource[]).find((s) => !usedSources.has(s)) ?? "all";
 
   const [source, setSource]       = useState<ReportSource>(firstFreeSource);
-  const [format, setFormat]       = useState<ReportFormat>("csv");
+  const [format, setFormat]       = useState<ReportFormat>("xml");
   const [freq, setFreq]           = useState<ScheduleFrequency>(7);
   const [sendHour, setSendHour]   = useState(9);
   const [timezone]                = useState(() => getBrowserTimezone());
@@ -161,21 +163,37 @@ export const CreateScheduleModal = observer(({ open, onClose, onCreated }: Props
           <div>
             <p className="text-sm font-medium text-textSecondary mb-2">{t("labelFormat")}</p>
             <div className="flex gap-2">
-              {FORMATS.map((f) => (
-                <button key={f.id} onClick={() => setFormat(f.id)}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition relative ${
-                    format === f.id ? "bg-primary text-white border-primary"
-                      : "border-border text-textSecondary hover:border-primary hover:text-primary"
-                  }`}>
-                  {f.id.toUpperCase()}
-                  {f.recommended && (
-                    <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] bg-green-500 text-white px-1.5 rounded-full leading-4">
-                      {t("recommended")}
-                    </span>
-                  )}
-                </button>
-              ))}
+              {FORMATS.map((f) => {
+                const allowed = canExportFormat(f.id);
+                return (
+                  <button key={f.id} onClick={() => allowed && setFormat(f.id)}
+                    className={`flex-1 py-2 rounded-lg text-sm font-medium border transition relative ${
+                      !allowed
+                        ? "border-border text-textSecondary/40 cursor-not-allowed"
+                        : format === f.id
+                          ? "bg-primary text-white border-primary"
+                          : "border-border text-textSecondary hover:border-primary hover:text-primary"
+                    }`}>
+                    {f.id.toUpperCase()}
+                    {f.recommended && allowed && (
+                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] bg-green-500 text-white px-1.5 rounded-full leading-4">
+                        {t("recommended")}
+                      </span>
+                    )}
+                    {!allowed && (
+                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] bg-textSecondary/50 text-white px-1.5 rounded-full leading-4">
+                        Pro
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
+            {!canExportFormat(format) && (
+              <div className="mt-3">
+                <UpgradeBanner compact reason={t("exportLocked" as Parameters<typeof t>[0])} />
+              </div>
+            )}
           </div>
 
           {/* Frequency */}
@@ -260,7 +278,7 @@ export const CreateScheduleModal = observer(({ open, onClose, onCreated }: Props
         <div className="flex gap-3 px-6 py-4 border-t border-border">
           <Button variant="secondary" onClick={onClose} className="flex-1">{t("cancel")}</Button>
           <Button variant="primary" onClick={handleSubmit}
-            disabled={loading || noChannel || !title.trim() || isSourceTaken}
+            disabled={loading || noChannel || !title.trim() || isSourceTaken || !canExportFormat(format)}
             className="flex-1">
             {loading ? t("saving") : t("create")}
           </Button>
