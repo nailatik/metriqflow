@@ -304,6 +304,20 @@
     "loadChannelsError": "Failed to load channels",
     "historyCapped": "Free plan: history limited to 30 days"
   },
+  "aiInsights": {
+    "title": "AI Insights",
+    "description": "Get personalized recommendations based on channel statistics.",
+    "generate": "Generate",
+    "regenerate": "Refresh",
+    "generating": "Analyzing…",
+    "loading": "Claude is analyzing your stats…",
+    "generated": "Just now",
+    "fromCache": "Cached · {min} min ago",
+    "error": "Failed to get insights",
+    "upgradeRequired": "AI Insights are available on paid plans.",
+    "upgradeLink": "View plans →",
+    "quotaExceeded": "Daily AI generation limit reached. Try again tomorrow."
+  },
   "VKAnalytics": {
     "title": "VK Analytics",
     "loading": "Loading communities…",

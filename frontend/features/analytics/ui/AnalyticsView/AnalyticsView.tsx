@@ -8,6 +8,7 @@ import {
 } from "recharts";
 import { http } from "@/shared/lib/axios";
 import { UpgradeBanner } from "@/features/billing/ui/UpgradeBanner/UpgradeBanner";
+import { AiInsightsCard } from "@/features/analytics/ui/AiInsightsCard";
 import type { TgChannel } from "@/entities/integration/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -476,6 +477,10 @@ export function AnalyticsView() {
               }
             </div>
           </div>
+
+          {selectedId && (
+            <AiInsightsCard network="telegram" sourceId={selectedId} period={period} />
+          )}
         </>
       )}
     </div>

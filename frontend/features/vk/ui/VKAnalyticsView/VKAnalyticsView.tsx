@@ -8,6 +8,7 @@ import {
 } from "recharts";
 import { http } from "@/shared/lib/axios";
 import { UpgradeBanner } from "@/features/billing/ui/UpgradeBanner/UpgradeBanner";
+import { AiInsightsCard } from "@/features/analytics/ui/AiInsightsCard";
 import { useCommunitiesStore } from "@/shared/store/StoreProvider";
 import type { Community } from "@/entities/community/types";
 
@@ -431,6 +432,10 @@ export const VKAnalyticsView = observer(function VKAnalyticsView() {
               }
             </div>
           </div>
+
+          {selectedId && (
+            <AiInsightsCard network="vk" sourceId={selectedId} period={period} />
+          )}
         </>
       )}
     </div>
