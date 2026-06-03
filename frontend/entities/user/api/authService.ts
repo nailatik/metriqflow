@@ -24,6 +24,9 @@ export const authService = {
   deleteAccount: (token: string) =>
     http.delete<{ message: string }>("/auth/account", { data: { token } }),
 
+  updateAlerts: (enabled: boolean) =>
+    http.patch<{ alerts_enabled: boolean }>("/settings/alerts", { enabled }),
+
   verifyEmail: (token: string) =>
     http.get<{ message: string }>(`/auth/verify-email?token=${token}`),
 

@@ -103,4 +103,17 @@ export const userAsync = {
       return false;
     }
   },
+
+  async updateAlertsEnabled(store: UserStore, enabled: boolean): Promise<ActionResult> {
+    if (!store.state.user) return { success: false, error: "Not authenticated" };
+    try {
+      await authService.updateAlerts(enabled);
+      runInAction(() => {
+        if (store.state.user) store.state.user.alerts_enabled = enabled;
+      });
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: getErrorMessage(err) };
+    }
+  },
 };

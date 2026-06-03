@@ -2,6 +2,20 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { AiLocale, Confidence, InsightsInput, InsightsPayload } from "../types/insights";
 import { logger } from "../lib/logger";
 
+export type AlertCopyInput = {
+  locale: "ru" | "en";
+  channelTitle: string;
+  curER: number;
+  prevER: number;
+  dropPct: number | null;
+  kind: "drop" | "ok";
+};
+
+export type AlertCopy = {
+  subject: string;
+  bodyHtml: string;
+};
+
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const SYSTEM_PROMPT_RU = `Ты — опытный SMM-аналитик с глубоким знанием продвижения в Telegram и ВКонтакте.
@@ -91,6 +105,69 @@ function normConfidence(v: unknown): Confidence {
 function clampPriority(v: unknown, fallback: number): number {
   const n = Math.round(Number(v));
   return Number.isFinite(n) && n >= 1 && n <= 3 ? n : fallback;
+}
+
+const ALERT_SYSTEM_RU = `Ты — SMM-аналитик MetriqFlow. Пишешь короткое email-уведомление об изменении вовлечённости Telegram-канала.
+
+Формат вывода — СТРОГО JSON без текста вне объекта:
+{"subject":"...","bodyHtml":"..."}
+
+Правила:
+- subject: до 80 символов. Emoji в начале: ⚠️ если падение, ✅ если всё хорошо.
+- bodyHtml: HTML, max 200 слов. Стиль: дружелюбный, конкретный. 2-3 абзаца.
+- kind="drop": одна гипотеза причины + 1 конкретный совет.
+- kind="ok": похвали результат + 1 совет для дальнейшего роста.
+- В конце добавь: <p style="color:#888;font-size:13px">— MetriqFlow</p>
+- Только JSON, без markdown.`;
+
+const ALERT_SYSTEM_EN = `You are an SMM analyst for MetriqFlow. Write a short email notification about a Telegram channel's engagement change.
+
+Output format — STRICT JSON, nothing outside the object:
+{"subject":"...","bodyHtml":"..."}
+
+Rules:
+- subject: max 80 chars. Leading emoji: ⚠️ for drop, ✅ for good news.
+- bodyHtml: HTML, max 200 words. Tone: friendly, concrete. 2-3 paragraphs.
+- kind="drop": one hypothesis for the cause + 1 concrete tip.
+- kind="ok": praise the result + 1 tip to push further.
+- End with: <p style="color:#888;font-size:13px">— MetriqFlow</p>
+- JSON only, no markdown.`;
+
+export async function generateAlertCopy(input: AlertCopyInput): Promise<AlertCopy> {
+  const systemPrompt = input.locale === "en" ? ALERT_SYSTEM_EN : ALERT_SYSTEM_RU;
+  const payload = JSON.stringify({
+    channelTitle: input.channelTitle,
+    curER:        `${input.curER.toFixed(2)}%`,
+    prevER:       `${input.prevER.toFixed(2)}%`,
+    dropPct:      input.dropPct !== null ? `${input.dropPct.toFixed(1)}%` : null,
+    kind:         input.kind,
+  });
+
+  const response = await client.messages.create({
+    model:      "claude-haiku-4-5",
+    max_tokens: 512,
+    system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
+    messages: [{ role: "user", content: payload }],
+  });
+
+  const textBlock = response.content.find((b) => b.type === "text");
+  if (!textBlock || textBlock.type !== "text") {
+    throw new AiServiceError(502, "Empty alert copy response");
+  }
+
+  const raw = textBlock.text.trim().replace(/^```json\s*/i, "").replace(/```$/i, "").trim();
+  let parsed: { subject?: string; bodyHtml?: string };
+  try {
+    parsed = JSON.parse(raw) as typeof parsed;
+  } catch {
+    throw new AiServiceError(502, "AI returned invalid alert copy JSON");
+  }
+
+  if (!parsed.subject || !parsed.bodyHtml) {
+    throw new AiServiceError(502, "AI alert copy missing subject or bodyHtml");
+  }
+
+  return { subject: String(parsed.subject), bodyHtml: String(parsed.bodyHtml) };
 }
 
 export class AiServiceError extends Error {

@@ -445,6 +445,15 @@
       "cancel": "Cancel",
       "sent": "Confirmation email sent to:",
       "error": "Failed to send email"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Weekly engagement alerts for your channels.",
+      "alertsLabel": "Weekly alerts",
+      "alertsOn": "Enabled",
+      "alertsOff": "Disabled",
+      "saving": "Saving...",
+      "saveError": "Failed to save"
     }
   },
   "VerifyEmail": {
