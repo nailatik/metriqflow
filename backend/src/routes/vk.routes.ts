@@ -6,14 +6,16 @@ import {
   getVkCommunities,
   getVkCommunityAnalytics,
 } from "../controllers/vk.controller";
+import { aiInsightsVk } from "../controllers/ai.controller";
 
 const router = Router();
 
 router.use(authMiddleware);
 
-router.get("/communities",                        getVkCommunities);
-router.post("/communities",                       addVkCommunity);
-router.delete("/communities/:id",                 removeVkCommunity);
-router.get("/communities/:communityId/analytics", getVkCommunityAnalytics);
+router.get("/communities",                                 getVkCommunities);
+router.post("/communities",                                addVkCommunity);
+router.delete("/communities/:id",                          removeVkCommunity);
+router.get("/communities/:communityId/analytics",          getVkCommunityAnalytics);
+router.post("/communities/:communityId/ai-insights",       aiInsightsVk);
 
 export default router;
