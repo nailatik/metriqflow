@@ -11,12 +11,13 @@ export const testAlertsRun = async (req: Request, res: Response) => {
   const userId = req.user?.id;
   if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
-  const { forUserId } = req.body as { forUserId?: unknown };
+  const { forUserId, force } = req.body as { forUserId?: unknown; force?: unknown };
   const targetId = typeof forUserId === "number" ? forUserId : userId;
+  const forceFlag = force === true;
 
-  logger.info({ triggeredBy: userId, targetId }, "ALERTS: manual test-run triggered");
+  logger.info({ triggeredBy: userId, targetId, force: forceFlag }, "ALERTS: manual test-run triggered");
 
-  triggerAlertsRun(targetId).catch((err) => {
+  triggerAlertsRun(targetId, forceFlag).catch((err) => {
     logger.error({ err }, "ALERTS: test-run failed");
   });
 

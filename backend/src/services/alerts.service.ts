@@ -32,11 +32,11 @@ export function stopAlertScheduler(): void {
   logger.info("🔔 Alert scheduler stopped");
 }
 
-export async function triggerAlertsRun(forUserId?: number): Promise<void> {
-  return runAlerts(forUserId);
+export async function triggerAlertsRun(forUserId?: number, force = false): Promise<void> {
+  return runAlerts(forUserId, force);
 }
 
-async function runAlerts(forUserId?: number): Promise<void> {
+async function runAlerts(forUserId?: number, force = false): Promise<void> {
   const usersResult = await query(
     `SELECT
        u.id,
@@ -55,7 +55,7 @@ async function runAlerts(forUserId?: number): Promise<void> {
   );
 
   for (const user of usersResult.rows as AlertUser[]) {
-    await processUser(user).catch((err) => {
+    await processUser(user, force).catch((err) => {
       logger.error({ err, userId: user.id }, "ALERTS: processUser failed");
     });
   }
@@ -69,15 +69,15 @@ type AlertUser = {
   locale: string;
 };
 
-async function processUser(user: AlertUser): Promise<void> {
+async function processUser(user: AlertUser, force = false): Promise<void> {
   const isDead =
     !user.last_active_at ||
     user.last_active_at < new Date(Date.now() - DEAD_AFTER_DAYS * 86_400_000);
 
-  if (isDead) {
+  if (isDead && !force) {
     await handleDeadUser(user);
   } else {
-    await handleActiveUser(user);
+    await handleActiveUser(user, force);
   }
 }
 
@@ -106,14 +106,14 @@ async function handleDeadUser(user: AlertUser): Promise<void> {
   logger.info({ userId: user.id }, "ALERTS: reengagement sent");
 }
 
-async function handleActiveUser(user: AlertUser): Promise<void> {
+async function handleActiveUser(user: AlertUser, force = false): Promise<void> {
   const channelsResult = await query(
     "SELECT id, channel_id, title FROM telegram_channels WHERE user_id = $1 AND is_active = TRUE",
     [user.id]
   );
 
   for (const ch of channelsResult.rows as ChannelRow[]) {
-    await processChannel(user, ch).catch((err) => {
+    await processChannel(user, ch, force).catch((err) => {
       logger.error({ err, userId: user.id, channelPk: ch.id }, "ALERTS: channel alert failed");
     });
   }
@@ -121,15 +121,17 @@ async function handleActiveUser(user: AlertUser): Promise<void> {
 
 type ChannelRow = { id: number; channel_id: string; title: string };
 
-async function processChannel(user: AlertUser, ch: ChannelRow): Promise<void> {
-  const cooldown = await query(
-    `SELECT 1 FROM alert_log
-     WHERE channel_pk = $1 AND kind IN ('drop', 'ok')
-       AND sent_at > NOW() - (INTERVAL '1 day' * $2)
-     LIMIT 1`,
-    [ch.id, ALERT_COOLDOWN_DAYS]
-  );
-  if ((cooldown.rowCount ?? 0) > 0) return;
+async function processChannel(user: AlertUser, ch: ChannelRow, force = false): Promise<void> {
+  if (!force) {
+    const cooldown = await query(
+      `SELECT 1 FROM alert_log
+       WHERE channel_pk = $1 AND kind IN ('drop', 'ok')
+         AND sent_at > NOW() - (INTERVAL '1 day' * $2)
+       LIMIT 1`,
+      [ch.id, ALERT_COOLDOWN_DAYS]
+    );
+    if ((cooldown.rowCount ?? 0) > 0) return;
+  }
 
   const erResult = await query(
     `WITH
@@ -162,9 +164,13 @@ async function processChannel(user: AlertUser, ch: ChannelRow): Promise<void> {
     cur_er: number; cur_posts: number; prev_er: number; prev_posts: number;
   };
 
-  if (prev_posts < 2 || cur_posts < 1) return;
+  if (!force && (prev_posts < 2 || cur_posts < 1)) return;
 
-  const dropPct = prev_er > 0 ? ((prev_er - cur_er) / prev_er) * 100 : 0;
+  // force mode with no real data: use synthetic values so delivery is testable
+  const effectiveCurER  = cur_posts >= 1 ? cur_er  : 3.2;
+  const effectivePrevER = prev_posts >= 2 ? prev_er : 8.5;
+
+  const dropPct = effectivePrevER > 0 ? ((effectivePrevER - effectiveCurER) / effectivePrevER) * 100 : 0;
   const kind: "drop" | "ok" = dropPct > 20 ? "drop" : "ok";
 
   let subject: string;
@@ -173,8 +179,8 @@ async function processChannel(user: AlertUser, ch: ChannelRow): Promise<void> {
     const copy = await generateAlertCopy({
       locale:       user.locale as "ru" | "en",
       channelTitle: ch.title,
-      curER:        cur_er,
-      prevER:       prev_er,
+      curER:        effectiveCurER,
+      prevER:       effectivePrevER,
       dropPct:      kind === "drop" ? dropPct : null,
       kind,
     });
@@ -185,17 +191,19 @@ async function processChannel(user: AlertUser, ch: ChannelRow): Promise<void> {
     const isRu = user.locale !== "en";
     ({ subject, bodyHtml } =
       kind === "drop"
-        ? fallbackDropTemplate(ch.title, cur_er, prev_er, dropPct, isRu)
-        : fallbackOkTemplate(ch.title, cur_er, isRu));
+        ? fallbackDropTemplate(ch.title, effectiveCurER, effectivePrevER, dropPct, isRu)
+        : fallbackOkTemplate(ch.title, effectiveCurER, isRu));
   }
 
   await deliver(user, subject, bodyHtml);
 
-  await query(
-    `INSERT INTO alert_log (user_id, channel_pk, kind, cur_er, prev_er, drop_pct)
-     VALUES ($1, $2, $3, $4, $5, $6)`,
-    [user.id, ch.id, kind, cur_er, prev_er, kind === "drop" ? dropPct : null]
-  );
+  if (!force) {
+    await query(
+      `INSERT INTO alert_log (user_id, channel_pk, kind, cur_er, prev_er, drop_pct)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [user.id, ch.id, kind, effectiveCurER, effectivePrevER, kind === "drop" ? dropPct : null]
+    );
+  }
   logger.info({ userId: user.id, channelPk: ch.id, kind, dropPct }, "ALERTS: sent");
 }
 
