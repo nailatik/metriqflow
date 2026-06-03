@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { observer } from "mobx-react-lite";
@@ -44,7 +45,7 @@ export const CreateReportModal = observer(({ open, defaultSource = "all", onClos
   const { canExportFormat } = usePlan();
 
   const [source, setSource]   = useState<ReportSource>(defaultSource);
-  const [format, setFormat]   = useState<ReportFormat>("xml");
+  const [format, setFormat]   = useState<ReportFormat>("csv");
   const [period, setPeriod]   = useState<1 | 7 | 30>(7);
   const [title, setTitle]     = useState(() => autoTitle(defaultSource, 7));
   const [loading, setLoading] = useState(false);
@@ -78,7 +79,7 @@ export const CreateReportModal = observer(({ open, defaultSource = "all", onClos
     if (e.target === overlayRef.current) onClose();
   };
 
-  return (
+  return createPortal(
     <div
       ref={overlayRef}
       onClick={handleOverlayClick}
@@ -206,6 +207,7 @@ export const CreateReportModal = observer(({ open, defaultSource = "all", onClos
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 });

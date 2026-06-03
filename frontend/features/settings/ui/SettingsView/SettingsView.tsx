@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations, useLocale } from "next-intl";
 import { observer } from "mobx-react-lite";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -310,7 +311,7 @@ export const SettingsView = observer(() => {
       </div>
 
       {/* ── Confirm delete modal ─────────────────────────────────────────────── */}
-      {showConfirmModal && (
+      {showConfirmModal && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-surface border border-border rounded-2xl p-8 max-w-md w-full mx-4 shadow-xl">
             <h2 className="text-xl font-semibold text-red-500 mb-3">{t("danger.confirmDeleteTitle")}</h2>
@@ -336,7 +337,8 @@ export const SettingsView = observer(() => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -217,7 +217,7 @@
     "generate": "Сформировать",
     "generating": "Формируется...",
     "schedulesTab": "Автоматические отчёты",
-    "exportLocked": "Экспорт CSV и PDF доступен на плане Pro и выше"
+    "exportLocked": "Экспорт PDF доступен на плане Pro и выше"
   },
   "Integrations": {
     "title": "Интеграции",
@@ -516,7 +516,7 @@
       "autoUnlimited": "Авторепорты без лимита",
       "autoN": "{n, plural, one {# авторепорт/мес} few {# авторепорта/мес} other {# авторепортов/мес}}",
       "ai": "AI-инсайты",
-      "export": "Экспорт CSV / PDF",
+      "export": "Экспорт PDF",
       "exportXmlOnly": "Только экспорт XML"
     },
     "taglineUltimate": "Эксклюзивный доступ",

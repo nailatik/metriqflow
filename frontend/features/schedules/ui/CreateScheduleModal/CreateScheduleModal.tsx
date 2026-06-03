@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations, useLocale } from "next-intl";
 import { observer } from "mobx-react-lite";
 import { useSchedulesStore, useUserStore } from "@/shared/store/StoreProvider";
@@ -53,7 +54,7 @@ export const CreateScheduleModal = observer(({ open, onClose, onCreated }: Props
   const firstFreeSource = (["all", "telegram", "vk"] as ReportSource[]).find((s) => !usedSources.has(s)) ?? "all";
 
   const [source, setSource]       = useState<ReportSource>(firstFreeSource);
-  const [format, setFormat]       = useState<ReportFormat>("xml");
+  const [format, setFormat]       = useState<ReportFormat>("csv");
   const [freq, setFreq]           = useState<ScheduleFrequency>(7);
   const [sendHour, setSendHour]   = useState(9);
   const [timezone]                = useState(() => getBrowserTimezone());
@@ -105,7 +106,7 @@ export const CreateScheduleModal = observer(({ open, onClose, onCreated }: Props
 
   const noChannel = !tgEnabled && !emailEnabled;
 
-  return (
+  return createPortal(
     <div ref={overlayRef} onClick={handleOverlay}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="bg-bg border border-border rounded-2xl w-full max-w-md shadow-2xl">
@@ -284,6 +285,7 @@ export const CreateScheduleModal = observer(({ open, onClose, onCreated }: Props
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 });

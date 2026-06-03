@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { observer } from "mobx-react-lite";
 import { useSchedulesStore, useUserStore } from "@/shared/store/StoreProvider";
@@ -85,7 +86,7 @@ export const EditScheduleModal = observer(({ open, schedule, onClose }: Props) =
     if (e.target === overlayRef.current) onClose();
   };
 
-  return (
+  return createPortal(
     <div
       ref={overlayRef}
       onClick={handleOverlay}
@@ -221,6 +222,7 @@ export const EditScheduleModal = observer(({ open, schedule, onClose }: Props) =
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 });

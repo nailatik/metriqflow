@@ -159,8 +159,8 @@ export default observer(function BillingPage() {
               label: t("feat.ai"),
             },
             {
-              ok: limits.export_formats.length > 1,
-              label: limits.export_formats.length > 1 ? t("feat.export") : t("feat.exportXmlOnly"),
+              ok: limits.export_formats.includes("pdf"),
+              label: t("feat.export"),
             },
           ];
 
