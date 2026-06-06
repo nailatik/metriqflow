@@ -167,7 +167,7 @@ export function PostForm({ post, channels, onSave, onDelete, onClose }: Props) {
         className="w-full max-w-lg bg-surface rounded-2xl shadow-xl p-6 flex flex-col gap-5 mx-4 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-semibold text-textPrimary">
+        <h2 className="text-lg font-semibold text-textMain">
           {isEditing ? t("editPost") : t("createPost")}
         </h2>
 
@@ -208,7 +208,7 @@ export function PostForm({ post, channels, onSave, onDelete, onClose }: Props) {
             disabled={isReadonly || isEditing}
             value={channelId}
             onChange={(e) => setChannelId(e.target.value)}
-            className="w-full rounded-lg border border-border bg-background text-textPrimary px-3 py-2 text-sm disabled:opacity-60"
+            className="w-full rounded-lg border border-border bg-bg text-textMain px-3 py-2 text-sm disabled:opacity-60"
           >
             {filteredChannels.length === 0 && (
               <option value="">{t("noChannels")}</option>
@@ -230,7 +230,7 @@ export function PostForm({ post, channels, onSave, onDelete, onClose }: Props) {
               disabled={isReadonly}
               value={scheduledAt}
               onChange={(e) => setScheduledAt(e.target.value)}
-              className="flex-1 rounded-lg border border-border bg-background text-textPrimary px-3 py-2 text-sm disabled:opacity-60"
+              className="flex-1 rounded-lg border border-border bg-bg text-textMain px-3 py-2 text-sm disabled:opacity-60"
             />
             {platform === "tg" && !isReadonly && (
               <button
@@ -256,7 +256,7 @@ export function PostForm({ post, channels, onSave, onDelete, onClose }: Props) {
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={5}
-            className="w-full rounded-lg border border-border bg-background text-textPrimary px-3 py-2 text-sm resize-y disabled:opacity-60"
+            className="w-full rounded-lg border border-border bg-bg text-textMain px-3 py-2 text-sm resize-y disabled:opacity-60"
           />
         </div>
 
@@ -269,7 +269,7 @@ export function PostForm({ post, channels, onSave, onDelete, onClose }: Props) {
             onChange={(e) => setMediaRaw(e.target.value)}
             rows={3}
             placeholder="https://..."
-            className="w-full rounded-lg border border-border bg-background text-textPrimary px-3 py-2 text-sm font-mono resize-y disabled:opacity-60"
+            className="w-full rounded-lg border border-border bg-bg text-textMain px-3 py-2 text-sm font-mono resize-y disabled:opacity-60"
           />
         </div>
 

@@ -75,7 +75,7 @@ function PostCard({
         <StatusBadge status={post.status} label={statusLabel} />
       </div>
       {post.text && (
-        <p className="text-sm text-textPrimary line-clamp-2 leading-snug">{post.text}</p>
+        <p className="text-sm text-textMain line-clamp-2 leading-snug">{post.text}</p>
       )}
       <p className="text-[11px] text-textSecondary">
         {fmt(post.scheduled_at, { hour: "2-digit", minute: "2-digit" })}
@@ -122,7 +122,7 @@ function CalendarView({
               }`}
             >
               <span className="text-[10px] text-textSecondary uppercase tracking-wide">{dayLabels[day.getDay()]}</span>
-              <span className={`text-sm font-semibold ${isToday ? "text-primary" : "text-textPrimary"}`}>
+              <span className={`text-sm font-semibold ${isToday ? "text-primary" : "text-textMain"}`}>
                 {day.getDate()}
               </span>
             </button>
@@ -169,7 +169,7 @@ function ListView({
       {sorted.map((post) => (
         <div key={post.id} className="flex items-start gap-4">
           <div className="w-24 flex-shrink-0 text-right pt-3">
-            <p className="text-xs font-medium text-textPrimary">
+            <p className="text-xs font-medium text-textMain">
               {fmt(post.scheduled_at, { month: "short", day: "numeric" })}
             </p>
             <p className="text-[11px] text-textSecondary">
@@ -320,7 +320,7 @@ export function ContentPlannerView() {
     <div className="p-6 flex flex-col gap-6">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-2xl font-bold text-textPrimary">{t("title")}</h1>
+        <h1 className="text-2xl font-bold text-textMain">{t("title")}</h1>
         <div className="flex items-center gap-2">
           {/* View toggle */}
           <div className="flex rounded-lg border border-border overflow-hidden">
@@ -392,7 +392,7 @@ export function ContentPlannerView() {
                 >
                   ›
                 </button>
-                <span className="text-sm font-medium text-textPrimary">{weekLabel}</span>
+                <span className="text-sm font-medium text-textMain">{weekLabel}</span>
               </div>
               <button
                 onClick={goToday}
