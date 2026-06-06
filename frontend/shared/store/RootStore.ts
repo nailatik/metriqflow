@@ -4,6 +4,7 @@ import { ReportsStore } from "./reportsStore/reportsStore";
 import { SchedulesStore } from "./schedulesStore/schedulesStore";
 import { IntegrationsStore } from "./integrationsStore/integrationsStore";
 import { CommunitiesStore } from "./communitiesStore/communitiesStore";
+import { CompetitorsStore } from "./competitorsStore/competitorsStore";
 import { BillingStore } from "./billingStore/billingStore";
 import { SettingsStore } from "./settingsStore/settingsStore";
 
@@ -14,6 +15,7 @@ export class RootStore {
   schedulesStore: SchedulesStore;
   integrationsStore: IntegrationsStore;
   communitiesStore: CommunitiesStore;
+  competitorsStore: CompetitorsStore;
   billingStore: BillingStore;
   settingsStore: SettingsStore;
 
@@ -24,6 +26,7 @@ export class RootStore {
     this.schedulesStore = new SchedulesStore(this);
     this.integrationsStore = new IntegrationsStore(this);
     this.communitiesStore = new CommunitiesStore(this);
+    this.competitorsStore = new CompetitorsStore(this);
     this.billingStore = new BillingStore(this);
     this.settingsStore = new SettingsStore(this);
   }
@@ -33,6 +36,7 @@ export class RootStore {
     this.schedulesStore.reset();
     this.integrationsStore.reset();
     this.communitiesStore.reset();
+    this.competitorsStore.reset();
   }
 }
 
