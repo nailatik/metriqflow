@@ -504,7 +504,8 @@
     "billing": "Billing",
     "support": "Support",
     "logout": "Logout",
-    "competitors": "Competitors"
+    "competitors": "Competitors",
+    "contentPlanner": "Content"
   },
   "Billing": {
     "title": "Billing",
@@ -617,5 +618,57 @@
     "refreshNow": "Refresh",
     "refreshing": "Refreshing...",
     "refreshIn": "Available in {min} min"
+  },
+  "ContentPlanner": {
+    "title": "Content Planner",
+    "newPost": "New Post",
+    "noChannels": "No channels connected. Add a Telegram or VK integration.",
+    "noPosts": "No scheduled posts yet. Create your first!",
+    "platform": "Platform",
+    "channel": "Channel",
+    "scheduledAt": "Publish date & time",
+    "text": "Post text",
+    "mediaUrls": "Media URLs (one per line)",
+    "status": "Status",
+    "statuses": {
+      "draft": "Draft",
+      "scheduled": "Scheduled",
+      "sending": "Sending",
+      "sent": "Sent",
+      "failed": "Failed"
+    },
+    "bestTime": "Best time",
+    "bestTimeHint": "Based on views data over last 90 days",
+    "bestTimeNotEnough": "Not enough data for a recommendation",
+    "bestTimeApplied": "Best time applied",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "deleteConfirm": "Delete this post?",
+    "editPost": "Edit post",
+    "createPost": "Create post",
+    "vkAutoPostNote": "VK auto-publishing will be added in a future update",
+    "errorLoad": "Failed to load posts",
+    "errorSave": "Failed to save",
+    "errorDelete": "Failed to delete",
+    "calendarView": "Calendar",
+    "listView": "List",
+    "week": "Week",
+    "days": [
+      "Sun",
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri",
+      "Sat"
+    ],
+    "scheduleDraft": "Schedule",
+    "backToDraft": "Back to draft",
+    "sentAt": "Sent",
+    "errorMsg": "Error reason",
+    "retryAsNew": "Retry as new",
+    "errorTextRequired": "Post text cannot be empty",
+    "errorPastDate": "Cannot schedule a post in the past"
   }
 }

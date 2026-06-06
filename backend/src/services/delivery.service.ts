@@ -49,6 +49,71 @@ export async function sendReportViaTelegram(
   });
 }
 
+// ─── Telegram channel posting (for content planner) ─────────────────────────
+
+async function tgApiJson<T>(method: string, payload: unknown): Promise<T> {
+  if (!BOT_TOKEN) throw new Error("BOT_TOKEN not configured");
+  const body = JSON.stringify(payload);
+  return new Promise<T>((resolve, reject) => {
+    const url = new URL(`https://api.telegram.org/bot${BOT_TOKEN}/${method}`);
+    const req = https.request(
+      {
+        hostname: url.hostname,
+        path:     url.pathname,
+        method:   "POST",
+        headers:  { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(body) },
+      },
+      (res) => {
+        let data = "";
+        res.on("data", (chunk) => (data += chunk));
+        res.on("end", () => {
+          const parsed = JSON.parse(data) as { ok: boolean; result?: T; description?: string };
+          if (!parsed.ok) reject(new Error(`Telegram API: ${parsed.description}`));
+          else resolve(parsed.result as T);
+        });
+      }
+    );
+    req.on("error", reject);
+    req.write(body);
+    req.end();
+  });
+}
+
+export async function sendPostToChannel(
+  channelId: string,
+  text: string,
+  mediaUrls: string[],
+): Promise<void> {
+  if (!BOT_TOKEN) throw new Error("BOT_TOKEN not configured");
+
+  if (mediaUrls.length === 0) {
+    await tgApiJson("sendMessage", {
+      chat_id:    channelId,
+      text:       text || ".",
+      parse_mode: "HTML",
+    });
+    return;
+  }
+
+  if (mediaUrls.length === 1) {
+    await tgApiJson("sendPhoto", {
+      chat_id:    channelId,
+      photo:      mediaUrls[0],
+      caption:    text,
+      parse_mode: "HTML",
+    });
+    return;
+  }
+
+  // Multiple media — sendMediaGroup (captions supported only on first item)
+  const media = mediaUrls.map((url, i) => ({
+    type:       "photo",
+    media:      url,
+    ...(i === 0 && text ? { caption: text, parse_mode: "HTML" } : {}),
+  }));
+  await tgApiJson("sendMediaGroup", { chat_id: channelId, media });
+}
+
 // ─── Email ────────────────────────────────────────────────────────────────────
 
 function createTransport() {
