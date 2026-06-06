@@ -5,7 +5,6 @@ import { useTranslations } from "next-intl";
 import { http } from "@/shared/lib/axios";
 import { PostForm, type PlannedPost, type ChannelOption } from "../PostForm/PostForm";
 import type { TgChannel } from "@/entities/integration/types";
-import type { Community } from "@/entities/community/types";
 
 // ─── Status badge ─────────────────────────────────────────────────────────────
 
@@ -217,25 +216,17 @@ export function ContentPlannerView() {
     setLoading(true);
     setError(null);
     try {
-      const [postsRes, tgRes, vkRes] = await Promise.all([
+      const [postsRes, tgRes] = await Promise.all([
         http.get<PlannedPost[]>("/content-posts"),
         http.get<TgChannel[]>("/integrations/telegram/channels").catch(() => ({ data: [] as TgChannel[] })),
-        http.get<Community[]>("/vk/communities").catch(() => ({ data: [] as Community[] })),
       ]);
       setPosts(postsRes.data);
 
-      const opts: ChannelOption[] = [
-        ...tgRes.data.map((c) => ({
-          platform: "tg" as const,
-          channel_id: c.channel_id,
-          title: c.title,
-        })),
-        ...vkRes.data.map((c) => ({
-          platform: "vk" as const,
-          channel_id: c.community_id,
-          title: c.name,
-        })),
-      ];
+      const opts: ChannelOption[] = tgRes.data.map((c) => ({
+        platform: "tg" as const,
+        channel_id: c.channel_id,
+        title: c.title,
+      }));
       setChannels(opts);
     } catch {
       setError(t("errorLoad"));

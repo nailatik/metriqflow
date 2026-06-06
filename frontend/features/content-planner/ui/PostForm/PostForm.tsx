@@ -7,7 +7,7 @@ import { http } from "@/shared/lib/axios";
 
 export type PlannedPost = {
   id: number;
-  platform: "tg" | "vk";
+  platform: "tg";
   channel_id: string;
   channel_title: string | null;
   scheduled_at: string;
@@ -21,7 +21,7 @@ export type PlannedPost = {
 };
 
 export type ChannelOption = {
-  platform: "tg" | "vk";
+  platform: "tg";
   channel_id: string;
   title: string;
 };
@@ -52,7 +52,6 @@ export function PostForm({ post, channels, onSave, onDelete, onClose }: Props) {
   const t = useTranslations("ContentPlanner");
 
   const defaultChannel = channels[0] ?? null;
-  const [platform,      setPlatform]      = useState<"tg" | "vk">(post?.platform ?? defaultChannel?.platform ?? "tg");
   const [channelId,     setChannelId]     = useState(post?.channel_id ?? defaultChannel?.channel_id ?? "");
   const [scheduledAt,   setScheduledAt]   = useState(post ? toLocalInputValue(post.scheduled_at) : getDefaultDatetime());
   const [text,          setText]          = useState(post?.text ?? "");
@@ -69,16 +68,14 @@ export function PostForm({ post, channels, onSave, onDelete, onClose }: Props) {
   const isEditing = !!post;
   const isReadonly = !!post && ["sending", "sent"].includes(post.status);
 
-  const filteredChannels = channels.filter((c) => c.platform === platform);
-
   useEffect(() => {
-    if (!filteredChannels.find((c) => c.channel_id === channelId)) {
-      setChannelId(filteredChannels[0]?.channel_id ?? "");
+    if (!channels.find((c) => c.channel_id === channelId)) {
+      setChannelId(channels[0]?.channel_id ?? "");
     }
-  }, [platform, filteredChannels, channelId]);
+  }, [channels, channelId]);
 
   const fetchBestTime = async () => {
-    if (!channelId || platform !== "tg") {
+    if (!channelId) {
       setBestTimeHint(t("bestTimeNotEnough"));
       return;
     }
@@ -86,7 +83,7 @@ export function PostForm({ post, channels, onSave, onDelete, onClose }: Props) {
     setBestTimeHint(null);
     try {
       const res = await http.get<{ day_of_week: number; hour: number; avg_views: number } | null>(
-        `/content-posts/best-time?channel_id=${channelId}&platform=${platform}`
+        `/content-posts/best-time?channel_id=${channelId}&platform=tg`
       );
       if (!res.data) {
         setBestTimeHint(t("bestTimeNotEnough"));
@@ -117,7 +114,7 @@ export function PostForm({ post, channels, onSave, onDelete, onClose }: Props) {
       const mediaUrls = mediaRaw.split("\n").map((s) => s.trim()).filter(Boolean);
       const selectedChannel = channels.find((c) => c.channel_id === channelId);
       const payload = {
-        platform,
+        platform: "tg" as const,
         channel_id: channelId,
         channel_title: selectedChannel?.title ?? null,
         scheduled_at: new Date(scheduledAt).toISOString(),
@@ -177,30 +174,6 @@ export function PostForm({ post, channels, onSave, onDelete, onClose }: Props) {
           </div>
         )}
 
-        {/* Platform */}
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-medium text-textSecondary">{t("platform")}</label>
-          <div className="flex gap-2">
-            {(["tg", "vk"] as const).map((p) => (
-              <button
-                key={p}
-                disabled={isReadonly || isEditing}
-                onClick={() => setPlatform(p)}
-                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
-                  platform === p
-                    ? "bg-primary text-white border-primary"
-                    : "bg-transparent text-textSecondary border-border hover:border-primary/50"
-                } disabled:opacity-60 disabled:cursor-not-allowed`}
-              >
-                {p === "tg" ? "Telegram" : "ВКонтакте"}
-              </button>
-            ))}
-          </div>
-          {platform === "vk" && (
-            <p className="text-xs text-amber-600 mt-1">{t("vkAutoPostNote")}</p>
-          )}
-        </div>
-
         {/* Channel */}
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-medium text-textSecondary">{t("channel")}</label>
@@ -210,10 +183,10 @@ export function PostForm({ post, channels, onSave, onDelete, onClose }: Props) {
             onChange={(e) => setChannelId(e.target.value)}
             className="w-full rounded-lg border border-border bg-bg text-textMain px-3 py-2 text-sm disabled:opacity-60"
           >
-            {filteredChannels.length === 0 && (
+            {channels.length === 0 && (
               <option value="">{t("noChannels")}</option>
             )}
-            {filteredChannels.map((c) => (
+            {channels.map((c) => (
               <option key={c.channel_id} value={c.channel_id}>
                 {c.title}
               </option>
@@ -232,7 +205,7 @@ export function PostForm({ post, channels, onSave, onDelete, onClose }: Props) {
               onChange={(e) => setScheduledAt(e.target.value)}
               className="flex-1 rounded-lg border border-border bg-bg text-textMain px-3 py-2 text-sm disabled:opacity-60"
             />
-            {platform === "tg" && !isReadonly && (
+            {!isReadonly && (
               <button
                 onClick={fetchBestTime}
                 disabled={loadingBest || !channelId}
