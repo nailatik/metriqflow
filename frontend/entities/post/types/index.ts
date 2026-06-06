@@ -6,6 +6,7 @@ export interface TelegramPost {
   reactions_total: number | null;
   forwards: number | null;
   comments: number | null;
+  has_media: boolean;
   posted_at: string;
 }
 

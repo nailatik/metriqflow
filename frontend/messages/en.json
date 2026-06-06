@@ -683,6 +683,16 @@
     "sortDate": "By date",
     "sortViews": "By views",
     "noResults": "No posts found. Try adjusting the filters.",
-    "totalResults": "{total} posts found"
+    "totalResults": "{total} posts found",
+    "modalChannel": "Channel",
+    "hasMedia": "Media",
+    "modalText": "Post text",
+    "noText": "No text",
+    "statViews": "Views",
+    "statReactions": "Reactions",
+    "statForwards": "Forwards",
+    "statComments": "Comments",
+    "statER": "ER",
+    "openOriginal": "Open in Telegram"
   }
 }

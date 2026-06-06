@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { createPortal } from "react-dom";
 import { http } from "@/shared/lib/axios";
 import { postsService } from "@/entities/post/api/postsService";
 import type { TelegramPost, PostsSearchResult } from "@/entities/post/types";
@@ -10,6 +11,16 @@ import type { TgChannel } from "@/entities/integration/types";
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function fmtDate(iso: string) {
+  return new Date(iso).toLocaleDateString(undefined, {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function fmtDateShort(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, {
     day: "2-digit",
     month: "short",
@@ -22,11 +33,135 @@ function fmtNum(n: number | null | undefined) {
   return n >= 1_000 ? `${(n / 1000).toFixed(1)}k` : String(n);
 }
 
+function engagementRate(post: TelegramPost): string | null {
+  if (!post.views || post.views === 0) return null;
+  const rate = ((post.reactions_total ?? 0) + (post.forwards ?? 0)) / post.views * 100;
+  return `${rate.toFixed(2)}%`;
+}
+
+// ─── PostModal ────────────────────────────────────────────────────────────────
+
+function PostModal({
+  post,
+  channelTitle,
+  channelUsername,
+  onClose,
+  t,
+}: {
+  post: TelegramPost;
+  channelTitle: string;
+  channelUsername: string | null;
+  onClose: () => void;
+  t: ReturnType<typeof useTranslations<"PostsSearch">>;
+}) {
+  const er = engagementRate(post);
+  const tmeLink = channelUsername
+    ? `https://t.me/${channelUsername}/${post.message_id}`
+    : null;
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const statItem = (icon: string, label: string, value: string | number) => (
+    <div className="flex flex-col items-center gap-1 p-3 rounded-xl bg-background border border-border min-w-[80px]">
+      <span className="text-xl">{icon}</span>
+      <span className="text-base font-semibold text-textMain">{value}</span>
+      <span className="text-[10px] text-textSecondary uppercase tracking-wide">{label}</span>
+    </div>
+  );
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-lg bg-surface rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 p-5 border-b border-border">
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <p className="text-xs text-textSecondary">{t("modalChannel")}</p>
+            <p className="text-sm font-semibold text-textMain truncate">{channelTitle}</p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {post.has_media && (
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                📎 {t("hasMedia")}
+              </span>
+            )}
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg hover:bg-border text-textSecondary transition"
+              aria-label="Close"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="flex flex-col gap-5 p-5 overflow-y-auto">
+          {/* Stats row */}
+          <div className="flex flex-wrap gap-2 justify-center">
+            {statItem("👁", t("statViews"), fmtNum(post.views))}
+            {statItem("❤️", t("statReactions"), fmtNum(post.reactions_total))}
+            {statItem("↗", t("statForwards"), fmtNum(post.forwards))}
+            {statItem("💬", t("statComments"), fmtNum(post.comments))}
+            {er && statItem("📊", t("statER"), er)}
+          </div>
+
+          {/* Date */}
+          <div className="flex items-center gap-2 text-xs text-textSecondary">
+            <span>🕐</span>
+            <span>{fmtDate(post.posted_at)}</span>
+          </div>
+
+          {/* Text */}
+          <div className="flex flex-col gap-1.5">
+            <p className="text-xs font-medium text-textSecondary uppercase tracking-wide">{t("modalText")}</p>
+            {post.text?.trim() ? (
+              <p className="text-sm text-textMain leading-relaxed whitespace-pre-wrap break-words">
+                {post.text.trim()}
+              </p>
+            ) : (
+              <p className="text-sm text-textSecondary italic">{t("noText")}</p>
+            )}
+          </div>
+
+          {/* Link to original */}
+          {tmeLink && (
+            <a
+              href={tmeLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm text-primary hover:underline"
+            >
+              <span>🔗</span>
+              <span>{t("openOriginal")}</span>
+            </a>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 // ─── PostRow ──────────────────────────────────────────────────────────────────
 
-function PostRow({ post }: { post: TelegramPost }) {
+function PostRow({ post, onClick }: { post: TelegramPost; onClick: () => void }) {
   return (
-    <div className="flex flex-col gap-1 p-4 rounded-xl border border-border bg-surface hover:border-primary/30 transition-colors">
+    <button
+      onClick={onClick}
+      className="w-full text-left flex flex-col gap-1 p-4 rounded-xl border border-border bg-surface hover:border-primary/40 hover:bg-primary/[0.02] transition-colors"
+    >
       <div className="flex items-start justify-between gap-4">
         <p className="text-sm text-textMain leading-snug line-clamp-3 flex-1 min-w-0">
           {post.text?.trim() || <span className="text-textSecondary italic">—</span>}
@@ -37,8 +172,11 @@ function PostRow({ post }: { post: TelegramPost }) {
           {(post.forwards ?? 0) > 0 && <span>↗ {fmtNum(post.forwards)}</span>}
         </div>
       </div>
-      <p className="text-[11px] text-textSecondary">{fmtDate(post.posted_at)}</p>
-    </div>
+      <div className="flex items-center gap-2">
+        <p className="text-[11px] text-textSecondary">{fmtDateShort(post.posted_at)}</p>
+        {post.has_media && <span className="text-[10px] text-textSecondary">📎</span>}
+      </div>
+    </button>
   );
 }
 
@@ -103,6 +241,7 @@ export function PostsSearchView() {
   const [result, setResult] = useState<PostsSearchResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [channelsLoading, setChannelsLoading] = useState(true);
+  const [selectedPost, setSelectedPost] = useState<TelegramPost | null>(null);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -162,12 +301,17 @@ export function PostsSearchView() {
     setPage(1);
   };
 
-  const handleFilterChange = (setter: (v: string) => void) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleFilterChange = (setter: (v: string) => void) => (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     setter(e.target.value);
     setPage(1);
   };
 
-  const inputCls = "w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm text-textMain placeholder:text-textSecondary focus:outline-none focus:border-primary transition";
+  const activeChannel = channels.find((ch) => ch.id === channelId) ?? null;
+
+  const inputCls =
+    "w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm text-textMain placeholder:text-textSecondary focus:outline-none focus:border-primary transition";
 
   return (
     <div className="flex flex-col gap-6 p-6 max-w-4xl mx-auto w-full">
@@ -175,7 +319,6 @@ export function PostsSearchView() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
-        {/* Channel selector */}
         <select
           value={channelId ?? ""}
           onChange={(e) => handleChannelChange(Number(e.target.value))}
@@ -191,7 +334,6 @@ export function PostsSearchView() {
           ))}
         </select>
 
-        {/* Search */}
         <input
           type="text"
           placeholder={t("searchPlaceholder")}
@@ -200,28 +342,32 @@ export function PostsSearchView() {
           className={`${inputCls} flex-1 min-w-[160px]`}
         />
 
-        {/* Date from */}
-        <input
-          type="date"
-          value={from}
-          onChange={handleFilterChange(setFrom)}
-          title={t("from")}
-          className={`${inputCls} w-[148px]`}
-        />
+        <label className="flex items-center gap-2 border border-border rounded-lg px-3 py-2 bg-surface focus-within:border-primary transition cursor-pointer">
+          <span className="text-xs font-medium text-textSecondary whitespace-nowrap">{t("from")}</span>
+          <input
+            type="date"
+            value={from}
+            onChange={handleFilterChange(setFrom)}
+            className="bg-transparent text-sm text-textMain focus:outline-none w-[120px]"
+          />
+        </label>
 
-        {/* Date to */}
-        <input
-          type="date"
-          value={to}
-          onChange={handleFilterChange(setTo)}
-          title={t("to")}
-          className={`${inputCls} w-[148px]`}
-        />
+        <label className="flex items-center gap-2 border border-border rounded-lg px-3 py-2 bg-surface focus-within:border-primary transition cursor-pointer">
+          <span className="text-xs font-medium text-textSecondary whitespace-nowrap">{t("to")}</span>
+          <input
+            type="date"
+            value={to}
+            onChange={handleFilterChange(setTo)}
+            className="bg-transparent text-sm text-textMain focus:outline-none w-[120px]"
+          />
+        </label>
 
-        {/* Sort */}
         <select
           value={sort}
-          onChange={(e) => { setSort(e.target.value as "views" | "date"); setPage(1); }}
+          onChange={(e) => {
+            setSort(e.target.value as "views" | "date");
+            setPage(1);
+          }}
           className={`${inputCls} w-[160px]`}
         >
           <option value="date">{t("sortDate")}</option>
@@ -229,12 +375,10 @@ export function PostsSearchView() {
         </select>
       </div>
 
-      {/* No channels */}
       {!channelsLoading && channels.length === 0 && (
         <p className="text-textSecondary text-sm">{t("noChannelsHint")}</p>
       )}
 
-      {/* Results */}
       {channelId && (
         <>
           {loading && (
@@ -259,7 +403,11 @@ export function PostsSearchView() {
               </p>
               <div className="flex flex-col gap-3">
                 {result.posts.map((post) => (
-                  <PostRow key={post.id} post={post} />
+                  <PostRow
+                    key={post.id}
+                    post={post}
+                    onClick={() => setSelectedPost(post)}
+                  />
                 ))}
               </div>
               <Pagination
@@ -270,6 +418,16 @@ export function PostsSearchView() {
             </>
           )}
         </>
+      )}
+
+      {selectedPost && activeChannel && (
+        <PostModal
+          post={selectedPost}
+          channelTitle={activeChannel.title}
+          channelUsername={activeChannel.username}
+          onClose={() => setSelectedPost(null)}
+          t={t}
+        />
       )}
     </div>
   );

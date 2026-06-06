@@ -683,6 +683,16 @@
     "sortDate": "По дате",
     "sortViews": "По просмотрам",
     "noResults": "Посты не найдены. Попробуйте изменить фильтры.",
-    "totalResults": "Найдено постов: {total}"
+    "totalResults": "Найдено постов: {total}",
+    "modalChannel": "Канал",
+    "hasMedia": "Медиа",
+    "modalText": "Текст поста",
+    "noText": "Текст отсутствует",
+    "statViews": "Просмотры",
+    "statReactions": "Реакции",
+    "statForwards": "Репосты",
+    "statComments": "Комментарии",
+    "statER": "ER",
+    "openOriginal": "Открыть в Telegram"
   }
 }

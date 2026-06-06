@@ -58,7 +58,7 @@ export const searchPosts = async (req: Request, res: Response) => {
     }
     if (to) {
       params.push(to);
-      conditions.push(`posted_at <= $${params.length}::timestamptz`);
+      conditions.push(`posted_at < ($${params.length}::date + interval '1 day')`);
     }
 
     const where = conditions.length > 0 ? `AND ${conditions.join(" AND ")}` : "";
@@ -66,7 +66,7 @@ export const searchPosts = async (req: Request, res: Response) => {
 
     const [postsResult, countResult] = await Promise.all([
       query(
-        `SELECT id, message_id, text, views, reactions_total, forwards, comments, posted_at
+        `SELECT id, message_id, text, views, reactions_total, forwards, comments, has_media, posted_at
          FROM telegram_posts
          WHERE channel_id = $1 ${where}
          ORDER BY ${orderBy}
