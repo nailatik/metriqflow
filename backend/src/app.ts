@@ -11,6 +11,7 @@ import schedulesRoutes from "./routes/schedules.routes";
 import integrationsRoutes from "./routes/integrations.routes";
 import vkRoutes from "./routes/vk.routes";
 import competitorsRoutes from "./routes/competitors.routes";
+import contentPostsRoutes from "./routes/content-posts.routes";
 import healthRoutes from "./routes/health.routes";
 import subscriptionRoutes from "./routes/subscription.routes";
 import settingsRoutes from "./routes/settings.routes";
@@ -66,6 +67,7 @@ app.use("/vk",              analyticsLimiter, vkRoutes);
 app.use("/competitors",    analyticsLimiter, competitorsRoutes);
 app.use("/subscription",   subscriptionRoutes);
 app.use("/settings",       settingsRoutes);
+app.use("/content-posts",  contentPostsRoutes);
 
 app.use((_req: Request, res: Response) => {
   res.status(404).json({ message: "Not found" });

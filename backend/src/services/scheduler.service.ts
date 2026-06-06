@@ -2,7 +2,7 @@ import cron from "node-cron";
 import path from "path";
 import fs from "fs";
 import { query, pool } from "../db";
-import { sendReportViaTelegram, sendReportViaEmail } from "./delivery.service";
+import { sendReportViaTelegram, sendReportViaEmail, sendPostToChannel } from "./delivery.service";
 import { logger } from "../lib/logger";
 
 // Reuse generators from reports controller by importing shared logic
@@ -31,8 +31,9 @@ type UserRow = {
   telegram_id: number | null;
 };
 
-// Keep the cron task reference so we can stop it during graceful shutdown.
+// Keep the cron task references so we can stop them during graceful shutdown.
 let schedulerTask: ReturnType<typeof cron.schedule> | null = null;
+let postingTask:   ReturnType<typeof cron.schedule> | null = null;
 
 export function startScheduler(): void {
   if (schedulerTask) return; // idempotent — protects against double-start
@@ -57,14 +58,80 @@ export function startScheduler(): void {
     }
   });
 
+  postingTask = cron.schedule("* * * * *", async () => {
+    try {
+      await processContentPosts();
+    } catch (err) {
+      logger.error({ err }, "POSTING TICK ERROR:");
+    }
+  });
+
   logger.info("📅 Report scheduler started");
+  logger.info("📤 Content posting scheduler started");
 }
 
 export function stopScheduler(): void {
-  if (!schedulerTask) return;
-  schedulerTask.stop();
-  schedulerTask = null;
-  logger.info("📅 Report scheduler stopped");
+  if (schedulerTask) { schedulerTask.stop(); schedulerTask = null; }
+  if (postingTask)   { postingTask.stop();   postingTask   = null; }
+  logger.info("📅 Schedulers stopped");
+}
+
+// ─── Content post auto-publisher ─────────────────────────────────────────────
+
+type PlannedPostRow = {
+  id: number;
+  platform: "tg" | "vk";
+  channel_id: string;
+  text: string;
+  media_urls: string[];
+};
+
+async function processContentPosts(): Promise<void> {
+  const due = await query(
+    `UPDATE planned_posts
+     SET status = 'sending', updated_at = NOW()
+     WHERE id IN (
+       SELECT id FROM planned_posts
+       WHERE status = 'scheduled' AND scheduled_at <= NOW()
+       LIMIT 10
+       FOR UPDATE SKIP LOCKED
+     )
+     RETURNING id, platform, channel_id, text, media_urls`,
+    []
+  );
+  if (due.rowCount === 0) return;
+
+  for (const post of due.rows as PlannedPostRow[]) {
+    await publishPost(post).catch((err) => {
+      logger.error({ err }, `POSTING: failed post ${post.id}`);
+    });
+  }
+}
+
+async function publishPost(post: PlannedPostRow): Promise<void> {
+  if (post.platform === "vk") {
+    // VK OAuth is disabled since 2024-06-25 — service token cannot post
+    await query(
+      `UPDATE planned_posts SET status = 'failed', error_message = $1, updated_at = NOW() WHERE id = $2`,
+      ["VK auto-posting not yet supported", post.id]
+    );
+    return;
+  }
+
+  try {
+    await sendPostToChannel(post.channel_id, post.text, post.media_urls ?? []);
+    await query(
+      `UPDATE planned_posts SET status = 'sent', sent_at = NOW(), error_message = NULL, updated_at = NOW() WHERE id = $1`,
+      [post.id]
+    );
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    await query(
+      `UPDATE planned_posts SET status = 'failed', error_message = $1, updated_at = NOW() WHERE id = $2`,
+      [msg, post.id]
+    );
+    logger.error({ err }, `POSTING: TG send failed for post ${post.id}`);
+  }
 }
 
 async function processSchedule(sched: ScheduleRow): Promise<void> {
