@@ -501,3 +501,92 @@ export const getVkCommunityAnalytics = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+/* GET /vk/communities/:communityId/posts-search
+ * Fetches last 100 posts (VK hard cap), filters/sorts/paginates in memory. */
+export const searchVkPosts = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+    const communityId = parseInt(req.params.communityId as string, 10);
+    if (!Number.isInteger(communityId) || communityId <= 0) {
+      return res.status(400).json({ message: "Invalid communityId" });
+    }
+
+    const row = await query(
+      `SELECT community_id, name, screen_name
+       FROM vk_communities
+       WHERE id = $1 AND user_id = $2 AND is_active = TRUE`,
+      [communityId, userId]
+    );
+    if (row.rows.length === 0) return res.status(404).json({ message: "Community not found" });
+
+    const community = row.rows[0] as { community_id: string; name: string; screen_name: string };
+    const groupId = Number(community.community_id);
+
+    type RawVkPost = {
+      id: number; text: string; date: number;
+      likes?: { count: number }; reposts?: { count: number };
+      comments?: { count: number }; views?: { count: number };
+      attachments?: unknown[];
+    };
+
+    let wallData: { items: RawVkPost[] };
+    try {
+      wallData = await vkCall<{ items: RawVkPost[] }>(
+        "wall.get",
+        { owner_id: -groupId, count: 100, filter: "owner" },
+        VK_SERVICE_TOKEN
+      );
+    } catch (err) {
+      const mapped = vkErrorMessage(err);
+      logger.error({ err }, "VK POSTS SEARCH (vk api):");
+      return res.status(mapped.status).json({ message: mapped.message, code: mapped.code });
+    }
+
+    const q    = typeof req.query.q    === "string" ? req.query.q.trim().toLowerCase() : "";
+    const from = typeof req.query.from === "string" && req.query.from ? req.query.from : null;
+    const to   = typeof req.query.to   === "string" && req.query.to   ? req.query.to   : null;
+    const sort = req.query.sort === "views" ? "views" : "date";
+    const page  = Math.max(1, Number(req.query.page)  || 1);
+    const limit = Math.min(Math.max(1, Number(req.query.limit) || 20), 100);
+
+    let posts = wallData.items.map((p) => ({
+      id:        p.id,
+      text:      p.text || null,
+      views:     p.views?.count    ?? 0,
+      likes:     p.likes?.count    ?? 0,
+      reposts:   p.reposts?.count  ?? 0,
+      comments:  p.comments?.count ?? 0,
+      has_media: !!(p.attachments?.length),
+      posted_at: new Date(p.date * 1000).toISOString(),
+      _ts:       p.date,
+    }));
+
+    if (q)    posts = posts.filter((p) => (p.text ?? "").toLowerCase().includes(q));
+    if (from) { const ts = new Date(from).getTime() / 1000;         posts = posts.filter((p) => p._ts >= ts); }
+    if (to)   { const ts = new Date(to).getTime()   / 1000 + 86400; posts = posts.filter((p) => p._ts <  ts); }
+
+    posts.sort(sort === "views"
+      ? (a, b) => b.views - a.views
+      : (a, b) => b._ts   - a._ts
+    );
+
+    const total     = posts.length;
+    const offset    = (page - 1) * limit;
+    const pagePosts = posts.slice(offset, offset + limit).map(({ _ts, ...rest }) => rest);
+
+    return res.json({
+      posts:        pagePosts,
+      total,
+      page,
+      limit,
+      pages:        Math.ceil(total / limit),
+      community_id: community.community_id,
+    });
+  } catch (err) {
+    logger.error({ err }, "VK POSTS SEARCH ERROR:");
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};

@@ -693,6 +693,13 @@
     "statForwards": "Forwards",
     "statComments": "Comments",
     "statER": "ER",
-    "openOriginal": "Open in Telegram"
+    "noCommunities": "No communities",
+    "noCommunitiesHint": "No VK communities connected. Add an integration.",
+    "resetFilters": "Reset",
+    "vkNote": "VK: searching across the last 100 posts in this community.",
+    "statLikes": "Likes",
+    "statReposts": "Reposts",
+    "openTelegram": "Open in Telegram",
+    "openVk": "Open in VKontakte"
   }
 }

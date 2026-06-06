@@ -10,7 +10,18 @@ export interface TelegramPost {
   posted_at: string;
 }
 
-export interface PostsSearchResult {
+export interface VkPost {
+  id: number;
+  text: string | null;
+  views: number;
+  likes: number;
+  reposts: number;
+  comments: number;
+  has_media: boolean;
+  posted_at: string;
+}
+
+export interface TgSearchResult {
   posts: TelegramPost[];
   total: number;
   page: number;
@@ -18,8 +29,27 @@ export interface PostsSearchResult {
   pages: number;
 }
 
-export interface PostsSearchParams {
+export interface VkSearchResult {
+  posts: VkPost[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+  community_id: string;
+}
+
+export interface TgSearchParams {
   channelId: number;
+  q?: string;
+  from?: string;
+  to?: string;
+  sort?: "views" | "date";
+  page?: number;
+  limit?: number;
+}
+
+export interface VkSearchParams {
+  communityId: number;
   q?: string;
   from?: string;
   to?: string;

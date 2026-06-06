@@ -693,6 +693,13 @@
     "statForwards": "Репосты",
     "statComments": "Комментарии",
     "statER": "ER",
-    "openOriginal": "Открыть в Telegram"
+    "noCommunities": "Нет сообществ",
+    "noCommunitiesHint": "Нет подключённых VK-сообществ. Добавьте интеграцию.",
+    "resetFilters": "Сбросить",
+    "vkNote": "VK: поиск по последним 100 постам сообщества.",
+    "statLikes": "Лайки",
+    "statReposts": "Репосты",
+    "openTelegram": "Открыть в Telegram",
+    "openVk": "Открыть во ВКонтакте"
   }
 }
