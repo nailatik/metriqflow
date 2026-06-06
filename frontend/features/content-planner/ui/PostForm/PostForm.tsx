@@ -107,8 +107,23 @@ export function PostForm({ post, channels, onSave, onDelete, onClose }: Props) {
     }
   };
 
+  const BACKEND_ERROR_MAP: Record<string, string> = {
+    "scheduled_at must be in the future for scheduled posts": t("errorPastDate"),
+    "scheduled_at must be in the future": t("errorPastDate"),
+  };
+
   const handleSave = async () => {
     setError(null);
+
+    if (!text.trim()) {
+      setError(t("errorTextRequired"));
+      return;
+    }
+    if (new Date(scheduledAt) <= new Date()) {
+      setError(t("errorPastDate"));
+      return;
+    }
+
     setSaving(true);
     try {
       const mediaUrls = mediaRaw.split("\n").map((s) => s.trim()).filter(Boolean);
@@ -118,7 +133,7 @@ export function PostForm({ post, channels, onSave, onDelete, onClose }: Props) {
         channel_id: channelId,
         channel_title: selectedChannel?.title ?? null,
         scheduled_at: new Date(scheduledAt).toISOString(),
-        text,
+        text: text.trim(),
         media_urls: mediaUrls,
         status,
       };
@@ -133,8 +148,8 @@ export function PostForm({ post, channels, onSave, onDelete, onClose }: Props) {
       }
       onSave(saved);
     } catch (e: unknown) {
-      const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setError(msg ?? t("errorSave"));
+      const raw = (e as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setError((raw && BACKEND_ERROR_MAP[raw]) ?? raw ?? t("errorSave"));
     } finally {
       setSaving(false);
     }

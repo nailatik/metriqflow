@@ -667,6 +667,8 @@
     "backToDraft": "Back to draft",
     "sentAt": "Sent",
     "errorMsg": "Error reason",
-    "retryAsNew": "Retry as new"
+    "retryAsNew": "Retry as new",
+    "errorTextRequired": "Post text cannot be empty",
+    "errorPastDate": "Cannot schedule a post in the past"
   }
 }
