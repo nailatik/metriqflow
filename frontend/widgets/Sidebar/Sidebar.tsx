@@ -13,6 +13,7 @@ const navLinks = [
   { href: "/app/analytics",    labelKey: "analytics",    exact: false },
   { href: "/app/reports",      labelKey: "reports",      exact: false },
   { href: "/app/integrations", labelKey: "integrations", exact: false },
+  { href: "/app/competitors",  labelKey: "competitors",  exact: false },
   { href: "/app/settings",     labelKey: "settings",     exact: false },
 ] as const;
 

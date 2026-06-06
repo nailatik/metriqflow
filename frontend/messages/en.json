@@ -503,7 +503,8 @@
     "profile": "Profile",
     "billing": "Billing",
     "support": "Support",
-    "logout": "Logout"
+    "logout": "Logout",
+    "competitors": "Competitors"
   },
   "Billing": {
     "title": "Billing",
@@ -583,5 +584,38 @@
   },
   "VK": {
     "vkLimitReached": "Your VK community plan limit reached."
+  },
+  "Competitors": {
+    "title": "Competitor Analysis",
+    "addTitle": "Add Competitor",
+    "placeholderTg": "@username or t.me/channel",
+    "placeholderVk": "vk.com/group or ID",
+    "addBtn": "Add",
+    "adding": "Adding...",
+    "addError": "Could not add. Check the username or ID.",
+    "limitReached": "You have reached the competitor limit for your plan.",
+    "remove": "Remove",
+    "loading": "Loading...",
+    "loadError": "Failed to load data",
+    "empty": "No competitors yet",
+    "emptyDesc": "Add a public Telegram channel or VK community to compare.",
+    "comparison": "Metrics Comparison",
+    "ownChannel": "Your channel",
+    "competitor": "Competitor",
+    "noOwnTg": "No Telegram channels connected. Connect one in Integrations.",
+    "noOwnVk": "No VK communities connected. Connect one in VK Analytics.",
+    "subscribers": "Subscribers",
+    "avgViews": "Avg. views",
+    "postFreq": "Posts/week",
+    "chart": "Comparison chart",
+    "fetchedAt": "Data as of {date}",
+    "postsN": "Sampled: {n} posts",
+    "ownChannelLabel": "Compare with",
+    "justUpdated": "just updated",
+    "updatedAgo": "updated {min} min ago",
+    "refreshEvery10": "refreshes every 10 min",
+    "refreshNow": "Refresh",
+    "refreshing": "Refreshing...",
+    "refreshIn": "Available in {min} min"
   }
 }

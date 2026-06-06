@@ -7,5 +7,6 @@ export const useReportsStore      = () => getRootStore().reportsStore;
 export const useSchedulesStore    = () => getRootStore().schedulesStore;
 export const useIntegrationsStore = () => getRootStore().integrationsStore;
 export const useCommunitiesStore  = () => getRootStore().communitiesStore;
+export const useCompetitorsStore  = () => getRootStore().competitorsStore;
 export const useBillingStore      = () => getRootStore().billingStore;
 export const useSettingsStore     = () => getRootStore().settingsStore;

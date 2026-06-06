@@ -10,6 +10,7 @@ import reportsRoutes from "./routes/reports.routes";
 import schedulesRoutes from "./routes/schedules.routes";
 import integrationsRoutes from "./routes/integrations.routes";
 import vkRoutes from "./routes/vk.routes";
+import competitorsRoutes from "./routes/competitors.routes";
 import healthRoutes from "./routes/health.routes";
 import subscriptionRoutes from "./routes/subscription.routes";
 import settingsRoutes from "./routes/settings.routes";
@@ -62,6 +63,7 @@ app.use("/reports",         reportsRoutes);
 app.use("/report-schedules", schedulesRoutes);
 app.use("/integrations",    analyticsLimiter, integrationsRoutes);
 app.use("/vk",              analyticsLimiter, vkRoutes);
+app.use("/competitors",    analyticsLimiter, competitorsRoutes);
 app.use("/subscription",   subscriptionRoutes);
 app.use("/settings",       settingsRoutes);
 

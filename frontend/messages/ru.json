@@ -503,7 +503,8 @@
     "profile": "Профиль",
     "billing": "Подписка",
     "support": "Поддержка",
-    "logout": "Выйти"
+    "logout": "Выйти",
+    "competitors": "Конкуренты"
   },
   "Billing": {
     "title": "Подписка",
@@ -583,5 +584,38 @@
   },
   "VK": {
     "vkLimitReached": "Достигнут лимит VK-сообществ вашего плана."
+  },
+  "Competitors": {
+    "title": "Анализ конкурентов",
+    "addTitle": "Добавить конкурента",
+    "placeholderTg": "@username или t.me/channel",
+    "placeholderVk": "vk.com/group или ID",
+    "addBtn": "Добавить",
+    "adding": "Добавление...",
+    "addError": "Не удалось добавить. Проверьте username или ID.",
+    "limitReached": "Достигнут лимит конкурентов для вашего плана.",
+    "remove": "Удалить",
+    "loading": "Загрузка...",
+    "loadError": "Ошибка загрузки данных",
+    "empty": "Нет конкурентов",
+    "emptyDesc": "Добавьте публичный Telegram-канал или VK-сообщество для сравнения.",
+    "comparison": "Сравнение показателей",
+    "ownChannel": "Ваш канал",
+    "competitor": "Конкурент",
+    "noOwnTg": "У вас нет подключённых Telegram-каналов. Подключите канал в разделе «Интеграции».",
+    "noOwnVk": "У вас нет подключённых VK-сообществ. Подключите сообщество в разделе «VK-аналитика».",
+    "subscribers": "Подписчики",
+    "avgViews": "Ср. просмотры",
+    "postFreq": "Постов/нед.",
+    "chart": "График сравнения",
+    "fetchedAt": "Данные от {date}",
+    "postsN": "Выборка: {n} постов",
+    "ownChannelLabel": "Ваш канал",
+    "justUpdated": "только что обновлено",
+    "updatedAgo": "обновлено {min} мин. назад",
+    "refreshEvery10": "обновление раз в 10 мин.",
+    "refreshNow": "Обновить",
+    "refreshing": "Обновление...",
+    "refreshIn": "Доступно через {min} мин."
   }
 }
