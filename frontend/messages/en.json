@@ -505,7 +505,8 @@
     "support": "Support",
     "logout": "Logout",
     "competitors": "Competitors",
-    "contentPlanner": "Content"
+    "contentPlanner": "Content",
+    "posts": "Post Search"
   },
   "Billing": {
     "title": "Billing",
@@ -670,5 +671,18 @@
     "retryAsNew": "Retry as new",
     "errorTextRequired": "Post text cannot be empty",
     "errorPastDate": "Cannot schedule a post in the past"
+  },
+  "PostsSearch": {
+    "title": "Post Search",
+    "loadingChannels": "Loading...",
+    "noChannels": "No channels",
+    "noChannelsHint": "No Telegram channels connected. Add an integration.",
+    "searchPlaceholder": "Search by text...",
+    "from": "From",
+    "to": "To",
+    "sortDate": "By date",
+    "sortViews": "By views",
+    "noResults": "No posts found. Try adjusting the filters.",
+    "totalResults": "{total} posts found"
   }
 }

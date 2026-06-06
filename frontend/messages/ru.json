@@ -505,7 +505,8 @@
     "support": "Поддержка",
     "logout": "Выйти",
     "competitors": "Конкуренты",
-    "contentPlanner": "Контент"
+    "contentPlanner": "Контент",
+    "posts": "Поиск постов"
   },
   "Billing": {
     "title": "Подписка",
@@ -670,5 +671,18 @@
     "retryAsNew": "Повторить как новый",
     "errorTextRequired": "Текст поста не может быть пустым",
     "errorPastDate": "Нельзя запланировать пост в прошлое"
+  },
+  "PostsSearch": {
+    "title": "Поиск по постам",
+    "loadingChannels": "Загрузка...",
+    "noChannels": "Нет каналов",
+    "noChannelsHint": "Нет подключённых Telegram-каналов. Добавьте интеграцию.",
+    "searchPlaceholder": "Поиск по тексту...",
+    "from": "От",
+    "to": "До",
+    "sortDate": "По дате",
+    "sortViews": "По просмотрам",
+    "noResults": "Посты не найдены. Попробуйте изменить фильтры.",
+    "totalResults": "Найдено постов: {total}"
   }
 }
