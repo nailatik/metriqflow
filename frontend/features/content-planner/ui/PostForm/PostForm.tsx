@@ -164,9 +164,14 @@ export function PostForm({ post, channels, onSave, onDelete, onClose }: Props) {
         className="w-full max-w-lg bg-surface rounded-2xl shadow-xl p-6 flex flex-col gap-5 mx-4 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-semibold text-textMain">
-          {isEditing ? t("editPost") : t("createPost")}
-        </h2>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold text-textMain">
+            {isEditing ? t("editPost") : t("createPost")}
+          </h2>
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium flex-shrink-0">
+            ✈️ Telegram
+          </span>
+        </div>
 
         {isReadonly && (
           <div className="bg-amber-500/5 border border-amber-500/30 rounded-xl px-4 py-3 text-sm text-textSecondary">
