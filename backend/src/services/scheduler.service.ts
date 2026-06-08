@@ -119,10 +119,23 @@ async function publishPost(post: PlannedPostRow): Promise<void> {
   }
 
   try {
-    await sendPostToChannel(post.channel_id, post.text, post.media_urls ?? []);
+    const sent = await sendPostToChannel(post.channel_id, post.text, post.media_urls ?? []);
     await query(
       `UPDATE planned_posts SET status = 'sent', sent_at = NOW(), error_message = NULL, updated_at = NOW() WHERE id = $1`,
       [post.id]
+    );
+    // Persist to telegram_posts so analytics picks it up regardless of bot polling state
+    await query(
+      `INSERT INTO telegram_posts (channel_id, message_id, text, views, forwards, reactions_total, has_media, posted_at)
+       VALUES ($1::bigint, $2, $3, 0, 0, 0, $4, to_timestamp($5))
+       ON CONFLICT (channel_id, message_id) DO NOTHING`,
+      [
+        post.channel_id,
+        sent.message_id,
+        post.text || null,
+        (post.media_urls ?? []).length > 0,
+        sent.date,
+      ]
     );
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

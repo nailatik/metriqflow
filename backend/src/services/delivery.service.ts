@@ -79,39 +79,41 @@ async function tgApiJson<T>(method: string, payload: unknown): Promise<T> {
   });
 }
 
+type TgMessage = { message_id: number; date: number };
+
 export async function sendPostToChannel(
   channelId: string,
   text: string,
   mediaUrls: string[],
-): Promise<void> {
+): Promise<TgMessage> {
   if (!BOT_TOKEN) throw new Error("BOT_TOKEN not configured");
 
   if (mediaUrls.length === 0) {
-    await tgApiJson("sendMessage", {
+    return tgApiJson<TgMessage>("sendMessage", {
       chat_id:    channelId,
       text:       text || ".",
       parse_mode: "HTML",
     });
-    return;
   }
 
   if (mediaUrls.length === 1) {
-    await tgApiJson("sendPhoto", {
+    return tgApiJson<TgMessage>("sendPhoto", {
       chat_id:    channelId,
       photo:      mediaUrls[0],
       caption:    text,
       parse_mode: "HTML",
     });
-    return;
   }
 
-  // Multiple media — sendMediaGroup (captions supported only on first item)
+  // Multiple media — sendMediaGroup returns array; first item has caption
   const media = mediaUrls.map((url, i) => ({
     type:       "photo",
     media:      url,
     ...(i === 0 && text ? { caption: text, parse_mode: "HTML" } : {}),
   }));
-  await tgApiJson("sendMediaGroup", { chat_id: channelId, media });
+  const messages = await tgApiJson<TgMessage[]>("sendMediaGroup", { chat_id: channelId, media });
+  if (!messages[0]) throw new Error("sendMediaGroup returned empty array");
+  return messages[0];
 }
 
 // ─── Email ────────────────────────────────────────────────────────────────────
