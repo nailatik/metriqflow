@@ -92,7 +92,7 @@ function OnboardingCard({ steps, onDismiss }: { steps: OnboardingStep[]; onDismi
   return (
     <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-card">
       {/* header strip */}
-      <div className="px-7 pt-6 pb-5 border-b border-border">
+      <div className="px-4 pt-5 pb-4 sm:px-7 sm:pt-6 sm:pb-5 border-b border-border">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${allDone ? "bg-success/10" : "bg-primary/10"}`}>
@@ -252,14 +252,14 @@ export default observer(function ProfilePage() {
       {/* Hero */}
       <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-card">
         <div className="h-36 bg-gradient-to-br from-primary/25 via-primary/10 to-transparent" />
-        <div className="px-8 pb-8">
-          <div className="-mt-12 flex items-end justify-between gap-6">
-            <div className="flex items-end gap-5">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-primaryHover flex items-center justify-center text-onAccent text-3xl font-bold ring-4 ring-surface flex-shrink-0 shadow-md">
+        <div className="px-5 pb-6 sm:px-8 sm:pb-8">
+          <div className="-mt-12 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
+            <div className="flex items-end gap-4 sm:gap-5">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-primary to-primaryHover flex items-center justify-center text-onAccent text-2xl sm:text-3xl font-bold ring-4 ring-surface flex-shrink-0 shadow-md">
                 {initials}
               </div>
               <div className="pb-1 min-w-0">
-                <h1 className="text-2xl font-bold text-textMain leading-tight">
+                <h1 className="text-xl sm:text-2xl font-bold text-textMain leading-tight">
                   {user?.full_name ?? "—"}
                 </h1>
                 <div className="flex flex-wrap items-center gap-2 mt-1">
@@ -273,7 +273,7 @@ export default observer(function ProfilePage() {
                 </div>
               </div>
             </div>
-            <div className="pb-1">
+            <div className="pb-1 self-start sm:self-auto">
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block" />
                 {tD("stats.active")}
@@ -284,21 +284,21 @@ export default observer(function ProfilePage() {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard label={tD("stats.reports")} value={reportsStore.state.list.length} href="/app/reports" />
         <StatCard label={tD("stats.integrations")} value={integrationsCount ?? "—"} href="/app/integrations" />
         <StatCard label={tD("stats.activity")} value={tD("stats.active")} accent />
       </div>
 
       {/* Content grid: personal info + activity */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
         {/* Personal info — 2 cols */}
-        <div className="col-span-2 bg-surface border border-border rounded-xl p-7 shadow-card">
+        <div className="col-span-1 sm:col-span-2 bg-surface border border-border rounded-xl p-7 shadow-card">
           <h2 className="text-xs font-semibold text-textSecondary uppercase tracking-widest mb-6">
             {tP("personalInfo")}
           </h2>
-          <div className="grid grid-cols-2 gap-x-12 gap-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
             <InfoField label={tP("fullName")} value={user?.full_name} />
             <InfoField label={tP("email")} value={user?.email} />
             <InfoField label={tP("phone")} value={user?.phone} />
