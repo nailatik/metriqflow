@@ -90,11 +90,11 @@ export const EditScheduleModal = observer(({ open, schedule, onClose }: Props) =
     <div
       ref={overlayRef}
       onClick={handleOverlay}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4"
     >
-      <div className="bg-bg border border-border rounded-2xl w-full max-w-md shadow-2xl">
+      <div className="w-full sm:max-w-md max-h-[92dvh] overflow-y-auto rounded-t-2xl sm:rounded-2xl bg-bg border border-border shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+        <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-border bg-bg">
           <div>
             <h2 className="text-lg font-semibold text-textMain">{t("editModalTitle" as Parameters<typeof t>[0])}</h2>
             <div className="flex items-center gap-2 mt-1">
