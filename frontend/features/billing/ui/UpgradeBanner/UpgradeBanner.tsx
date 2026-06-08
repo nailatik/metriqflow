@@ -25,14 +25,14 @@ export function UpgradeBanner({ reason, compact = false }: Props) {
   }
 
   return (
-    <div className="bg-primary/5 border border-primary/20 rounded-xl px-5 py-4 flex items-center justify-between gap-4">
+    <div className="bg-primary/5 border border-primary/20 rounded-xl px-5 py-4 flex flex-wrap items-center justify-between gap-4">
       <div>
         <p className="text-sm font-semibold text-textMain">{reason ?? t("limitReached")}</p>
         <p className="text-xs text-textSecondary mt-0.5">{t("upgradeDesc")}</p>
       </div>
       <Link
         href={`/${locale}/app/billing`}
-        className="flex-shrink-0 px-4 py-2 bg-primary text-onAccent text-sm font-medium rounded-lg hover:bg-primaryHover transition"
+        className="w-full sm:w-auto flex-shrink-0 px-4 py-2 bg-primary text-onAccent text-sm font-medium rounded-lg hover:bg-primaryHover transition text-center"
       >
         {t("upgrade")}
       </Link>

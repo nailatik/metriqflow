@@ -61,20 +61,20 @@ function PromoSection() {
     <div className="flex flex-col gap-3">
       <h2 className="text-base font-semibold text-textMain">{t("promoTitle")}</h2>
       <p className="text-sm text-textSecondary">{t("promoDesc")}</p>
-      <div className="flex gap-2 max-w-sm">
+      <div className="flex flex-col sm:flex-row gap-2 w-full sm:max-w-sm">
         <input
           type="text"
           value={code}
           onChange={(e) => setCode(e.target.value.toUpperCase())}
           onKeyDown={(e) => e.key === "Enter" && handleRedeem()}
           placeholder={t("promoPlaceholder")}
-          className="flex-1 px-3 py-2 text-sm rounded-lg border border-border bg-surface text-textMain placeholder:text-textSecondary focus:outline-none focus:ring-2 focus:ring-primary/30"
+          className="flex-1 min-w-0 px-3 py-2.5 sm:py-2 text-sm rounded-lg border border-border bg-surface text-textMain placeholder:text-textSecondary focus:outline-none focus:ring-2 focus:ring-primary/30"
           disabled={loading}
         />
         <button
           onClick={handleRedeem}
           disabled={loading || !code.trim()}
-          className="px-4 py-2 text-sm font-medium bg-primary text-onAccent rounded-lg hover:bg-primaryHover disabled:opacity-50 disabled:cursor-not-allowed transition"
+          className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-sm font-medium bg-primary text-onAccent rounded-lg hover:bg-primaryHover disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
           {loading ? t("promoActivating") : t("promoActivate")}
         </button>

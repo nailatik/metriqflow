@@ -123,11 +123,11 @@ export const ReportsList = observer(() => {
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">{t("title")}</h1>
         <button
           onClick={() => setModalOpen(true)}
-          className="px-4 py-2 bg-primary text-onAccent rounded-xl text-sm font-medium hover:bg-primaryHover transition"
+          className="w-full sm:w-auto px-4 py-2 bg-primary text-onAccent rounded-xl text-sm font-medium hover:bg-primaryHover transition"
         >
           {t("create")}
         </button>

@@ -90,7 +90,7 @@ function PostCard({
   );
 }
 
-// ─── CalendarView ─────────────────────────────────────────────────────────────
+// ─── CalendarView (desktop lg+) ───────────────────────────────────────────────
 
 function CalendarView({
   posts,
@@ -141,6 +141,107 @@ function CalendarView({
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// ─── AgendaView (phone/tablet < lg) ──────────────────────────────────────────
+
+function AgendaView({
+  posts,
+  weekBase,
+  statusLabels,
+  onPostClick,
+  onDayClick,
+  dayLabels,
+  t,
+}: {
+  posts: PlannedPost[];
+  weekBase: Date;
+  statusLabels: Record<string, string>;
+  onPostClick: (post: PlannedPost) => void;
+  onDayClick: (date: Date) => void;
+  dayLabels: string[];
+  t: ReturnType<typeof useTranslations<"ContentPlanner">>;
+}) {
+  const days = getWeekDays(weekBase);
+  const today = new Date();
+
+  const [selectedDay, setSelectedDay] = useState<Date>(() => {
+    const todayInWeek = days.find((d) => sameDay(d, today));
+    return todayInWeek ?? days[0];
+  });
+
+  // Reset selected day when week changes
+  useEffect(() => {
+    const freshDays = getWeekDays(weekBase);
+    const now = new Date();
+    const todayInWeek = freshDays.find((d) => sameDay(d, now));
+    setSelectedDay(todayInWeek ?? freshDays[0]);
+  }, [weekBase]);
+
+  const dayPosts = posts.filter((p) => sameDay(new Date(p.scheduled_at), selectedDay));
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Horizontally-scrollable day-picker strip */}
+      <div className="overflow-x-auto -mx-5 px-5">
+        <div className="flex gap-2 pb-1" style={{ minWidth: "max-content" }}>
+          {days.map((day, i) => {
+            const isToday    = sameDay(day, today);
+            const isSelected = sameDay(day, selectedDay);
+            const count      = posts.filter((p) => sameDay(new Date(p.scheduled_at), day)).length;
+            return (
+              <button
+                key={i}
+                onClick={() => setSelectedDay(day)}
+                className={`flex flex-col items-center gap-0.5 px-4 py-2 min-h-11 rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
+                  isSelected
+                    ? "bg-primary text-onAccent"
+                    : isToday
+                    ? "bg-primary/10 text-primary"
+                    : "hover:bg-surfaceMuted text-textMain"
+                }`}
+              >
+                <span className="text-[10px] font-semibold uppercase tracking-wide leading-none">
+                  {(dayLabels[day.getDay()] ?? "").slice(0, 3)}
+                </span>
+                <span className="text-sm font-bold leading-snug">{day.getDate()}</span>
+                {count > 0 && (
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
+                    isSelected
+                      ? "bg-white/25 text-white"
+                      : "bg-primary/20 text-primary"
+                  }`}>
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Selected day posts + add button */}
+      <div className="flex flex-col gap-2">
+        {dayPosts.length === 0 && (
+          <p className="text-sm text-textSecondary text-center py-6">{t("noPosts")}</p>
+        )}
+        {dayPosts.map((p) => (
+          <PostCard
+            key={p.id}
+            post={p}
+            statusLabel={statusLabels[p.status] ?? p.status}
+            onClick={() => onPostClick(p)}
+          />
+        ))}
+        <button
+          onClick={() => onDayClick(selectedDay)}
+          className="w-full py-2.5 rounded-lg border border-dashed border-border text-sm text-textSecondary hover:border-primary hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+        >
+          + {t("newPost")}
+        </button>
+      </div>
     </div>
   );
 }
@@ -276,14 +377,6 @@ export function ContentPlannerView() {
     setFormPost("new");
   };
 
-  // PostForm needs an initial scheduled_at when opening from calendar day click
-  const formPostValue: PlannedPost | null =
-    formPost === "new"
-      ? null
-      : formPost;
-
-  // When opening "new" from a calendar day, we want to pre-fill scheduled_at.
-  // We'll pass a synthetic post with just scheduled_at set.
   const syntheticInitialPost: PlannedPost | null =
     formPost === "new" && formDate
       ? ({
@@ -311,16 +404,16 @@ export function ContentPlannerView() {
     : formPost;
 
   return (
-    <div className="p-6 flex flex-col gap-6">
+    <div className="flex flex-col gap-6">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-bold text-textMain">{t("title")}</h1>
-        <div className="flex items-center gap-2">
-          {/* View toggle */}
-          <div className="flex rounded-lg border border-border overflow-hidden">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          {/* View toggle — desktop only (phone always shows agenda) */}
+          <div className="hidden lg:flex rounded-lg border border-border overflow-hidden">
             <button
               onClick={() => setView("calendar")}
-              className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+              className={`px-3 py-2.5 sm:py-1.5 text-sm font-medium transition-colors ${
                 view === "calendar" ? "bg-primary text-onAccent" : "text-textSecondary hover:bg-surfaceMuted"
               }`}
             >
@@ -328,7 +421,7 @@ export function ContentPlannerView() {
             </button>
             <button
               onClick={() => setView("list")}
-              className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+              className={`px-3 py-2.5 sm:py-1.5 text-sm font-medium transition-colors ${
                 view === "list" ? "bg-primary text-onAccent" : "text-textSecondary hover:bg-surfaceMuted"
               }`}
             >
@@ -338,7 +431,7 @@ export function ContentPlannerView() {
           <button
             onClick={() => openNew()}
             disabled={channels.length === 0}
-            className="px-4 py-2 rounded-lg bg-primary text-onAccent text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="flex-1 sm:flex-none px-4 py-2.5 sm:py-2 rounded-lg bg-primary text-onAccent text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             + {t("newPost")}
           </button>
@@ -368,52 +461,66 @@ export function ContentPlannerView() {
 
       {!loading && !error && (
         <div className="bg-surface border border-border rounded-xl p-5 flex flex-col gap-4">
-          {/* Calendar nav */}
-          {view === "calendar" && (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={prevWeek}
-                  className="p-1.5 rounded-lg hover:bg-surfaceMuted text-textSecondary transition-colors"
-                  aria-label="Previous week"
-                >
-                  ‹
-                </button>
-                <button
-                  onClick={nextWeek}
-                  className="p-1.5 rounded-lg hover:bg-surfaceMuted text-textSecondary transition-colors"
-                  aria-label="Next week"
-                >
-                  ›
-                </button>
-                <span className="text-sm font-medium text-textMain">{weekLabel}</span>
-              </div>
+          {/* Week nav — always on phone (agenda), desktop: calendar view only */}
+          <div className={`flex items-center justify-between ${view !== "calendar" ? "lg:hidden" : ""}`}>
+            <div className="flex items-center gap-2">
               <button
-                onClick={goToday}
-                className="text-xs text-primary hover:underline font-medium"
+                onClick={prevWeek}
+                className="p-2 min-h-11 min-w-11 flex items-center justify-center rounded-lg hover:bg-surfaceMuted text-textSecondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                aria-label="Previous week"
               >
-                {t("week")}
+                ‹
               </button>
+              <button
+                onClick={nextWeek}
+                className="p-2 min-h-11 min-w-11 flex items-center justify-center rounded-lg hover:bg-surfaceMuted text-textSecondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                aria-label="Next week"
+              >
+                ›
+              </button>
+              <span className="text-sm font-medium text-textMain">{weekLabel}</span>
             </div>
-          )}
+            <button
+              onClick={goToday}
+              className="text-xs text-primary hover:underline font-medium min-h-11 px-2 flex items-center"
+            >
+              {t("week")}
+            </button>
+          </div>
 
-          {view === "calendar" ? (
-            <CalendarView
+          {/* Desktop: calendar grid or list */}
+          <div className="hidden lg:block">
+            {view === "calendar" ? (
+              <CalendarView
+                posts={posts}
+                weekBase={weekBase}
+                statusLabels={statusLabels}
+                onPostClick={(p) => setFormPost(p)}
+                onDayClick={(date) => openNew(date)}
+                dayLabels={dayLabels}
+              />
+            ) : (
+              <ListView
+                posts={posts}
+                statusLabels={statusLabels}
+                onPostClick={(p) => setFormPost(p)}
+                t={t}
+              />
+            )}
+          </div>
+
+          {/* Phone/tablet: agenda view */}
+          <div className="lg:hidden">
+            <AgendaView
               posts={posts}
               weekBase={weekBase}
               statusLabels={statusLabels}
               onPostClick={(p) => setFormPost(p)}
               onDayClick={(date) => openNew(date)}
               dayLabels={dayLabels}
-            />
-          ) : (
-            <ListView
-              posts={posts}
-              statusLabels={statusLabels}
-              onPostClick={(p) => setFormPost(p)}
               t={t}
             />
-          )}
+          </div>
         </div>
       )}
 

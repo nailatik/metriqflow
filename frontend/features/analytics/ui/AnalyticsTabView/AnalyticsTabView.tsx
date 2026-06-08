@@ -88,13 +88,13 @@ export const AnalyticsTabView = observer(function AnalyticsTabView() {
   return (
     <div className="flex flex-col gap-6">
       {/* Tab switcher */}
-      <div className="flex gap-1 bg-surface border border-border rounded-lg p-1 w-fit">
+      <div className="flex flex-wrap gap-1 bg-surface border border-border rounded-lg p-1 w-fit">
         {TABS.map((tabItem) => (
           <div key={tabItem.id} className="relative group">
             <button
               onClick={() => tabItem.enabled && setTab(tabItem.id)}
               disabled={!tabItem.enabled}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition ${
+              className={`px-4 py-2.5 sm:py-1.5 rounded-md text-sm font-medium transition ${
                 tab === tabItem.id && tabItem.enabled
                   ? "bg-primary text-onAccent"
                   : tabItem.enabled
@@ -122,7 +122,7 @@ export const AnalyticsTabView = observer(function AnalyticsTabView() {
       <div className="flex justify-start pt-2 border-t border-border">
         <button
           onClick={() => openModal(tab === "all" ? "all" : tab === "telegram" ? "telegram" : "vk")}
-          className="px-5 py-2.5 bg-primary text-onAccent rounded-xl text-sm font-medium hover:bg-primaryHover transition"
+          className="w-full sm:w-auto px-5 py-2.5 bg-primary text-onAccent rounded-xl text-sm font-medium hover:bg-primaryHover transition"
         >
           {t("createReport")}
         </button>

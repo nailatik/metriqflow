@@ -108,7 +108,7 @@ export const RegisterForm = observer(() => {
     }
 
     return (
-      <div className="w-full max-w-md bg-surface border border-border rounded-2xl p-8 shadow-card">
+      <div className="w-full max-w-md bg-surface border border-border rounded-2xl p-5 sm:p-8 shadow-card">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-semibold text-textMain">{t("step2.title")}</h1>
           <p className="text-textSecondary mt-2 text-sm">{t("step2.subtitle")}</p>
@@ -176,7 +176,7 @@ export const RegisterForm = observer(() => {
   }
 
   return (
-    <div className="w-full max-w-md bg-surface border border-border rounded-2xl p-8 shadow-card">
+    <div className="w-full max-w-md bg-surface border border-border rounded-2xl p-5 sm:p-8 shadow-card">
       <div className="text-center mb-8">
         <h1 className="text-2xl font-semibold text-textMain">{t("step1.title")}</h1>
         <p className="text-textSecondary mt-2 text-sm">{t("step1.subtitle")}</p>

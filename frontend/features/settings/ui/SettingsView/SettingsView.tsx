@@ -131,7 +131,7 @@ export const SettingsView = observer(() => {
       <h1 className="text-2xl font-semibold text-textMain">{t("title")}</h1>
 
       {/* ── Profile section ─────────────────────────────────────────────────── */}
-      <div className="bg-surface border border-border rounded-xl p-6 shadow-card">
+      <div className="bg-surface border border-border rounded-xl p-4 sm:p-6 shadow-card">
         <h2 className="text-lg font-semibold text-textMain mb-4">{t("account.title")}</h2>
         <div className="space-y-4 text-textSecondary">
 
@@ -163,12 +163,12 @@ export const SettingsView = observer(() => {
           <div>
             <p className="text-sm font-medium text-textMain mb-1">{t("account.organization")}</p>
             {editingOrg ? (
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
                 <input
                   type="text"
                   value={orgValue}
                   onChange={(e) => setOrgValue(e.target.value)}
-                  className="flex-1 px-3 py-1.5 rounded-lg border border-border bg-bg text-textMain text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                  className="w-full sm:flex-1 px-3 py-2.5 sm:py-1.5 rounded-lg border border-border bg-bg text-textMain text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                   placeholder={t("account.organization")}
                   autoFocus
                 />
@@ -229,7 +229,7 @@ export const SettingsView = observer(() => {
           <div>
             <p className="text-sm font-medium text-textMain mb-1">{t("account.password")}</p>
             {editingPwd ? (
-              <form onSubmit={handleChangePassword} className="space-y-3 mt-1 max-w-sm">
+              <form onSubmit={handleChangePassword} className="space-y-3 mt-1 w-full sm:max-w-sm">
                 <input
                   type="password"
                   value={pwdForm.current}
@@ -298,7 +298,7 @@ export const SettingsView = observer(() => {
       </div>
 
       {/* ── Notifications ───────────────────────────────────────────────────── */}
-      <div className="bg-surface border border-border rounded-xl p-6 shadow-card">
+      <div className="bg-surface border border-border rounded-xl p-4 sm:p-6 shadow-card">
         <h2 className="text-lg font-semibold text-textMain mb-1">{t("notifications.title")}</h2>
         <p className="text-sm text-textSecondary mb-4">{t("notifications.description")}</p>
 
@@ -370,8 +370,8 @@ export const SettingsView = observer(() => {
 
       {/* ── Confirm delete modal ─────────────────────────────────────────────── */}
       {showConfirmModal && createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-surface border border-border rounded-2xl p-8 max-w-md w-full mx-4 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
+          <div className="bg-surface border border-border rounded-t-2xl sm:rounded-2xl p-6 sm:p-8 w-full sm:max-w-md shadow-xl">
             <h2 className="text-xl font-semibold text-error mb-3">{t("danger.confirmDeleteTitle")}</h2>
             <p className="text-textSecondary text-sm mb-6">{t("danger.confirmDeleteDescription")}</p>
 

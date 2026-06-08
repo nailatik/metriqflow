@@ -173,14 +173,14 @@ export const SchedulesList = observer(() => {
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold">{t("title")}</h2>
           <p className="text-sm text-textSecondary mt-0.5">{t("subtitle")}</p>
         </div>
         <button
           onClick={() => setModalOpen(true)}
-          className="px-4 py-2 bg-primary text-onAccent rounded-xl text-sm font-medium hover:bg-primaryHover transition"
+          className="w-full sm:w-auto px-4 py-2 bg-primary text-onAccent rounded-xl text-sm font-medium hover:bg-primaryHover transition"
         >
           {t("create")}
         </button>
