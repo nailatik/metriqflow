@@ -367,7 +367,8 @@ export const VKAnalyticsView = observer(function VKAnalyticsView() {
               <p className="text-xs font-semibold text-textSecondary uppercase tracking-widest mb-4">
                 {t("viewsChart")}
               </p>
-              <ResponsiveContainer width="100%" height={220}>
+              <div className="h-[200px] sm:h-[260px]">
+              <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={analytics.stats_by_day} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="reachGrad" x1="0" y1="0" x2="0" y2="1">
@@ -405,6 +406,7 @@ export const VKAnalyticsView = observer(function VKAnalyticsView() {
                   />
                 </AreaChart>
               </ResponsiveContainer>
+              </div>
             </div>
           )}
 
