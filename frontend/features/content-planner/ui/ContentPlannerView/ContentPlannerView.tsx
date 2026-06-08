@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { http } from "@/shared/lib/axios";
+import { TelegramIcon, VKIcon } from "@/shared/ui/PlatformIcon/PlatformIcon";
 import { PostForm, type PlannedPost, type ChannelOption } from "../PostForm/PostForm";
 import type { TgChannel } from "@/entities/integration/types";
 
@@ -60,7 +61,9 @@ function PostCard({
   statusLabel: string;
   onClick: () => void;
 }) {
-  const platformIcon = post.platform === "tg" ? "✈️" : "🅱️";
+  const platformIcon = post.platform === "tg"
+    ? <TelegramIcon className="w-3.5 h-3.5 text-sky-500" />
+    : <VKIcon className="w-3.5 h-3.5 text-blue-500" />;
   return (
     <button
       onClick={onClick}
@@ -68,7 +71,7 @@ function PostCard({
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 min-w-0">
-          <span className="text-xs">{platformIcon}</span>
+          <span className="inline-flex items-center">{platformIcon}</span>
           <span className="text-xs font-medium text-textSecondary truncate">{post.channel_title ?? post.channel_id}</span>
         </div>
         <StatusBadge status={post.status} label={statusLabel} />

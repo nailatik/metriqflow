@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { http } from "@/shared/lib/axios";
+import { TelegramIcon } from "@/shared/ui/PlatformIcon/PlatformIcon";
 
 export type PlannedPost = {
   id: number;
@@ -184,7 +185,7 @@ export function PostForm({ post, channels, onSave, onDelete, onClose }: Props) {
             {isEditing ? t("editPost") : t("createPost")}
           </h2>
           <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium flex-shrink-0">
-            ✈️ Telegram
+            <TelegramIcon className="w-3.5 h-3.5" /> Telegram
           </span>
         </div>
 

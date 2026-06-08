@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { observer } from "mobx-react-lite";
 import { useSchedulesStore } from "@/shared/store/StoreProvider";
+import { TelegramIcon } from "@/shared/ui/PlatformIcon/PlatformIcon";
 import { CreateScheduleModal } from "../CreateScheduleModal/CreateScheduleModal";
 import { EditScheduleModal } from "../EditScheduleModal/EditScheduleModal";
 import type { Schedule } from "@/entities/schedule/types";
@@ -100,8 +101,8 @@ function ScheduleCard({
           <span className="font-medium">{t("labelDelivery")}:</span>
           <div className="flex gap-4">
             {tgCh && (
-              <span className={tgCh.enabled ? "text-primary" : "line-through"}>
-                ✈️ {t("tgDelivery")}
+              <span className={`inline-flex items-center gap-1 ${tgCh.enabled ? "text-primary" : "line-through"}`}>
+                <TelegramIcon className="w-3.5 h-3.5" /> {t("tgDelivery")}
               </span>
             )}
             {emailCh && (

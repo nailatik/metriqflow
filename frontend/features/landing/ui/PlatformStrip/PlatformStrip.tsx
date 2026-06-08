@@ -3,11 +3,11 @@ import { TelegramIcon, VKIcon, YouTubeIcon, InstagramIcon, TikTokIcon } from "..
 import { Reveal } from "../Reveal/Reveal";
 
 const PLATFORMS = [
-  { name: "Telegram", Icon: TelegramIcon, live: true },
-  { name: "VK", Icon: VKIcon, live: true },
-  { name: "YouTube", Icon: YouTubeIcon, live: false },
-  { name: "Instagram", Icon: InstagramIcon, live: false },
-  { name: "TikTok", Icon: TikTokIcon, live: false },
+  { name: "Telegram", Icon: TelegramIcon, live: true, color: "text-sky-500" },
+  { name: "VKontakte", Icon: VKIcon, live: true, color: "text-blue-500" },
+  { name: "YouTube", Icon: YouTubeIcon, live: false, color: "" },
+  { name: "Instagram", Icon: InstagramIcon, live: false, color: "" },
+  { name: "TikTok", Icon: TikTokIcon, live: false, color: "" },
 ] as const;
 
 export async function PlatformStrip({ locale }: { locale: string }) {
@@ -22,10 +22,10 @@ export async function PlatformStrip({ locale }: { locale: string }) {
         </div>
 
         <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {PLATFORMS.map(({ name, Icon, live }, i) => (
+          {PLATFORMS.map(({ name, Icon, live, color }, i) => (
             <Reveal key={name} delay={i * 60}>
               <div className={`relative h-full rounded-xl border bg-surface px-4 py-5 flex flex-col items-center gap-2.5 text-center transition-colors ${live ? "border-border" : "border-dashed border-border"}`}>
-                <Icon className={`w-7 h-7 ${live ? "text-primary" : "text-textSecondary/50"}`} />
+                <Icon className={`w-7 h-7 ${live ? color : "text-textSecondary/50"}`} />
                 <span className={`text-sm font-medium ${live ? "text-textMain" : "text-textSecondary"}`}>{name}</span>
                 {live ? (
                   <span className="inline-flex items-center gap-1 text-[10px] font-medium text-success">

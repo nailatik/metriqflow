@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { createPortal } from "react-dom";
 import { http } from "@/shared/lib/axios";
+import { TelegramIcon, VKIcon } from "@/shared/ui/PlatformIcon/PlatformIcon";
 import { postsService } from "@/entities/post/api/postsService";
 import type {
   TelegramPost, VkPost,
@@ -95,8 +96,8 @@ function PostModal({ data, onClose, t }: {
     : "from-blue-600/20 via-blue-600/5 to-transparent";
 
   const platformBadge = isTg
-    ? <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-500 border border-sky-500/25">✈️ Telegram</span>
-    : <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-600/15 text-blue-500 border border-blue-600/25">🅱 VK</span>;
+    ? <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-500 border border-sky-500/25"><TelegramIcon className="w-3 h-3" /> Telegram</span>
+    : <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-600/15 text-blue-500 border border-blue-600/25"><VKIcon className="w-3 h-3" /> VK</span>;
 
   return createPortal(
     <div
@@ -378,7 +379,9 @@ export function PostsSearchView() {
                 platform === p ? "bg-surface text-textMain shadow-sm" : "text-textSecondary hover:text-textMain"
               }`}
             >
-              {p === "tg" ? "✈️ Telegram" : "🅱 VK"}
+              {p === "tg"
+                ? <span className="flex items-center gap-1.5"><TelegramIcon className="w-3.5 h-3.5 text-sky-500" /> Telegram</span>
+                : <span className="flex items-center gap-1.5"><VKIcon className="w-3.5 h-3.5 text-blue-500" /> VK</span>}
             </button>
           ))}
         </div>

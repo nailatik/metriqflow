@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { http } from "@/shared/lib/axios";
+import { TelegramIcon, VKIcon } from "@/shared/ui/PlatformIcon/PlatformIcon";
 
 // Lazy-load recharts views — see AnalyticsTabView for rationale.
 const AnalyticsView = dynamic(
@@ -121,7 +122,7 @@ function CombinedSummary() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {data.telegram && (
               <div className="bg-surface border border-border rounded-xl px-5 py-4 flex flex-col gap-1">
-                <p className="text-sm font-semibold text-textMain">✈️ Telegram</p>
+                <p className="text-sm font-semibold text-textMain flex items-center gap-1.5"><TelegramIcon className="w-4 h-4 text-sky-500" /> Telegram</p>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-textSecondary">
                   <span>{t("subscribers")}: <b className="text-textMain">{fmt(data.telegram.followers)}</b></span>
                   <GrowthBadge value={data.telegram.followers_growth} />
@@ -132,7 +133,7 @@ function CombinedSummary() {
             )}
             {data.vk && (
               <div className="bg-surface border border-border rounded-xl px-5 py-4 flex flex-col gap-1">
-                <p className="text-sm font-semibold text-textMain">🔵 VKontakte</p>
+                <p className="text-sm font-semibold text-textMain flex items-center gap-1.5"><VKIcon className="w-4 h-4 text-blue-500" /> VKontakte</p>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-textSecondary">
                   <span>{t("members")}: <b className="text-textMain">{fmt(data.vk.followers)}</b></span>
                   <GrowthBadge value={data.vk.followers_growth} />
@@ -179,13 +180,13 @@ export function AllAnalyticsView({ hasTelegram, hasVk }: Props) {
       <CombinedSummary />
 
       {hasTelegram && (
-        <PlatformSection icon="✈️" label="Telegram">
+        <PlatformSection icon={<TelegramIcon className="w-4 h-4 text-sky-500" />} label="Telegram">
           <AnalyticsView />
         </PlatformSection>
       )}
 
       {hasVk && (
-        <PlatformSection icon="🔵" label="VKontakte">
+        <PlatformSection icon={<VKIcon className="w-4 h-4 text-blue-500" />} label="VKontakte">
           <VKAnalyticsView />
         </PlatformSection>
       )}
