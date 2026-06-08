@@ -301,7 +301,7 @@ export const CompetitorsView = observer(function CompetitorsView() {
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`px-3 py-1 rounded-md text-sm font-medium transition ${
+              className={`px-3 py-2.5 sm:py-1 min-h-11 sm:min-h-0 rounded-md text-sm font-medium transition ${
                 period === p ? "bg-primary text-onAccent" : "text-textSecondary hover:text-textMain"
               }`}
             >
@@ -314,14 +314,14 @@ export const CompetitorsView = observer(function CompetitorsView() {
       {/* Add form */}
       <div className="bg-surface border border-border rounded-xl p-5">
         <p className="text-xs font-semibold text-textSecondary uppercase tracking-widest mb-3">{t("addTitle")}</p>
-        <form onSubmit={handleAdd} className="flex flex-wrap gap-2">
-          <div className="flex gap-1 bg-bg border border-border rounded-lg p-1">
+        <form onSubmit={handleAdd} className="flex flex-col sm:flex-row gap-2">
+          <div className="flex gap-1 bg-bg border border-border rounded-lg p-1 self-start sm:self-auto">
             {(["tg", "vk"] as const).map((pl) => (
               <button
                 key={pl}
                 type="button"
                 onClick={() => setAddPlatform(pl)}
-                className={`px-3 py-1 rounded-md text-sm font-medium transition ${
+                className={`px-3 py-2.5 sm:py-1 min-h-11 sm:min-h-0 rounded-md text-sm font-medium transition ${
                   addPlatform === pl ? "bg-primary text-onAccent" : "text-textSecondary hover:text-textMain"
                 }`}
               >
@@ -334,12 +334,12 @@ export const CompetitorsView = observer(function CompetitorsView() {
             value={addInput}
             onChange={(e) => setAddInput(e.target.value)}
             placeholder={addPlatform === "tg" ? t("placeholderTg") : t("placeholderVk")}
-            className="flex-1 min-w-48 text-sm bg-bg border border-border rounded-lg px-3 py-1.5 text-textMain outline-none focus:border-primary"
+            className="w-full sm:flex-1 min-w-0 text-sm bg-bg border border-border rounded-lg px-3 py-2.5 sm:py-1.5 text-textMain outline-none focus:border-primary"
           />
           <button
             type="submit"
             disabled={addLoading || !addInput.trim()}
-            className="px-4 py-1.5 bg-primary text-onAccent text-sm font-medium rounded-lg disabled:opacity-50"
+            className="w-full sm:w-auto px-4 py-2.5 sm:py-1.5 bg-primary text-onAccent text-sm font-medium rounded-lg disabled:opacity-50"
           >
             {addLoading ? t("adding") : t("addBtn")}
           </button>
@@ -514,7 +514,8 @@ export const CompetitorsView = observer(function CompetitorsView() {
                     ))}
                   </select>
                 </div>
-                <ResponsiveContainer width="100%" height={220}>
+                <div className="h-[200px] sm:h-[240px]">
+                <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                     <XAxis dataKey="name" tick={{ fontSize: 11, fill: "var(--color-text-secondary)" }} />
@@ -537,6 +538,7 @@ export const CompetitorsView = observer(function CompetitorsView() {
                     <Bar dataKey={rivalLabel} fill="var(--color-chart-2)" radius={[4,4,0,0]} />
                   </BarChart>
                 </ResponsiveContainer>
+                </div>
               </div>
 
               <p className="text-xs text-textSecondary">
