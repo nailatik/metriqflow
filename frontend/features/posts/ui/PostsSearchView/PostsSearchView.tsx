@@ -366,7 +366,7 @@ export function PostsSearchView() {
   const activeId          = platform === "tg" ? channelId : communityId;
 
   return (
-    <div className="flex flex-col gap-6 p-6 max-w-4xl mx-auto w-full">
+    <div className="flex flex-col gap-6 max-w-4xl mx-auto w-full">
       {/* Title + platform toggle */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-semibold text-textMain">{t("title")}</h1>
@@ -375,7 +375,7 @@ export function PostsSearchView() {
             <button
               key={p}
               onClick={() => { setPlatform(p); setPage(1); }}
-              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${
+              className={`px-4 py-2.5 sm:py-1.5 rounded-lg text-sm font-medium transition ${
                 platform === p ? "bg-surface text-textMain shadow-sm" : "text-textSecondary hover:text-textMain"
               }`}
             >
@@ -395,7 +395,7 @@ export function PostsSearchView() {
             value={channelId ?? ""}
             onChange={(e) => { setChannelId(Number(e.target.value)); setPage(1); }}
             disabled={sourceLoading || !hasSource}
-            className={`${inputCls} max-w-[220px]`}
+            className={`${inputCls} w-full sm:w-auto sm:max-w-[220px]`}
           >
             {sourceLoading && <option>{t("loadingChannels")}</option>}
             {!sourceLoading && !hasSource && <option>{t("noChannels")}</option>}
@@ -406,7 +406,7 @@ export function PostsSearchView() {
             value={communityId ?? ""}
             onChange={(e) => { setCommunityId(Number(e.target.value)); setPage(1); }}
             disabled={sourceLoading || !hasSource}
-            className={`${inputCls} max-w-[220px]`}
+            className={`${inputCls} w-full sm:w-auto sm:max-w-[220px]`}
           >
             {sourceLoading && <option>{t("loadingChannels")}</option>}
             {!sourceLoading && !hasSource && <option>{t("noCommunities")}</option>}
@@ -420,23 +420,23 @@ export function PostsSearchView() {
           placeholder={t("searchPlaceholder")}
           value={q}
           onChange={onFilter(setQ)}
-          className={`${inputCls} flex-1 min-w-[160px]`}
+          className={`${inputCls} flex-1 min-w-0`}
         />
 
         {/* Date from */}
-        <label className="flex items-center gap-2 border border-border rounded-lg px-3 py-2 bg-surface focus-within:border-primary transition cursor-pointer">
+        <label className="w-full sm:w-auto flex items-center gap-2 border border-border rounded-lg px-3 py-2 bg-surface focus-within:border-primary transition cursor-pointer">
           <span className="text-xs font-medium text-textSecondary whitespace-nowrap">{t("from")}</span>
-          <input type="date" value={from} onChange={onFilter(setFrom)} className="bg-transparent text-sm text-textMain focus:outline-none w-[120px]" />
+          <input type="date" value={from} onChange={onFilter(setFrom)} className="bg-transparent text-sm text-textMain focus:outline-none w-full sm:w-[140px]" />
         </label>
 
         {/* Date to */}
-        <label className="flex items-center gap-2 border border-border rounded-lg px-3 py-2 bg-surface focus-within:border-primary transition cursor-pointer">
+        <label className="w-full sm:w-auto flex items-center gap-2 border border-border rounded-lg px-3 py-2 bg-surface focus-within:border-primary transition cursor-pointer">
           <span className="text-xs font-medium text-textSecondary whitespace-nowrap">{t("to")}</span>
-          <input type="date" value={to} onChange={onFilter(setTo)} className="bg-transparent text-sm text-textMain focus:outline-none w-[120px]" />
+          <input type="date" value={to} onChange={onFilter(setTo)} className="bg-transparent text-sm text-textMain focus:outline-none w-full sm:w-[140px]" />
         </label>
 
         {/* Sort */}
-        <select value={sort} onChange={(e) => { setSort(e.target.value as "views" | "date"); setPage(1); }} className={`${inputCls} w-[160px]`}>
+        <select value={sort} onChange={(e) => { setSort(e.target.value as "views" | "date"); setPage(1); }} className={`${inputCls} w-full sm:w-[160px]`}>
           <option value="date">{t("sortDate")}</option>
           <option value="views">{t("sortViews")}</option>
         </select>
