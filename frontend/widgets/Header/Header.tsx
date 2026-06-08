@@ -43,7 +43,7 @@ export const Header = observer(() => {
           onClick={() => switchLocale(locale === "en" ? "ru" : "en")}
           aria-label={locale === "en" ? "Switch to Russian" : "Switch to English"}
           title={locale === "en" ? "Switch to Русский" : "Switch to English"}
-          className="px-2.5 py-1 rounded-lg border border-border text-sm font-medium text-textSecondary hover:text-textMain hover:border-primary transition-colors"
+          className="min-h-11 flex items-center px-2.5 rounded-lg border border-border text-sm font-medium text-textSecondary hover:text-textMain hover:border-primary transition-colors"
         >
           {locale.toUpperCase()}
         </button>
