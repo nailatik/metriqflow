@@ -150,7 +150,7 @@ export const Header = observer(() => {
                 <Link
                   href="/login"
                   onClick={() => setMobileOpen(false)}
-                  className="px-3 py-3 rounded-lg text-sm text-textSecondary hover:text-textMain hover:bg-surfaceMuted transition-colors"
+                  className="px-3 py-3 rounded-xl text-sm font-semibold border border-border text-textMain hover:bg-surfaceMuted transition-colors text-center"
                 >
                   {t("signIn")}
                 </Link>
