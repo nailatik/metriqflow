@@ -91,7 +91,7 @@ function GrowthBadge({ value }: { value: number | null | undefined }) {
   if (value === null || value === undefined) return null;
   const positive = value >= 0;
   const arrow    = positive ? "↑" : "↓";
-  const color    = positive ? "text-green-500" : "text-red-500";
+  const color    = positive ? "text-success" : "text-error";
   return (
     <span className={`text-xs font-medium ${color}`}>
       {arrow} {Math.abs(value).toFixed(1)}%
@@ -107,7 +107,7 @@ function StatCard({
   return (
     <div className="bg-surface border border-border rounded-xl px-5 py-4">
       <p className="text-xs font-semibold text-textSecondary uppercase tracking-widest mb-1">{label}</p>
-      <p className="text-2xl font-bold text-textMain">{value}</p>
+      <p className="text-2xl font-bold text-textMain tabular-nums">{value}</p>
       <div className="flex items-center gap-2 mt-0.5">
         {growth !== undefined && <GrowthBadge value={growth} />}
         {sub && <p className="text-xs text-textSecondary">{sub}</p>}
@@ -172,7 +172,7 @@ function Heatmap({ data, hint }: { data: HeatCell[]; hint: string }) {
                   key={hour}
                   title={cell ? `Avg ${fmt(cell.avg_views)} views · ${cell.post_count} posts` : "No data"}
                   className="flex-1 h-6 rounded-sm"
-                  style={{ backgroundColor: `rgba(79,70,229,${0.05 + intensity * 0.85})` }}
+                  style={{ backgroundColor: "var(--color-primary)", opacity: 0.05 + intensity * 0.85 }}
                 />
               );
             })}
@@ -315,7 +315,7 @@ export const VKAnalyticsView = observer(function VKAnalyticsView() {
                 onClick={() => setPeriod(p.value)}
                 className={`px-3 py-1 rounded-md text-sm font-medium transition ${
                   period === p.value
-                    ? "bg-primary text-white"
+                    ? "bg-primary text-onAccent"
                     : "text-textSecondary hover:text-textMain"
                 }`}
               >
@@ -345,7 +345,7 @@ export const VKAnalyticsView = observer(function VKAnalyticsView() {
         <>
           {/* Member count */}
           <div className="bg-primary/5 border border-primary/20 rounded-xl px-5 py-3 flex items-center gap-3">
-            <span className="text-2xl font-bold text-primary">{fmt(s.member_count)}</span>
+            <span className="text-2xl font-bold text-primary tabular-nums">{fmt(s.member_count)}</span>
             <span className="text-sm text-textSecondary">{t("subscribers")}</span>
             {g?.subscribers !== null && g?.subscribers !== undefined && (
               <GrowthBadge value={g.subscribers} />
@@ -371,8 +371,8 @@ export const VKAnalyticsView = observer(function VKAnalyticsView() {
                 <AreaChart data={analytics.stats_by_day} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="reachGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor="#4F46E5" stopOpacity={0.15} />
-                      <stop offset="95%" stopColor="#4F46E5" stopOpacity={0}    />
+                      <stop offset="5%"  stopColor="var(--color-chart-1)" stopOpacity={0.15} />
+                      <stop offset="95%" stopColor="var(--color-chart-1)" stopOpacity={0}    />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
@@ -397,7 +397,7 @@ export const VKAnalyticsView = observer(function VKAnalyticsView() {
                   <Area
                     type="monotone"
                     dataKey="views"
-                    stroke="#4F46E5"
+                    stroke="var(--color-chart-1)"
                     strokeWidth={2}
                     fill="url(#reachGrad)"
                     dot={false}

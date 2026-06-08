@@ -12,7 +12,7 @@ export default function LocaleNotFound() {
         <h2 className="text-xl font-semibold mt-4 text-textMain">{t("title")}</h2>
         <p className="text-textSecondary mt-2">{t("desc")}</p>
         <div className="mt-6">
-          <Link href="/" className="px-6 py-3 rounded-xl font-medium bg-primary text-white hover:bg-indigo-700 shadow-sm transition-all inline-block">
+          <Link href="/" className="px-6 py-3 rounded-xl font-medium bg-primary text-onAccent hover:bg-primaryHover shadow-card transition-all inline-block">
             {t("button")}
           </Link>
         </div>

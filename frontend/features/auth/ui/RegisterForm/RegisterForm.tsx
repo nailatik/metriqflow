@@ -108,7 +108,7 @@ export const RegisterForm = observer(() => {
     }
 
     return (
-      <div className="w-full max-w-md bg-surface border border-border rounded-2xl p-8 shadow-sm">
+      <div className="w-full max-w-md bg-surface border border-border rounded-2xl p-8 shadow-card">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-semibold text-textMain">{t("step2.title")}</h1>
           <p className="text-textSecondary mt-2 text-sm">{t("step2.subtitle")}</p>
@@ -176,7 +176,7 @@ export const RegisterForm = observer(() => {
   }
 
   return (
-    <div className="w-full max-w-md bg-surface border border-border rounded-2xl p-8 shadow-sm">
+    <div className="w-full max-w-md bg-surface border border-border rounded-2xl p-8 shadow-card">
       <div className="text-center mb-8">
         <h1 className="text-2xl font-semibold text-textMain">{t("step1.title")}</h1>
         <p className="text-textSecondary mt-2 text-sm">{t("step1.subtitle")}</p>
@@ -203,13 +203,13 @@ export const RegisterForm = observer(() => {
           />
           {password && (
             <div className="mt-2 space-y-1 text-sm">
-              <p className={checks.minLength ? "text-green-500" : "text-red-400"}>
+              <p className={checks.minLength ? "text-success" : "text-error"}>
                 {checks.minLength ? "✔" : "✖"} {t("validation.minLength")}
               </p>
-              <p className={checks.uppercase ? "text-green-500" : "text-red-400"}>
+              <p className={checks.uppercase ? "text-success" : "text-error"}>
                 {checks.uppercase ? "✔" : "✖"} {t("validation.uppercase")}
               </p>
-              <p className={checks.special ? "text-green-500" : "text-red-400"}>
+              <p className={checks.special ? "text-success" : "text-error"}>
                 {checks.special ? "✔" : "✖"} {t("validation.special")}
               </p>
             </div>

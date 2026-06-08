@@ -11,8 +11,8 @@ import type { TgChannel } from "@/entities/integration/types";
 const STATUS_STYLES: Record<string, string> = {
   draft:     "bg-textSecondary/10 text-textSecondary",
   scheduled: "bg-primary/10 text-primary",
-  sending:   "bg-amber-500/10 text-amber-600",
-  sent:      "bg-emerald-500/10 text-emerald-600",
+  sending:   "bg-primary/10 text-primary",
+  sent:      "bg-success/10 text-success",
   failed:    "bg-error/10 text-error",
 };
 
@@ -117,7 +117,7 @@ function CalendarView({
             <button
               onClick={() => onDayClick(day)}
               className={`flex flex-col items-center py-1 rounded-lg transition-colors ${
-                isToday ? "bg-primary/10" : "hover:bg-border"
+                isToday ? "bg-primary/10" : "hover:bg-surfaceMuted"
               }`}
             >
               <span className="text-[10px] text-textSecondary uppercase tracking-wide">{dayLabels[day.getDay()]}</span>
@@ -318,7 +318,7 @@ export function ContentPlannerView() {
             <button
               onClick={() => setView("calendar")}
               className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-                view === "calendar" ? "bg-primary text-white" : "text-textSecondary hover:bg-border"
+                view === "calendar" ? "bg-primary text-onAccent" : "text-textSecondary hover:bg-surfaceMuted"
               }`}
             >
               {t("calendarView")}
@@ -326,7 +326,7 @@ export function ContentPlannerView() {
             <button
               onClick={() => setView("list")}
               className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-                view === "list" ? "bg-primary text-white" : "text-textSecondary hover:bg-border"
+                view === "list" ? "bg-primary text-onAccent" : "text-textSecondary hover:bg-surfaceMuted"
               }`}
             >
               {t("listView")}
@@ -335,7 +335,7 @@ export function ContentPlannerView() {
           <button
             onClick={() => openNew()}
             disabled={channels.length === 0}
-            className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="px-4 py-2 rounded-lg bg-primary text-onAccent text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             + {t("newPost")}
           </button>
@@ -344,7 +344,7 @@ export function ContentPlannerView() {
 
       {/* No channels */}
       {!loading && channels.length === 0 && (
-        <div className="bg-amber-500/5 border border-amber-500/30 rounded-xl px-5 py-4">
+        <div className="bg-primary/5 border border-primary/20 rounded-xl px-5 py-4">
           <p className="text-sm text-textSecondary">{t("noChannels")}</p>
         </div>
       )}
@@ -371,14 +371,14 @@ export function ContentPlannerView() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={prevWeek}
-                  className="p-1.5 rounded-lg hover:bg-border text-textSecondary transition-colors"
+                  className="p-1.5 rounded-lg hover:bg-surfaceMuted text-textSecondary transition-colors"
                   aria-label="Previous week"
                 >
                   ‹
                 </button>
                 <button
                   onClick={nextWeek}
-                  className="p-1.5 rounded-lg hover:bg-border text-textSecondary transition-colors"
+                  className="p-1.5 rounded-lg hover:bg-surfaceMuted text-textSecondary transition-colors"
                   aria-label="Next week"
                 >
                   ›

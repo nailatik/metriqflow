@@ -96,7 +96,7 @@ export const AnalyticsTabView = observer(function AnalyticsTabView() {
               disabled={!tabItem.enabled}
               className={`px-4 py-1.5 rounded-md text-sm font-medium transition ${
                 tab === tabItem.id && tabItem.enabled
-                  ? "bg-primary text-white"
+                  ? "bg-primary text-onAccent"
                   : tabItem.enabled
                   ? "text-textSecondary hover:text-textMain"
                   : "text-textSecondary/40 cursor-not-allowed"
@@ -122,7 +122,7 @@ export const AnalyticsTabView = observer(function AnalyticsTabView() {
       <div className="flex justify-start pt-2 border-t border-border">
         <button
           onClick={() => openModal(tab === "all" ? "all" : tab === "telegram" ? "telegram" : "vk")}
-          className="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary/90 transition"
+          className="px-5 py-2.5 bg-primary text-onAccent rounded-xl text-sm font-medium hover:bg-primaryHover transition"
         >
           {t("createReport")}
         </button>

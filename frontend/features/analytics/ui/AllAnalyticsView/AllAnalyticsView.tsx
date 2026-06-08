@@ -51,7 +51,7 @@ function GrowthBadge({ value }: { value: number | null | undefined }) {
   if (value === null || value === undefined) return null;
   const positive = value >= 0;
   return (
-    <span className={`text-xs font-medium ${positive ? "text-green-500" : "text-red-500"}`}>
+    <span className={`text-xs font-medium ${positive ? "text-success" : "text-error"}`}>
       {positive ? "↑" : "↓"} {Math.abs(value).toFixed(1)}%
     </span>
   );
@@ -61,7 +61,7 @@ function BigStat({ label, value, growth }: { label: string; value: string; growt
   return (
     <div className="bg-surface border border-border rounded-xl px-5 py-4">
       <p className="text-xs font-semibold text-textSecondary uppercase tracking-widest mb-1">{label}</p>
-      <p className="text-2xl font-bold text-textMain">{value}</p>
+      <p className="text-2xl font-bold text-textMain tabular-nums">{value}</p>
       {growth !== undefined && <div className="mt-0.5"><GrowthBadge value={growth} /></div>}
     </div>
   );
@@ -95,7 +95,7 @@ function CombinedSummary() {
               key={p.value}
               onClick={() => setPeriod(p.value)}
               className={`px-3 py-1 rounded-md text-sm font-medium transition ${
-                period === p.value ? "bg-primary text-white" : "text-textSecondary hover:text-textMain"
+                period === p.value ? "bg-primary text-onAccent" : "text-textSecondary hover:text-textMain"
               }`}
             >
               {p.label}

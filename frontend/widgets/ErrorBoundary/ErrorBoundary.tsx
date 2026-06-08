@@ -32,21 +32,21 @@ export function ErrorBoundary({
 
   return (
     <div className={wrapper}>
-      <h2 className="text-2xl font-semibold text-red-600 mb-4">{t("title")}</h2>
+      <h2 className="text-2xl font-semibold text-error mb-4">{t("title")}</h2>
       {error.digest && (
         <p className="text-xs text-textSecondary mb-6 font-mono">#{error.digest}</p>
       )}
       <div className="flex gap-3">
         <button
           onClick={reset}
-          className="px-4 py-2 rounded-xl bg-primary text-white hover:bg-indigo-700 transition"
+          className="px-4 py-2 rounded-xl bg-primary text-onAccent hover:bg-primaryHover transition"
         >
           {t("tryAgain")}
         </button>
         {showHome && (
           <Link
             href="/"
-            className="px-4 py-2 rounded-xl bg-gray-100 text-textMain hover:bg-gray-200 transition"
+            className="px-4 py-2 rounded-xl bg-surfaceMuted text-textMain hover:bg-border transition"
           >
             {t("goHome")}
           </Link>

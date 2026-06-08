@@ -144,7 +144,7 @@ export const CreateScheduleModal = observer(({ open, onClose, onCreated }: Props
                       taken
                         ? "border-border text-textSecondary/40 bg-surface cursor-not-allowed opacity-50"
                         : source === s.id
-                          ? "bg-primary text-white border-primary"
+                          ? "bg-primary text-onAccent border-primary"
                           : "border-border text-textSecondary hover:border-primary hover:text-primary"
                     }`}
                   >
@@ -172,12 +172,12 @@ export const CreateScheduleModal = observer(({ open, onClose, onCreated }: Props
                       !allowed
                         ? "border-border text-textSecondary/40 cursor-not-allowed"
                         : format === f.id
-                          ? "bg-primary text-white border-primary"
+                          ? "bg-primary text-onAccent border-primary"
                           : "border-border text-textSecondary hover:border-primary hover:text-primary"
                     }`}>
                     {f.id.toUpperCase()}
                     {f.recommended && allowed && (
-                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] bg-green-500 text-white px-1.5 rounded-full leading-4">
+                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] bg-success text-white px-1.5 rounded-full leading-4">
                         {t("recommended")}
                       </span>
                     )}
@@ -204,7 +204,7 @@ export const CreateScheduleModal = observer(({ open, onClose, onCreated }: Props
               {FREQS.map((f) => (
                 <button key={f.days} onClick={() => setFreq(f.days)}
                   className={`flex-1 py-2 rounded-lg text-sm font-medium border transition ${
-                    freq === f.days ? "bg-primary text-white border-primary"
+                    freq === f.days ? "bg-primary text-onAccent border-primary"
                       : "border-border text-textSecondary hover:border-primary hover:text-primary"
                   }`}>
                   {t(f.key as Parameters<typeof t>[0])}

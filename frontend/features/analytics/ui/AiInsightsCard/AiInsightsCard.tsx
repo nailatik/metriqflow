@@ -25,8 +25,8 @@ function resetTime(iso: string, locale: string): string {
 }
 
 const CONFIDENCE_STYLES: Record<Confidence, string> = {
-  high:   "bg-emerald-500/10 text-emerald-600",
-  medium: "bg-amber-500/10 text-amber-600",
+  high:   "bg-success/10 text-success",
+  medium: "bg-primary/10 text-primary",
   low:    "bg-textSecondary/10 text-textSecondary",
 };
 
@@ -90,7 +90,7 @@ export function AiInsightsCard({ network, sourceId, period }: Props) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-lg">✨</span>
-          <h3 className="text-base font-semibold text-textPrimary">{t("title")}</h3>
+          <h3 className="text-base font-semibold text-textMain">{t("title")}</h3>
         </div>
         <div className="flex items-center gap-3">
           {metriqs && (
@@ -144,7 +144,7 @@ export function AiInsightsCard({ network, sourceId, period }: Props) {
         <div className="flex flex-col gap-4">
           {/* Low-data banner */}
           {isLowData && (
-            <div className="bg-amber-500/5 border border-amber-500/30 rounded-xl px-4 py-3 flex gap-2.5">
+            <div className="bg-primary/5 border border-primary/20 rounded-xl px-4 py-3 flex gap-2.5">
               <span className="text-base leading-none mt-0.5">⚠️</span>
               <p className="text-xs text-textSecondary leading-relaxed">
                 {t("dataLow", { count: payload.data_quality.post_count })}
@@ -159,7 +159,7 @@ export function AiInsightsCard({ network, sourceId, period }: Props) {
               <p className="text-[11px] font-semibold uppercase tracking-wide text-primary mb-1">
                 {t("keyTakeaway")}
               </p>
-              <p className="text-sm font-medium text-textPrimary leading-relaxed">{payload.headline}</p>
+              <p className="text-sm font-medium text-textMain leading-relaxed">{payload.headline}</p>
             </div>
           )}
 
@@ -172,7 +172,7 @@ export function AiInsightsCard({ network, sourceId, period }: Props) {
                 </span>
                 <div className="flex flex-col gap-0.5">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-medium text-textPrimary">{rec.title}</p>
+                    <p className="text-sm font-medium text-textMain">{rec.title}</p>
                     <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${CONFIDENCE_STYLES[rec.confidence]}`}>
                       {t(`confidence.${rec.confidence}`)}
                     </span>
@@ -211,7 +211,7 @@ export function AiInsightsCard({ network, sourceId, period }: Props) {
             className="w-full max-w-sm bg-surface rounded-2xl shadow-xl p-6 flex flex-col gap-4 mx-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-lg font-semibold text-textPrimary">{t("confirmTitle")}</h2>
+            <h2 className="text-lg font-semibold text-textMain">{t("confirmTitle")}</h2>
             <p className="text-sm text-textSecondary leading-relaxed">
               {t("confirmBody", { remaining: metriqs?.remaining ?? 0 })}
             </p>
@@ -224,7 +224,7 @@ export function AiInsightsCard({ network, sourceId, period }: Props) {
               </button>
               <button
                 onClick={confirmRefresh}
-                className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:opacity-90 transition-opacity"
+                className="px-4 py-2 rounded-lg bg-primary text-onAccent text-sm font-medium hover:bg-primaryHover transition-colors"
               >
                 {t("confirmYes")}
               </button>

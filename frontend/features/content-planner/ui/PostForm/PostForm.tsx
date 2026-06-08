@@ -189,7 +189,7 @@ export function PostForm({ post, channels, onSave, onDelete, onClose }: Props) {
         </div>
 
         {isReadonly && (
-          <div className="bg-amber-500/5 border border-amber-500/30 rounded-xl px-4 py-3 text-sm text-textSecondary">
+          <div className="bg-primary/5 border border-primary/20 rounded-xl px-4 py-3 text-sm text-textSecondary">
             {post?.status === "sent" ? t("statuses.sent") : t("statuses.sending")}
           </div>
         )}
@@ -230,7 +230,7 @@ export function PostForm({ post, channels, onSave, onDelete, onClose }: Props) {
                 onClick={fetchBestTime}
                 disabled={loadingBest || !channelId}
                 title={t("bestTimeHint")}
-                className="px-3 py-2 rounded-lg border border-border text-textSecondary hover:bg-border text-xs font-medium transition-colors disabled:opacity-50"
+                className="px-3 py-2 rounded-lg border border-border text-textSecondary hover:bg-surfaceMuted text-xs font-medium transition-colors disabled:opacity-50"
               >
                 {loadingBest ? "..." : `⚡ ${t("bestTime")}`}
               </button>
@@ -318,7 +318,7 @@ export function PostForm({ post, channels, onSave, onDelete, onClose }: Props) {
               <button
                 onClick={handleSave}
                 disabled={saving || !channelId}
-                className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+                className="px-4 py-2 rounded-lg bg-primary text-onAccent text-sm font-medium hover:bg-primaryHover transition-colors disabled:opacity-50"
               >
                 {saving ? "..." : t("save")}
               </button>

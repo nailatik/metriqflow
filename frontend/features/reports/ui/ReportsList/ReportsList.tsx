@@ -15,15 +15,15 @@ const SOURCE_LABEL: Record<ReportSource, string> = {
 };
 
 const FORMAT_COLOR: Record<ReportFormat, string> = {
-  csv: "bg-green-500/15 text-green-600",
-  pdf: "bg-red-500/15 text-red-600",
-  xml: "bg-blue-500/15 text-blue-600",
+  csv: "bg-success/15 text-success",
+  pdf: "bg-error/15 text-error",
+  xml: "bg-primary/15 text-primary",
 };
 
 const STATUS_CONFIG: Record<ReportStatus, { color: string; dotColor: string }> = {
-  ready:   { color: "text-green-600",    dotColor: "bg-green-500"  },
-  pending: { color: "text-yellow-600",   dotColor: "bg-yellow-400" },
-  failed:  { color: "text-red-500",      dotColor: "bg-red-500"    },
+  ready:   { color: "text-success", dotColor: "bg-success" },
+  pending: { color: "text-primary", dotColor: "bg-primary" },
+  failed:  { color: "text-error",   dotColor: "bg-error"   },
 };
 
 function ReportCard({ report, onDelete, t }: { report: Report; onDelete: (id: number) => void; t: ReturnType<typeof useTranslations> }) {
@@ -46,7 +46,7 @@ function ReportCard({ report, onDelete, t }: { report: Report; onDelete: (id: nu
   };
 
   return (
-    <div className="bg-surface border border-border rounded-xl p-5 flex flex-col gap-3 hover:shadow-md transition">
+    <div className="bg-surface border border-border rounded-xl p-5 flex flex-col gap-3 hover:shadow-card transition">
       {/* Title + status */}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
@@ -127,7 +127,7 @@ export const ReportsList = observer(() => {
         <h1 className="text-2xl font-semibold">{t("title")}</h1>
         <button
           onClick={() => setModalOpen(true)}
-          className="px-4 py-2 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary/90 transition"
+          className="px-4 py-2 bg-primary text-onAccent rounded-xl text-sm font-medium hover:bg-primaryHover transition"
         >
           {t("create")}
         </button>

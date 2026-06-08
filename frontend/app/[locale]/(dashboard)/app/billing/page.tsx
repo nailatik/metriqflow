@@ -74,13 +74,13 @@ function PromoSection() {
         <button
           onClick={handleRedeem}
           disabled={loading || !code.trim()}
-          className="px-4 py-2 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition"
+          className="px-4 py-2 text-sm font-medium bg-primary text-onAccent rounded-lg hover:bg-primaryHover disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
           {loading ? t("promoActivating") : t("promoActivate")}
         </button>
       </div>
       {result && (
-        <p className={`text-sm ${result.type === "success" ? "text-green-600" : result.type === "already" ? "text-textSecondary" : "text-red-500"}`}>
+        <p className={`text-sm ${result.type === "success" ? "text-success" : result.type === "already" ? "text-textSecondary" : "text-error"}`}>
           {result.type === "success" && t("promoSuccess", { plan: PLAN_NAMES[result.plan as Plan] ?? result.plan })}
           {result.type === "already" && t("promoAlready")}
           {result.type === "invalid" && t("promoInvalid")}
@@ -169,7 +169,7 @@ export default observer(function BillingPage() {
               key={plan}
               className={`relative flex flex-col overflow-hidden rounded-2xl bg-surface transition-shadow ${
                 isUltimate && isCurrent
-                  ? "border-2 border-amber-400 shadow-[0_4px_24px_rgba(251,191,36,0.15)]"
+                  ? "border-2 border-primary shadow-[0_8px_28px_rgba(217,119,6,0.20)]"
                   : isPopular && !isCurrent
                     ? "border-2 border-primary shadow-[0_4px_24px_rgba(0,0,0,0.1)]"
                     : isCurrent
@@ -179,7 +179,7 @@ export default observer(function BillingPage() {
             >
               {/* Top stripe */}
               {isCurrent && isUltimate ? (
-                <div className="bg-amber-400/20 text-amber-600 text-xs font-semibold text-center py-1.5 tracking-wide border-b border-amber-400/30">
+                <div className="bg-primary/15 text-primary text-xs font-semibold text-center py-1.5 tracking-wide border-b border-primary/25">
                   {t("current")}
                 </div>
               ) : isCurrent ? (
@@ -187,11 +187,11 @@ export default observer(function BillingPage() {
                   {t("current")}
                 </div>
               ) : isPopular ? (
-                <div className="bg-primary text-white text-xs font-semibold text-center py-1.5 tracking-wide">
+                <div className="bg-primary text-onAccent text-xs font-semibold text-center py-1.5 tracking-wide">
                   {t("popular")}
                 </div>
               ) : isUltimate ? (
-                <div className="bg-amber-400 text-white text-xs font-semibold text-center py-1.5 tracking-wide">
+                <div className="bg-gradient-to-r from-primary to-primaryHover text-onAccent text-xs font-semibold text-center py-1.5 tracking-wide">
                   {t("exclusiveTag")}
                 </div>
               ) : (
@@ -201,7 +201,7 @@ export default observer(function BillingPage() {
               <div className="p-6 flex flex-col gap-5 flex-1">
                 {/* Name + tagline */}
                 <div>
-                  <h3 className={`font-semibold text-lg ${isUltimate ? "text-amber-600" : "text-textMain"}`}>
+                  <h3 className={`font-semibold text-lg ${isUltimate ? "text-primary" : "text-textMain"}`}>
                     {PLAN_NAMES[plan]}
                   </h3>
                   <p className="text-xs text-textSecondary mt-0.5">{t(TAGLINE_KEYS[plan])}</p>
@@ -211,11 +211,11 @@ export default observer(function BillingPage() {
                 <div className="flex items-end gap-1.5">
                   {price ? (
                     <>
-                      <span className="text-3xl font-bold text-textMain leading-none">{price}</span>
+                      <span className="text-3xl font-bold text-textMain leading-none tabular-nums">{price}</span>
                       <span className="text-sm text-textSecondary pb-0.5">{t("perMonth")}</span>
                     </>
                   ) : (
-                    <span className={`text-3xl font-bold leading-none ${isUltimate ? "text-amber-600" : "text-textMain"}`}>
+                    <span className={`text-3xl font-bold leading-none ${isUltimate ? "text-primary" : "text-textMain"}`}>
                       {t("free")}
                     </span>
                   )}
@@ -242,7 +242,7 @@ export default observer(function BillingPage() {
                   ) : plan !== "free" && !isUltimate ? (
                     <button
                       disabled
-                      className="w-full py-2 rounded-xl bg-primary text-white text-sm font-medium opacity-50 cursor-not-allowed"
+                      className="w-full py-2 rounded-xl bg-primary text-onAccent text-sm font-medium opacity-50 cursor-not-allowed"
                     >
                       {t("comingSoon")}
                     </button>

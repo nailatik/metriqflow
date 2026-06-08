@@ -24,8 +24,8 @@ export const ProfileView = observer(() => {
     <div className="space-y-8">
       <h1 className="text-2xl font-semibold text-textMain">{t("title")}</h1>
 
-      <div className="bg-surface border border-border rounded-xl p-6 shadow-sm flex items-center gap-6">
-        <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-white text-2xl font-semibold flex-shrink-0">
+      <div className="bg-surface border border-border rounded-xl p-6 shadow-card flex items-center gap-6">
+        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primaryHover flex items-center justify-center text-onAccent text-2xl font-semibold flex-shrink-0">
           {initials}
         </div>
         <div>
@@ -44,7 +44,7 @@ export const ProfileView = observer(() => {
         </div>
       </div>
 
-      <div className="bg-surface border border-border rounded-xl p-6 shadow-sm">
+      <div className="bg-surface border border-border rounded-xl p-6 shadow-card">
         <h2 className="text-lg font-semibold text-textMain mb-4">{t("personalInfo")}</h2>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">

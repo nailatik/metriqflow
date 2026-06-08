@@ -34,13 +34,13 @@ function StatCard({ label, value, accent, href }: StatCardProps) {
   const inner = (
     <div
       className={`bg-surface border border-border rounded-xl px-6 py-5 flex flex-col gap-2 transition-all ${
-        href ? "hover:border-primary hover:shadow-sm cursor-pointer" : ""
+        href ? "hover:border-primary hover:shadow-card cursor-pointer" : ""
       }`}
     >
       <span className="text-xs font-semibold text-textSecondary uppercase tracking-widest">
         {label}
       </span>
-      <span className={`text-3xl font-bold ${accent ? "text-primary" : "text-textMain"}`}>
+      <span className={`text-3xl font-bold tabular-nums ${accent ? "text-primary" : "text-textMain"}`}>
         {value}
       </span>
     </div>
@@ -90,14 +90,14 @@ function OnboardingCard({ steps, onDismiss }: { steps: OnboardingStep[]; onDismi
   const pct = Math.round((doneCount / steps.length) * 100);
 
   return (
-    <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-sm">
+    <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-card">
       {/* header strip */}
       <div className="px-7 pt-6 pb-5 border-b border-border">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${allDone ? "bg-green-500/10" : "bg-primary/10"}`}>
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${allDone ? "bg-success/10" : "bg-primary/10"}`}>
               {allDone ? (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-green-500">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-success">
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
               ) : (
@@ -121,11 +121,11 @@ function OnboardingCard({ steps, onDismiss }: { steps: OnboardingStep[]; onDismi
             <div className="hidden sm:flex items-center gap-2">
               <div className="w-28 h-1.5 bg-border rounded-full overflow-hidden">
                 <div
-                  className={`h-full rounded-full transition-all duration-500 ${allDone ? "bg-green-500" : "bg-primary"}`}
+                  className={`h-full rounded-full transition-all duration-500 ${allDone ? "bg-success" : "bg-primary"}`}
                   style={{ width: `${pct}%` }}
                 />
               </div>
-              <span className={`text-xs font-bold tabular-nums ${allDone ? "text-green-500" : "text-primary"}`}>{pct}%</span>
+              <span className={`text-xs font-bold tabular-nums ${allDone ? "text-success" : "text-primary"}`}>{pct}%</span>
             </div>
             <button
               onClick={onDismiss}
@@ -143,18 +143,18 @@ function OnboardingCard({ steps, onDismiss }: { steps: OnboardingStep[]; onDismi
           <div
             key={i}
             className={`relative p-5 flex flex-col gap-3 transition-colors ${
-              step.done ? "bg-green-500/[0.03]" : "hover:bg-border/20"
+              step.done ? "bg-success/[0.03]" : "hover:bg-border/20"
             }`}
           >
             {/* top row: icon + check */}
             <div className="flex items-center justify-between">
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                step.done ? "bg-green-500/10 text-green-500" : "bg-border/60 text-textSecondary"
+                step.done ? "bg-success/10 text-success" : "bg-border/60 text-textSecondary"
               }`}>
                 {STEP_ICONS[i]}
               </div>
               {step.done ? (
-                <span className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                <span className="w-5 h-5 rounded-full bg-success flex items-center justify-center flex-shrink-0">
                   <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
@@ -250,12 +250,12 @@ export default observer(function ProfilePage() {
     <div className="flex flex-col gap-6">
 
       {/* Hero */}
-      <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-sm">
+      <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-card">
         <div className="h-36 bg-gradient-to-br from-primary/25 via-primary/10 to-transparent" />
         <div className="px-8 pb-8">
           <div className="-mt-12 flex items-end justify-between gap-6">
             <div className="flex items-end gap-5">
-              <div className="w-24 h-24 rounded-full bg-primary flex items-center justify-center text-white text-3xl font-bold ring-4 ring-surface flex-shrink-0 shadow-md">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-primaryHover flex items-center justify-center text-onAccent text-3xl font-bold ring-4 ring-surface flex-shrink-0 shadow-md">
                 {initials}
               </div>
               <div className="pb-1 min-w-0">
@@ -294,7 +294,7 @@ export default observer(function ProfilePage() {
       <div className="grid grid-cols-3 gap-4">
 
         {/* Personal info — 2 cols */}
-        <div className="col-span-2 bg-surface border border-border rounded-xl p-7 shadow-sm">
+        <div className="col-span-2 bg-surface border border-border rounded-xl p-7 shadow-card">
           <h2 className="text-xs font-semibold text-textSecondary uppercase tracking-widest mb-6">
             {tP("personalInfo")}
           </h2>
@@ -309,7 +309,7 @@ export default observer(function ProfilePage() {
         </div>
 
         {/* Recent activity — 1 col */}
-        <div className="bg-surface border border-border rounded-xl p-7 shadow-sm">
+        <div className="bg-surface border border-border rounded-xl p-7 shadow-card">
           <h2 className="text-xs font-semibold text-textSecondary uppercase tracking-widest mb-4">
             {tD("recentActivity.title")}
           </h2>
@@ -320,8 +320,8 @@ export default observer(function ProfilePage() {
               {reportsStore.state.list.slice(0, 5).map((r) => (
                 <div key={r.id} className="flex items-start gap-3">
                   <span className={`mt-0.5 w-2 h-2 rounded-full flex-shrink-0 ${
-                    r.status === "ready" ? "bg-green-500" :
-                    r.status === "failed" ? "bg-red-500" : "bg-yellow-400"
+                    r.status === "ready" ? "bg-success" :
+                    r.status === "failed" ? "bg-error" : "bg-primary"
                   }`} />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm text-textMain truncate">{r.title}</p>

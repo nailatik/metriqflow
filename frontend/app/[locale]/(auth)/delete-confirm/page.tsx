@@ -68,7 +68,7 @@ export default function DeleteConfirmPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-bg px-4">
-      <div className="w-full max-w-md bg-surface border border-border rounded-2xl p-8 shadow-sm text-center space-y-6">
+      <div className="w-full max-w-md bg-surface border border-border rounded-2xl p-8 shadow-card text-center space-y-6">
         <div className="text-5xl">⚠️</div>
         <div className="space-y-2">
           <h1 className="text-2xl font-semibold text-textMain">{t("title")}</h1>
@@ -78,7 +78,7 @@ export default function DeleteConfirmPage() {
           variant="primary"
           onClick={handleDelete}
           disabled={status === "loading"}
-          className="w-full !bg-red-600 hover:!bg-red-700"
+          className="w-full !bg-error !text-white hover:!opacity-90"
         >
           {status === "loading" ? t("loading") : t("confirm")}
         </Button>

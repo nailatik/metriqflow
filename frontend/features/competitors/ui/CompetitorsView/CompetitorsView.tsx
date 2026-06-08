@@ -61,7 +61,7 @@ function competitorUrl(platform: string, identifier: string): string {
 
 function ErBadge({ basis }: { basis: CompareMetrics["er_basis"] }) {
   if (basis === "full")           return null;
-  if (basis === "reactions_only") return <span className="ml-1 text-[10px] text-amber-500 bg-amber-50 border border-amber-200 rounded px-1">≈ реакции</span>;
+  if (basis === "reactions_only") return <span className="ml-1 text-[10px] text-primary bg-primary/10 border border-primary/25 rounded px-1">≈ реакции</span>;
   return <span className="ml-1 text-[10px] text-textSecondary">—</span>;
 }
 
@@ -302,7 +302,7 @@ export const CompetitorsView = observer(function CompetitorsView() {
               key={p}
               onClick={() => setPeriod(p)}
               className={`px-3 py-1 rounded-md text-sm font-medium transition ${
-                period === p ? "bg-primary text-white" : "text-textSecondary hover:text-textMain"
+                period === p ? "bg-primary text-onAccent" : "text-textSecondary hover:text-textMain"
               }`}
             >
               {p}
@@ -322,7 +322,7 @@ export const CompetitorsView = observer(function CompetitorsView() {
                 type="button"
                 onClick={() => setAddPlatform(pl)}
                 className={`px-3 py-1 rounded-md text-sm font-medium transition ${
-                  addPlatform === pl ? "bg-primary text-white" : "text-textSecondary hover:text-textMain"
+                  addPlatform === pl ? "bg-primary text-onAccent" : "text-textSecondary hover:text-textMain"
                 }`}
               >
                 {pl === "tg" ? "Telegram" : "VK"}
@@ -339,7 +339,7 @@ export const CompetitorsView = observer(function CompetitorsView() {
           <button
             type="submit"
             disabled={addLoading || !addInput.trim()}
-            className="px-4 py-1.5 bg-primary text-white text-sm font-medium rounded-lg disabled:opacity-50"
+            className="px-4 py-1.5 bg-primary text-onAccent text-sm font-medium rounded-lg disabled:opacity-50"
           >
             {addLoading ? t("adding") : t("addBtn")}
           </button>
@@ -533,8 +533,8 @@ export const CompetitorsView = observer(function CompetitorsView() {
                       ]}
                     />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Bar dataKey={ownLabel}   fill="#4F46E5" radius={[4,4,0,0]} />
-                    <Bar dataKey={rivalLabel} fill="#E54F7D" radius={[4,4,0,0]} />
+                    <Bar dataKey={ownLabel}   fill="var(--color-chart-1)" radius={[4,4,0,0]} />
+                    <Bar dataKey={rivalLabel} fill="var(--color-chart-2)" radius={[4,4,0,0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

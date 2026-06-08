@@ -21,7 +21,7 @@ export function ReportsPageView() {
             onClick={() => setTab(id)}
             className={`px-4 py-1.5 rounded-md text-sm font-medium transition ${
               tab === id
-                ? "bg-primary text-white"
+                ? "bg-primary text-onAccent"
                 : "text-textSecondary hover:text-textMain"
             }`}
           >

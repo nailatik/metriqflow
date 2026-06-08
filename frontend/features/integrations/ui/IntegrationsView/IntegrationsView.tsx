@@ -216,7 +216,7 @@ const TelegramCard = observer(function TelegramCard() {
                 href={`https://t.me/${BOT_USERNAME}?start=${tokenData.token}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm px-4 py-1.5 rounded-lg bg-primary text-white hover:bg-indigo-700 transition font-medium"
+                className="text-sm px-4 py-1.5 rounded-lg bg-primary text-onAccent hover:bg-primaryHover transition font-medium"
               >
                 Open @{BOT_USERNAME}
               </a>

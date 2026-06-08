@@ -17,10 +17,10 @@ const FREQ_LABEL: Record<number, string> = {
 };
 
 const STATUS_DOT: Record<string, string> = {
-  delivered:   "bg-green-500",
-  failed:      "bg-red-500",
-  no_channels: "bg-yellow-400",
-  pending:     "bg-yellow-400",
+  delivered:   "bg-success",
+  failed:      "bg-error",
+  no_channels: "bg-primary",
+  pending:     "bg-primary",
 };
 
 function ScheduleCard({
@@ -48,7 +48,7 @@ function ScheduleCard({
   const statusDot = schedule.last_status ? STATUS_DOT[schedule.last_status] ?? "bg-border" : "bg-border";
 
   return (
-    <div className={`bg-surface border rounded-xl p-5 flex flex-col gap-3 transition hover:shadow-md ${
+    <div className={`bg-surface border rounded-xl p-5 flex flex-col gap-3 transition hover:shadow-card ${
       !schedule.enabled || schedule.paused ? "opacity-60" : "border-border"
     }`}>
       {/* Header */}
@@ -62,7 +62,7 @@ function ScheduleCard({
             <span className={`w-2 h-2 rounded-full ${statusDot}`} title={schedule.last_status} />
           )}
           {schedule.paused && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-400/15 text-yellow-600 font-medium">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-primary/15 text-primary font-medium">
               {t("paused")}
             </span>
           )}
@@ -179,7 +179,7 @@ export const SchedulesList = observer(() => {
         </div>
         <button
           onClick={() => setModalOpen(true)}
-          className="px-4 py-2 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary/90 transition"
+          className="px-4 py-2 bg-primary text-onAccent rounded-xl text-sm font-medium hover:bg-primaryHover transition"
         >
           {t("create")}
         </button>

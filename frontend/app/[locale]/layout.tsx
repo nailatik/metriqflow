@@ -7,7 +7,30 @@ import { routing } from "@/i18n/routing";
 import { CommonWrapper } from "@/widgets/CommonWrapper/CommonWrapper";
 import { ThemeProvider } from "@/widgets/ThemeProvider/ThemeProvider";
 import { ThemeToggle } from "@/widgets/ThemeToggle/ThemeToggle";
+import { Plus_Jakarta_Sans, Manrope, JetBrains_Mono } from "next/font/google";
 import "@/shared/styles/globals.css";
+
+const fontSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-sans",
+  display: "swap",
+});
+
+// Plus Jakarta Sans has no Cyrillic glyphs — Manrope fills Cyrillic via per-glyph fallback
+const fontSansCyr = Manrope({
+  subsets: ["cyrillic", "latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-sans-cyr",
+  display: "swap",
+});
+
+const fontMono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-mono",
+  display: "swap",
+});
 
 interface LocaleLayoutProps {
   children: ReactNode;
@@ -74,7 +97,11 @@ export default async function LocaleLayout({ children, params }: LocaleLayoutPro
   const messages = await loadMessages(locale);
 
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html
+      lang={locale}
+      className={`${fontSans.variable} ${fontSansCyr.variable} ${fontMono.variable}`}
+      suppressHydrationWarning
+    >
       <body suppressHydrationWarning>
         <NextIntlClientProvider
           locale={locale}

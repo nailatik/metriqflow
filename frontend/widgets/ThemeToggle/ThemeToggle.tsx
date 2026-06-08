@@ -20,7 +20,7 @@ export const ThemeToggle = observer(function ThemeToggle() {
         rounded-full shadow-lg
         bg-surface border border-border
         text-textMain
-        hover:bg-primary hover:text-white hover:border-primary
+        hover:bg-primary hover:text-onAccent hover:border-primary
         transition-all duration-200
       "
     >

@@ -98,12 +98,12 @@ export default function VerifyEmailPage() {
   if (status === "error") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-bg px-4">
-        <div className="w-full max-w-md bg-surface border border-border rounded-2xl p-8 shadow-sm text-center space-y-4">
+        <div className="w-full max-w-md bg-surface border border-border rounded-2xl p-8 shadow-card text-center space-y-4">
           <div className="text-5xl">❌</div>
           <h1 className="text-2xl font-semibold text-textMain">{t("errorTitle")}</h1>
           <p className="text-textSecondary text-sm">{t("errorSubtitle")}</p>
           {resendSent ? (
-            <p className="text-green-500 text-sm">{t("resendSuccess")}</p>
+            <p className="text-success text-sm">{t("resendSuccess")}</p>
           ) : (
             <Button variant="primary" onClick={handleResend} disabled={resendLoading} className="w-full">
               {resendLoading ? t("resendLoading") : t("resend")}
@@ -118,7 +118,7 @@ export default function VerifyEmailPage() {
   // status === "pending"
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-bg px-4">
-      <div className="w-full max-w-md bg-surface border border-border rounded-2xl p-8 shadow-sm text-center space-y-6">
+      <div className="w-full max-w-md bg-surface border border-border rounded-2xl p-8 shadow-card text-center space-y-6">
         <div className="text-5xl">✉️</div>
         <div className="space-y-2">
           <h1 className="text-2xl font-semibold text-textMain">{t("title")}</h1>
@@ -129,7 +129,7 @@ export default function VerifyEmailPage() {
         </div>
 
         {resendSent ? (
-          <p className="text-green-500 text-sm">{t("resendSuccess")}</p>
+          <p className="text-success text-sm">{t("resendSuccess")}</p>
         ) : (
           <div className="space-y-3">
             <Button

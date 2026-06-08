@@ -110,7 +110,7 @@ export const CreateReportModal = observer(({ open, defaultSource = "all", onClos
                   onClick={() => setSource(s.id)}
                   className={`flex-1 py-2 rounded-lg text-sm font-medium border transition ${
                     source === s.id
-                      ? "bg-primary text-white border-primary"
+                      ? "bg-primary text-onAccent border-primary"
                       : "border-border text-textSecondary hover:border-primary hover:text-primary"
                   }`}
                 >
@@ -134,13 +134,13 @@ export const CreateReportModal = observer(({ open, defaultSource = "all", onClos
                       !allowed
                         ? "border-border text-textSecondary/40 cursor-not-allowed"
                         : format === f.id
-                          ? "bg-primary text-white border-primary"
+                          ? "bg-primary text-onAccent border-primary"
                           : "border-border text-textSecondary hover:border-primary hover:text-primary"
                     }`}
                   >
                     {f.id.toUpperCase()}
                     {f.recommended && allowed && (
-                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] bg-green-500 text-white px-1.5 rounded-full leading-4">
+                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] bg-success text-white px-1.5 rounded-full leading-4">
                         {t("recommended")}
                       </span>
                     )}
@@ -170,7 +170,7 @@ export const CreateReportModal = observer(({ open, defaultSource = "all", onClos
                   onClick={() => setPeriod(p)}
                   className={`flex-1 py-2 rounded-lg text-sm font-medium border transition ${
                     period === p
-                      ? "bg-primary text-white border-primary"
+                      ? "bg-primary text-onAccent border-primary"
                       : "border-border text-textSecondary hover:border-primary hover:text-primary"
                   }`}
                 >

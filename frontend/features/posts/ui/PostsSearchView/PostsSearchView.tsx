@@ -45,7 +45,7 @@ function calcER(views: number, a: number, b: number): string | null {
 
 function StatTile({ icon, label, value }: { icon: string; label: string; value: string | number }) {
   return (
-    <div className="flex flex-col items-center gap-1.5 px-4 py-3 rounded-2xl bg-background border border-border min-w-[72px]">
+    <div className="flex flex-col items-center gap-1.5 px-4 py-3 rounded-2xl bg-surfaceMuted border border-border min-w-[72px]">
       <span className="text-2xl leading-none">{icon}</span>
       <span className="text-sm font-bold text-textMain tabular-nums">{value}</span>
       <span className="text-[9px] font-semibold text-textSecondary uppercase tracking-widest">{label}</span>
@@ -114,7 +114,7 @@ function PostModal({ data, onClose, t }: {
               <div className="flex items-center gap-2 flex-wrap">
                 {platformBadge}
                 {hasMedia && (
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500 border border-amber-500/25">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/25">
                     📎 {t("hasMedia")}
                   </span>
                 )}
@@ -198,7 +198,7 @@ function PostRow({
   return (
     <button
       onClick={onClick}
-      className="w-full text-left flex flex-col gap-2 p-4 rounded-xl border border-border bg-surface hover:border-primary/40 hover:shadow-sm transition-all"
+      className="w-full text-left flex flex-col gap-2 p-4 rounded-xl border border-border bg-surface hover:border-primary/40 hover:shadow-card transition-all"
     >
       <div className="flex items-start justify-between gap-4">
         <p className="text-sm text-textMain leading-snug line-clamp-3 flex-1 min-w-0">
@@ -233,9 +233,9 @@ function Pagination({ page, pages, onChange }: { page: number; pages: number; on
       disabled={disabled}
       onClick={() => onChange(target)}
       className={`w-8 h-8 rounded-lg text-sm font-medium transition ${
-        active    ? "bg-primary text-white"
+        active    ? "bg-primary text-onAccent"
         : disabled ? "text-textSecondary opacity-40 cursor-not-allowed"
-        : "hover:bg-border text-textSecondary"
+        : "hover:bg-surfaceMuted text-textSecondary"
       }`}
     >
       {label}

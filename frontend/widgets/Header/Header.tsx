@@ -25,14 +25,16 @@ export const Header = observer(() => {
   };
 
   return (
-    <header className="grid grid-cols-[1fr_auto_1fr] items-center px-8 py-6 border-b border-border">
-      <h1 className="text-xl font-semibold tracking-tight justify-self-start">
-        <Link href="/">Metriq Flow</Link>
-      </h1>
+    <header className="sticky top-0 z-40 border-b border-border bg-bg/80 backdrop-blur-md">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center max-w-6xl mx-auto px-6 py-4">
+      <Link href="/" className="flex items-center gap-2 justify-self-start">
+        <span className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-primaryHover flex items-center justify-center text-onAccent font-bold text-sm">M</span>
+        <span className="text-lg font-semibold tracking-tight text-textMain">Metriq Flow</span>
+      </Link>
 
-      <nav className="flex items-center gap-6 text-textSecondary">
-        <a href="#features" className="hover:text-textMain">{t("features")}</a>
-        <a href="#how" className="hover:text-textMain">{t("howItWorks")}</a>
+      <nav className="hidden md:flex items-center gap-7 text-sm text-textSecondary">
+        <a href="#product" className="hover:text-textMain transition-colors">{t("product")}</a>
+        <a href="#how" className="hover:text-textMain transition-colors">{t("howItWorks")}</a>
       </nav>
 
       <div className="flex gap-3 items-center justify-self-end">
@@ -56,12 +58,13 @@ export const Header = observer(() => {
           </>
         ) : (
           <>
-            <Link href="/login" className="text-textSecondary hover:text-textMain">{t("login")}</Link>
+            <Link href="/login" className="hidden sm:inline text-sm text-textSecondary hover:text-textMain transition-colors">{t("signIn")}</Link>
             <Link href="/register">
               <Button variant="primary">{t("createAccount")}</Button>
             </Link>
           </>
         )}
+      </div>
       </div>
     </header>
   );

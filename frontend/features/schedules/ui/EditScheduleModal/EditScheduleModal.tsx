@@ -138,7 +138,7 @@ export const EditScheduleModal = observer(({ open, schedule, onClose }: Props) =
                   onClick={() => setFreq(f.days)}
                   className={`flex-1 py-2 rounded-lg text-sm font-medium border transition ${
                     freq === f.days
-                      ? "bg-primary text-white border-primary"
+                      ? "bg-primary text-onAccent border-primary"
                       : "border-border text-textSecondary hover:border-primary hover:text-primary"
                   }`}
                 >

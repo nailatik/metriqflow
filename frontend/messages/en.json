@@ -4,52 +4,101 @@
     "howItWorks": "How it works",
     "login": "Login",
     "createAccount": "Create account",
-    "logout": "Logout"
+    "logout": "Logout",
+    "product": "About",
+    "signIn": "Sign in"
   },
   "Landing": {
     "hero": {
-      "title": "Social analytics",
-      "titleHighlight": "automated in seconds",
-      "subtitle": "Track performance, generate reports and automate analytics — all in one clean dashboard built for modern teams.",
+      "badge": "Analytics for Telegram, VK & more",
+      "title": "Stop collecting data by hand.",
+      "titleHighlight": "Focus on your content.",
+      "subtitle": "MetriqFlow turns your Telegram and VK numbers into clear insights, competitor benchmarks and ready-to-send reports — so you spend your time creating, not counting.",
       "startFree": "Start free",
-      "learnMore": "Learn more"
+      "seeInAction": "See it in action"
     },
-    "socialProof": "Trusted by developers and marketing teams worldwide",
-    "features": {
-      "title": "Everything you need for analytics",
-      "dashboard": {
-        "title": "Unified Dashboard",
-        "desc": "All your social data in one clean interface."
-      },
-      "reports": {
-        "title": "Automated Reports",
-        "desc": "Generate reports without manual work."
+    "platforms": {
+      "title": "The platforms you really use",
+      "subtitle": "Two live today, three on the way. Your whole social footprint, one dashboard.",
+      "available": "Available now",
+      "soon": "Coming soon"
+    },
+    "showcase": {
+      "eyebrow": "Metriq Flow",
+      "title": "Everything you need to grow, in one place",
+      "subtitle": "MetriqFlow connects your numbers to the strategy that grows your business.",
+      "analytics": {
+        "eyebrow": "Analytics",
+        "title": "See every metric that matters",
+        "desc": "Followers, reach, engagement and per-post performance across all your channels — in one fast dashboard. No spreadsheets, no manual exports.",
+        "points": [
+          "Real-time growth & engagement",
+          "Per-post breakdown and best times",
+          "Light & dark, built for long sessions"
+        ]
       },
       "insights": {
-        "title": "Real-time Insights",
-        "desc": "Track performance as it happens."
+        "eyebrow": "AI Insights",
+        "title": "Helps you decide what to do next",
+        "desc": "MetriqFlow reads your data and surfaces plain-language recommendations: when to post, what's working, and where you're quietly losing reach.",
+        "points": [
+          "Plain-language recommendations",
+          "Best time to post, backed by your data",
+          "Catch drops before they cost you"
+        ]
+      },
+      "competitors": {
+        "eyebrow": "Competitor analysis",
+        "title": "Benchmark against anyone",
+        "desc": "Track competitor channels side by side. See who's growing faster and reverse-engineer the content that actually works.",
+        "points": [
+          "Side-by-side channel comparison",
+          "Growth & engagement gaps at a glance",
+          "Learn from top-performing posts"
+        ]
+      },
+      "planner": {
+        "eyebrow": "Content planner",
+        "title": "Plan and schedule in one calendar",
+        "desc": "Draft posts, pick the best time and keep your whole content pipeline in a single calendar your team can see.",
+        "points": [
+          "One simple content calendar",
+          "Status from draft to published",
+          "Never miss a posting window"
+        ]
+      },
+      "reports": {
+        "eyebrow": "Automated reports",
+        "title": "Reports your clients will love",
+        "desc": "Generate CSV, PDF or XML reports on a schedule and deliver them automatically. Zero manual work, every single week.",
+        "points": [
+          "CSV, PDF and XML exports",
+          "Scheduled and automatic",
+          "Clean and ready to share"
+        ]
       }
     },
     "howItWorks": {
-      "title": "How it works",
+      "eyebrow": "How it works",
+      "title": "Live in three minutes",
       "step": "Step {n}",
       "connect": {
-        "title": "Connect accounts",
-        "desc": "Link your social platforms"
+        "title": "Connect your channels",
+        "desc": "Link Telegram or VK in a couple of clicks. No code, no API keys to wrangle."
       },
       "analyze": {
-        "title": "Analyze data",
-        "desc": "We process everything automatically"
+        "title": "We crunch the numbers",
+        "desc": "MetriqFlow pulls your history and keeps everything in sync automatically."
       },
-      "get": {
-        "title": "Get insights",
-        "desc": "Receive reports & analytics"
+      "grow": {
+        "title": "Act on clear insights",
+        "desc": "Read your dashboard, follow the recommendations and watch your channels grow."
       }
     },
     "cta": {
-      "title": "Start using Metriq Flow today",
-      "subtitle": "No credit card required",
-      "button": "Create account"
+      "title": "Ready to boost your reach and productivity?",
+      "subtitle": "Turn your social numbers into strategy. Start free today.",
+      "button": "Start free"
     }
   },
   "Login": {
@@ -701,5 +750,17 @@
     "statReposts": "Reposts",
     "openTelegram": "Open in Telegram",
     "openVk": "Open in VKontakte"
+  },
+  "Footer": {
+    "tagline": "Social media analytics, automated.",
+    "product": "Product",
+    "features": "Features",
+    "howItWorks": "How it works",
+    "platforms": "Platforms",
+    "account": "Account",
+    "login": "Sign in",
+    "register": "Create account",
+    "rights": "All rights reserved.",
+    "builtFor": "Built for creators, marketers and teams."
   }
 }

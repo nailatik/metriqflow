@@ -10,7 +10,7 @@ export default function DashboardNotFound() {
       <h1 className="text-5xl font-bold text-textMain">{t("code")}</h1>
       <h2 className="text-xl font-semibold mt-4 text-textMain">{t("title")}</h2>
       <p className="text-textSecondary mt-2">{t("dashboardDesc")}</p>
-      <Link href="/app" className="mt-6 px-4 py-2 rounded-xl bg-primary text-white hover:bg-indigo-700 transition inline-block">
+      <Link href="/app" className="mt-6 px-4 py-2 rounded-xl bg-primary text-onAccent hover:bg-primaryHover transition inline-block">
         {t("dashboardButton")}
       </Link>
     </div>

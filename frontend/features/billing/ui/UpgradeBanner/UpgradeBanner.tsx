@@ -32,7 +32,7 @@ export function UpgradeBanner({ reason, compact = false }: Props) {
       </div>
       <Link
         href={`/${locale}/app/billing`}
-        className="flex-shrink-0 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition"
+        className="flex-shrink-0 px-4 py-2 bg-primary text-onAccent text-sm font-medium rounded-lg hover:bg-primaryHover transition"
       >
         {t("upgrade")}
       </Link>
