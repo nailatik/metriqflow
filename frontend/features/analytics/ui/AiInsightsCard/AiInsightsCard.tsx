@@ -1,20 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { observer } from "mobx-react-lite";
 import { createPortal } from "react-dom";
 import { useTranslations, useLocale } from "next-intl";
-import { http } from "@/shared/lib/axios";
-import { useUiStore } from "@/shared/store/StoreProvider";
-import type { Confidence, InsightsPayload, Metriqs } from "./types";
+import { useUiStore, useAnalyticsStore } from "@/shared/store/StoreProvider";
+import type { Confidence } from "@/shared/store/analyticsStore/types";
 
 type Props = {
   network:  "telegram" | "vk";
   sourceId: number | string;
   period:   string;
 };
-
-type InsightsResponse = InsightsPayload & { cached: boolean; metriqs?: Metriqs };
-type ErrorData = { message?: string; code?: string; metriqs?: Metriqs };
 
 function minutesAgo(iso: string): number {
   return Math.floor((Date.now() - new Date(iso).getTime()) / 60_000);
@@ -30,17 +27,19 @@ const CONFIDENCE_STYLES: Record<Confidence, string> = {
   low:    "bg-textSecondary/10 text-textSecondary",
 };
 
-export function AiInsightsCard({ network, sourceId, period }: Props) {
-  const t       = useTranslations("aiInsights");
-  const locale  = useLocale();
-  const uiStore = useUiStore();
+export const AiInsightsCard = observer(function AiInsightsCard({ network, sourceId, period }: Props) {
+  const t              = useTranslations("aiInsights");
+  const locale         = useLocale();
+  const uiStore        = useUiStore();
+  const analyticsStore = useAnalyticsStore();
 
-  const [loading,     setLoading]     = useState(false);
-  const [payload,     setPayload]     = useState<InsightsPayload | null>(null);
-  const [cached,      setCached]      = useState(false);
-  const [metriqs,     setMetriqs]     = useState<Metriqs | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [error,       setError]       = useState<{ message: string; code?: string } | null>(null);
+
+  const key = `${network}:${sourceId}:${period}`;
+  const entry = analyticsStore.state.insights.get(key) ?? {
+    loading: false, payload: null, cached: false, metriqs: null, error: null,
+  };
+  const { loading, payload, cached, metriqs, error } = entry;
 
   const endpoint =
     network === "telegram"
@@ -48,29 +47,13 @@ export function AiInsightsCard({ network, sourceId, period }: Props) {
       : `/vk/communities/${sourceId}/ai-insights`;
 
   const generate = async (force: boolean) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await http.post<InsightsResponse>(endpoint, { period, locale, force });
-      const { cached: isCached, metriqs: m, ...rest } = res.data;
-      setCached(isCached);
-      setPayload(rest as InsightsPayload);
-      if (m) {
-        setMetriqs(m);
-        // A fresh generation (not a cache read) costs one Metriq — confirm it via toast.
-        if (!isCached) uiStore.showToast(t("metriqSpent", { remaining: m.remaining }), "success");
-      }
-    } catch (e: unknown) {
-      const resp = (e as { response?: { data?: ErrorData } })?.response?.data;
-      if (resp?.metriqs) setMetriqs(resp.metriqs);
-      setError({ message: resp?.message ?? t("error"), code: resp?.code });
-    } finally {
-      setLoading(false);
+    await analyticsStore.generate(key, endpoint, period, locale, force);
+    const updated = analyticsStore.state.insights.get(key);
+    if (updated?.metriqs && !updated.cached) {
+      uiStore.showToast(t("metriqSpent", { remaining: updated.metriqs.remaining }), "success");
     }
   };
 
-  // First generation → straight through. Explicit "Refresh" on an existing insight
-  // costs a Metriq, so ask for confirmation first.
   const onPrimary = () => {
     if (payload) setConfirmOpen(true);
     else void generate(false);
@@ -235,4 +218,4 @@ export function AiInsightsCard({ network, sourceId, period }: Props) {
       )}
     </div>
   );
-}
+});

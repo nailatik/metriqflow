@@ -7,6 +7,7 @@ import { CommunitiesStore } from "./communitiesStore/communitiesStore";
 import { CompetitorsStore } from "./competitorsStore/competitorsStore";
 import { BillingStore } from "./billingStore/billingStore";
 import { SettingsStore } from "./settingsStore/settingsStore";
+import { AnalyticsStore } from "./analyticsStore/analyticsStore";
 
 export class RootStore {
   uiStore: UiStore;
@@ -18,6 +19,7 @@ export class RootStore {
   competitorsStore: CompetitorsStore;
   billingStore: BillingStore;
   settingsStore: SettingsStore;
+  analyticsStore: AnalyticsStore;
 
   constructor() {
     this.uiStore = new UiStore(this);
@@ -29,6 +31,7 @@ export class RootStore {
     this.competitorsStore = new CompetitorsStore(this);
     this.billingStore = new BillingStore(this);
     this.settingsStore = new SettingsStore(this);
+    this.analyticsStore = new AnalyticsStore(this);
   }
 
   reset(): void {
@@ -37,6 +40,7 @@ export class RootStore {
     this.integrationsStore.reset();
     this.communitiesStore.reset();
     this.competitorsStore.reset();
+    this.analyticsStore.reset();
   }
 }
 

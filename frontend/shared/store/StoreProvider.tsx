@@ -10,3 +10,4 @@ export const useCommunitiesStore  = () => getRootStore().communitiesStore;
 export const useCompetitorsStore  = () => getRootStore().competitorsStore;
 export const useBillingStore      = () => getRootStore().billingStore;
 export const useSettingsStore     = () => getRootStore().settingsStore;
+export const useAnalyticsStore    = () => getRootStore().analyticsStore;
