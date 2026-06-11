@@ -5,27 +5,35 @@ import { uiSync } from "./models/uiSync";
 export class UiStore {
   state: UiState;
 
+  readonly sync = {
+    showToast: (message: string, kind: ToastKind) => uiSync.showToast(this, message, kind),
+    clearToast: (id: number) => uiSync.clearToast(this, id),
+    setLoading: (value: boolean) => uiSync.setLoading(this, value),
+    setError: (message: string | null) => uiSync.setError(this, message),
+    clearError: () => uiSync.clearError(this),
+  };
+
   constructor(public root: RootStore) {
     this.state = new UiState();
   }
 
   setLoading(value: boolean): void {
-    uiSync.setLoading(this, value);
+    this.sync.setLoading(value);
   }
 
   setError(message: string | null): void {
-    uiSync.setError(this, message);
+    this.sync.setError(message);
   }
 
   clearError(): void {
-    uiSync.clearError(this);
+    this.sync.clearError();
   }
 
   showToast(message: string, kind: ToastKind = "info"): void {
-    uiSync.showToast(this, message, kind);
+    this.sync.showToast(message, kind);
   }
 
   clearToast(id: number): void {
-    uiSync.clearToast(this, id);
+    this.sync.clearToast(id);
   }
 }

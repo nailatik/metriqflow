@@ -1,3 +1,4 @@
+import type { TgAccount, TgChannel } from "@/entities/integration/types";
 import type { RootStore } from "../RootStore";
 import { IntegrationsState } from "./models/integrationsState";
 import { integrationsAsync } from "./models/integrationsAsync";
@@ -8,23 +9,38 @@ export class IntegrationsStore {
   statusInflight: Promise<void> | null = null;
   channelsInflight: Promise<void> | null = null;
 
+  readonly sync = {
+    setStatus: (linked: boolean, account: TgAccount | null) =>
+      integrationsSync.setStatus(this, linked, account),
+    setChannels: (channels: TgChannel[]) => integrationsSync.setChannels(this, channels),
+    clearTg: () => integrationsSync.clearTg(this),
+    reset: () => integrationsSync.reset(this),
+  };
+
+  readonly async = {
+    fetchStatus: (force = false) => integrationsAsync.fetchStatus(this, force),
+    fetchChannels: (force = false) => integrationsAsync.fetchChannels(this, force),
+    createToken: () => integrationsAsync.createToken(this),
+    unlink: () => integrationsAsync.unlink(this),
+  };
+
   constructor(public root: RootStore) {
     this.state = new IntegrationsState();
   }
 
   fetchStatus(force = false) {
-    return integrationsAsync.fetchStatus(this, force);
+    return this.async.fetchStatus(force);
   }
   fetchChannels(force = false) {
-    return integrationsAsync.fetchChannels(this, force);
+    return this.async.fetchChannels(force);
   }
   createToken() {
-    return integrationsAsync.createToken(this);
+    return this.async.createToken();
   }
   unlink() {
-    return integrationsAsync.unlink(this);
+    return this.async.unlink();
   }
   reset() {
-    integrationsSync.reset(this);
+    this.sync.reset();
   }
 }
