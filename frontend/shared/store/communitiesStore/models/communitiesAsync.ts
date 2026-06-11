@@ -12,7 +12,7 @@ export const communitiesAsync = {
         const res = await communitiesService.getCommunities();
         communitiesSync.setList(store, res.data);
       } catch {
-        communitiesSync.setList(store, []);
+        store.root.uiStore.setError("Failed to load communities");
       } finally {
         store.inflight = null;
       }

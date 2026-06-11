@@ -12,7 +12,7 @@ export const competitorsAsync = {
         const res = await competitorsService.getCompetitors();
         competitorsSync.setList(store, res.data);
       } catch {
-        competitorsSync.setList(store, []);
+        store.root.uiStore.setError("Failed to load competitors");
       } finally {
         store.inflight = null;
       }
