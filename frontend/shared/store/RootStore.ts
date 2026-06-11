@@ -1,3 +1,7 @@
+import { configure } from "mobx";
+
+configure({ enforceActions: "always" });
+
 import { UiStore } from "./uiStore/uiStore";
 import { UserStore } from "./userStore/userStore";
 import { ReportsStore } from "./reportsStore/reportsStore";
