@@ -44,8 +44,15 @@ export class RootStore {
   }
 }
 
-const rootStore: RootStore = new RootStore();
+let clientStore: RootStore | null = null;
 
 export function getRootStore(): RootStore {
-  return rootStore;
+  if (typeof window === "undefined") {
+    // On the server, a fresh instance per call so state never leaks between requests.
+    return new RootStore();
+  }
+  if (!clientStore) {
+    clientStore = new RootStore();
+  }
+  return clientStore;
 }
