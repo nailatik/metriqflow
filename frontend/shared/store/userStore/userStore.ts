@@ -6,13 +6,13 @@ import { userAsync } from "./models/userAsync";
 
 export class UserStore {
   state: UserState;
+  meInflight: Promise<void> | null = null;
 
   readonly sync = {
     hydrateFromStorage: () => userSync.hydrateFromStorage(this),
     setToken: (token: string) => userSync.setToken(this, token),
     setSession: (token: string, user: User | null) => userSync.setSession(this, token, user),
     setUser: (user: User | null) => userSync.setUser(this, user),
-    logout: () => userSync.logout(this),
   };
 
   readonly async = {
@@ -57,7 +57,7 @@ export class UserStore {
     return this.async.updateAlertsEnabled(enabled);
   }
   logout(): void {
-    this.sync.logout();
+    userSync.logout(this);
     this.root.reset();
   }
   setToken(token: string): void {

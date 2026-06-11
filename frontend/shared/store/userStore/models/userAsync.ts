@@ -5,8 +5,6 @@ import type { UserStore } from "../userStore";
 import type { ActionResult } from "../types";
 import { userSync } from "./userSync";
 
-let fetchMeInFlight: Promise<void> | null = null;
-
 function getErrorMessage(err: unknown): string {
   if (typeof err === "object" && err !== null && "response" in err) {
     const resp = (err as { response?: { data?: { message?: string } } }).response;
@@ -38,8 +36,8 @@ export const userAsync = {
   },
 
   async fetchMe(store: UserStore): Promise<void> {
-    if (fetchMeInFlight) return fetchMeInFlight;
-    fetchMeInFlight = (async () => {
+    if (store.meInflight) return store.meInflight;
+    store.meInflight = (async () => {
       try {
         const res = await authService.me();
         runInAction(() => {
@@ -49,10 +47,10 @@ export const userAsync = {
       } catch {
         userSync.logout(store);
       } finally {
-        fetchMeInFlight = null;
+        store.meInflight = null;
       }
     })();
-    return fetchMeInFlight;
+    return store.meInflight;
   },
 
   async updateOrganization(store: UserStore, organization: string): Promise<ActionResult> {
