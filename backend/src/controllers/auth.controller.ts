@@ -152,7 +152,8 @@ export const login = async (req: Request, res: Response) => {
     const normalizedEmail = normalizeEmail(email);
 
     const result = await query(
-      `SELECT id, email, password, created_at, is_profile_completed, email_verified
+      `SELECT id, email, password, created_at, is_profile_completed, email_verified,
+              full_name, birth_date, organization, phone, password_length, plan, plan_expires_at
        FROM users WHERE email = $1`,
       [normalizedEmail]
     );
@@ -193,6 +194,13 @@ export const login = async (req: Request, res: Response) => {
         created_at: user.created_at,
         is_profile_completed: user.is_profile_completed,
         email_verified: user.email_verified,
+        full_name: user.full_name,
+        birth_date: user.birth_date,
+        organization: user.organization,
+        phone: user.phone,
+        password_length: user.password_length,
+        plan: user.plan,
+        plan_expires_at: user.plan_expires_at,
       },
       accessToken,
     });

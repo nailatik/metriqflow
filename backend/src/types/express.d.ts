@@ -31,4 +31,11 @@ type UserDB = {
   created_at: string;
   is_profile_completed: boolean;
   email_verified: boolean;
+  full_name?: string;
+  birth_date?: string;
+  organization?: string;
+  phone?: string;
+  password_length?: number;
+  plan?: string;
+  plan_expires_at?: string | null;
 };
