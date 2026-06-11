@@ -19,9 +19,7 @@ export const userAsync = {
   async login(store: UserStore, email: string, password: string): Promise<boolean> {
     try {
       const res = await authService.login(email, password);
-      userSync.setToken(store, res.data.accessToken);
-      const meRes = await authService.me();
-      userSync.setUser(store, meRes.data);
+      userSync.setSession(store, res.data.accessToken, res.data.user);
       return true;
     } catch {
       userSync.logout(store);
