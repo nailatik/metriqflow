@@ -1,17 +1,23 @@
 {
   "name": "Metriq Flow",
-  "short_name": "MetriqFlow",
-  "description": "Social analytics platform for modern teams.",
+  "short_name": "Metriq Flow",
+  "description": "Social analytics for Telegram & VK — insights, competitor benchmarks and ready reports.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F9FAFB",
-  "theme_color": "#4F46E5",
+  "background_color": "#FAF8F4",
+  "theme_color": "#D97706",
   "icons": [
     {
       "src": "/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
   ]
 }

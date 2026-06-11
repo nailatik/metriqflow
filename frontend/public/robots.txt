@@ -1,7 +1,19 @@
+# robots.txt — Metriq Flow
+# https://metriqflow.com
+
 User-agent: *
 Allow: /
-Allow: /login
-Allow: /register
-Disallow: /app/
+Allow: /en/
+Allow: /ru/
+Allow: /en/login
+Allow: /ru/login
+Allow: /en/register
+Allow: /ru/register
+Disallow: /en/app/
+Disallow: /ru/app/
 
-Sitemap: http://localhost:3000/sitemap.xml
+# Block common crawler traps
+Disallow: /_next/
+Disallow: /api/
+
+Sitemap: https://metriqflow.com/sitemap.xml

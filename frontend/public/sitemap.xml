@@ -1,18 +1,67 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml"
+>
+
+  <!-- English home -->
   <url>
-    <loc>http://localhost:3000</loc>
+    <loc>https://metriqflow.com/en</loc>
+    <lastmod>2026-06-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en"        href="https://metriqflow.com/en"/>
+    <xhtml:link rel="alternate" hreflang="ru"        href="https://metriqflow.com/ru"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://metriqflow.com/en"/>
   </url>
+
+  <!-- Russian home -->
   <url>
-    <loc>http://localhost:3000/login</loc>
+    <loc>https://metriqflow.com/ru</loc>
+    <lastmod>2026-06-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en"        href="https://metriqflow.com/en"/>
+    <xhtml:link rel="alternate" hreflang="ru"        href="https://metriqflow.com/ru"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://metriqflow.com/en"/>
+  </url>
+
+  <!-- Register -->
+  <url>
+    <loc>https://metriqflow.com/en/register</loc>
+    <lastmod>2026-06-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://metriqflow.com/en/register"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://metriqflow.com/ru/register"/>
   </url>
+
   <url>
-    <loc>http://localhost:3000/register</loc>
+    <loc>https://metriqflow.com/ru/register</loc>
+    <lastmod>2026-06-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://metriqflow.com/en/register"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://metriqflow.com/ru/register"/>
   </url>
+
+  <!-- Login -->
+  <url>
+    <loc>https://metriqflow.com/en/login</loc>
+    <lastmod>2026-06-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://metriqflow.com/en/login"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://metriqflow.com/ru/login"/>
+  </url>
+
+  <url>
+    <loc>https://metriqflow.com/ru/login</loc>
+    <lastmod>2026-06-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://metriqflow.com/en/login"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://metriqflow.com/ru/login"/>
+  </url>
+
 </urlset>

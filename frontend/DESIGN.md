@@ -61,6 +61,16 @@ Never hardcode hex in components — always Tailwind token or CSS var.
 - **Nav active:** amber icon + tinted bg (`bg-primary/10 text-primary`).
 - Page bg `bg-bg`, surfaces `bg-surface` / `bg-surfaceMuted`, text `text-textMain` / `text-textSecondary`.
 
+## Responsive / Adaptive (contract — full spec in `RESPONSIVE.md`)
+Mobile-first, Tailwind default breakpoints. **Read `RESPONSIVE.md` before building or restyling any screen.**
+- **Phone `<768`:** off-canvas drawer + sticky mobile top bar (hamburger). Sidebar not in flow. Gutter `p-4`.
+- **Tablet `768–1023` (`md:`):** persistent icon-rail sidebar (`w-14`). Gutter `sm:p-6`.
+- **Desktop `≥1024` (`lg:`):** full `w-64` sidebar (manual collapse persists). Gutter `lg:p-8`.
+- Shell uses `min-h-dvh` (not `h-screen`); content column needs `min-w-0`.
+- No horizontal **page** scroll ever — only inside scoped charts/heatmaps/wide tables (`overflow-x-auto`).
+- Every grid mobile-first (`grid-cols-1 sm:grid-cols-N`). Modals = bottom-sheet on phone, centered `sm:` up.
+- Touch targets ≥44px. Inputs ≥16px on phone. Keep focus rings. Respect `prefers-reduced-motion`.
+
 ## Build order
 1. ✅ Tokens + fonts + config (Phase 2)
 2. ⏳ Pilot north-star screen: **Dashboard `/app`** (Phase 3, Opus)

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider, createTranslator } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -41,6 +41,15 @@ async function loadMessages(locale: string) {
   return (await import(`@/messages/${locale}.json`)).default;
 }
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#D97706" },
+    { media: "(prefers-color-scheme: dark)", color: "#F59E0B" },
+  ],
+};
+
 export async function generateMetadata({
   params,
 }: {
@@ -50,33 +59,45 @@ export async function generateMetadata({
   const messages = await loadMessages(locale);
   const t = createTranslator({ locale, namespace: "Landing", messages });
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://metriqflow.com";
+  const isRu = locale === "ru";
+
+  const keywords = isRu
+    ? ["аналитика соцсетей", "SMM", "аналитика Telegram", "аналитика ВКонтакте", "отчёты", "дашборд", "маркетинг", "MetriqFlow"]
+    : ["social analytics", "SMM", "Telegram analytics", "VK analytics", "reports", "dashboard", "marketing", "MetriqFlow"];
 
   return {
     metadataBase: new URL(siteUrl),
     title: {
-      default: "Metriq Flow — " + t("hero.titleHighlight"),
-      template: "%s | Metriq Flow",
+      default: "MetriqFlow — " + t("hero.titleHighlight"),
+      template: "%s | MetriqFlow",
     },
     description: t("hero.subtitle"),
-    keywords: ["social analytics", "SMM", "reports", "dashboard", "marketing"],
-    authors: [{ name: "Metriq Flow Team" }],
-    creator: "Metriq Flow",
-    icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
+    keywords,
+    authors: [{ name: "MetriqFlow" }],
+    creator: "MetriqFlow",
+    robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
+    icons: {
+      icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+      shortcut: "/favicon.svg",
+      apple: "/favicon.svg",
+    },
     manifest: "/manifest.webmanifest",
     openGraph: {
       type: "website",
-      locale: locale === "ru" ? "ru_RU" : "en_US",
-      url: "/",
-      siteName: "Metriq Flow",
-      title: "Metriq Flow",
+      locale: isRu ? "ru_RU" : "en_US",
+      alternateLocale: isRu ? "en_US" : "ru_RU",
+      url: `${siteUrl}/${locale}`,
+      siteName: "MetriqFlow",
+      title: "MetriqFlow — " + t("hero.titleHighlight"),
       description: t("hero.subtitle"),
-      images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Metriq Flow" }],
+      images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "MetriqFlow" }],
     },
     twitter: {
       card: "summary_large_image",
-      title: "Metriq Flow",
+      title: "MetriqFlow — " + t("hero.titleHighlight"),
       description: t("hero.subtitle"),
+      images: ["/og-image.png"],
     },
   };
 }
