@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { observer } from "mobx-react-lite";
 import { useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
@@ -10,7 +11,7 @@ import { Button } from "@/shared/ui/Button/Button";
 
 type Status = "pending" | "verifying" | "success" | "error";
 
-export default function VerifyEmailPage() {
+const VerifyEmailPage = observer(function VerifyEmailPage() {
   const t = useTranslations("VerifyEmail");
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -153,4 +154,6 @@ export default function VerifyEmailPage() {
       </div>
     </div>
   );
-}
+});
+
+export default VerifyEmailPage;
