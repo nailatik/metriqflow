@@ -13,6 +13,7 @@ export interface User {
   plan?: Plan;
   plan_expires_at?: string | null;
   alerts_enabled?: boolean;
+  is_admin?: boolean;
 }
 
 export interface AuthResponse {

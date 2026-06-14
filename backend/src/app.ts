@@ -16,7 +16,8 @@ import postsRoutes from "./routes/posts.routes";
 import healthRoutes from "./routes/health.routes";
 import subscriptionRoutes from "./routes/subscription.routes";
 import settingsRoutes from "./routes/settings.routes";
-import { globalLimiter, authLimiter, analyticsLimiter } from "./middleware/rateLimit.middleware";
+import adminRoutes from "./routes/admin.routes";
+import { globalLimiter, authLimiter, analyticsLimiter, adminLimiter } from "./middleware/rateLimit.middleware";
 import { requestId } from "./middleware/requestId.middleware";
 
 // CORS_ORIGINS is the single source of truth — comma-separated list of allowed
@@ -70,6 +71,7 @@ app.use("/subscription",   subscriptionRoutes);
 app.use("/settings",       settingsRoutes);
 app.use("/content-posts",  contentPostsRoutes);
 app.use("/posts",          analyticsLimiter, postsRoutes);
+app.use("/admin",          adminLimiter,     adminRoutes);
 
 app.use((_req: Request, res: Response) => {
   res.status(404).json({ message: "Not found" });

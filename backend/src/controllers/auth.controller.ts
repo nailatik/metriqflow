@@ -36,7 +36,7 @@ export const me = async (req: Request, res: Response) => {
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
     const result = await query(
-      "SELECT id, email, full_name, birth_date, organization, phone, email_verified, password_length, plan, plan_expires_at FROM users WHERE id = $1",
+      "SELECT id, email, full_name, birth_date, organization, phone, email_verified, password_length, plan, plan_expires_at, is_admin FROM users WHERE id = $1",
       [userId]
     );
 
@@ -153,7 +153,7 @@ export const login = async (req: Request, res: Response) => {
 
     const result = await query(
       `SELECT id, email, password, created_at, is_profile_completed, email_verified,
-              full_name, birth_date, organization, phone, password_length, plan, plan_expires_at
+              full_name, birth_date, organization, phone, password_length, plan, plan_expires_at, is_admin
        FROM users WHERE email = $1`,
       [normalizedEmail]
     );
@@ -201,6 +201,7 @@ export const login = async (req: Request, res: Response) => {
         password_length: user.password_length,
         plan: user.plan,
         plan_expires_at: user.plan_expires_at,
+        is_admin: user.is_admin ?? false,
       },
       accessToken,
     });

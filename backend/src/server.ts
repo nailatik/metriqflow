@@ -4,11 +4,13 @@ import { logger } from "./lib/logger";
 import { pool } from "./db";
 import { startScheduler, stopScheduler } from "./services/scheduler.service";
 import { startAlertScheduler, stopAlertScheduler } from "./services/alerts.service";
+import { seedAdmins } from "./lib/seedAdmins";
 
 const PORT = Number(process.env.PORT) || 8000;
 
 const server = app.listen(PORT, () => {
   logger.info({ port: PORT }, "Server running");
+  void seedAdmins();
 });
 
 startScheduler();

@@ -38,4 +38,5 @@ type UserDB = {
   password_length?: number;
   plan?: string;
   plan_expires_at?: string | null;
+  is_admin?: boolean;
 };
