@@ -20,6 +20,15 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
   ultimate: { tg_channels: null, vk_communities: null, competitors: null, history_days: null, autoreports: null, ai_daily: 20, export_formats: ["xml","csv","pdf"], team: null },
 };
 
+// Monthly list price in RUB (single source for MRR math). free/ultimate are non-revenue:
+// free = 0, ultimate = comp/gift (no list price), so both contribute 0 to MRR.
+export const PLAN_PRICES: Record<Plan, number> = {
+  free:     0,
+  pro:      590,
+  agency:   1990,
+  ultimate: 0,
+};
+
 export function getLimits(plan: string): PlanLimits {
   return PLAN_LIMITS[plan as Plan] ?? PLAN_LIMITS.free;
 }

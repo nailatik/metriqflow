@@ -103,6 +103,9 @@ export interface AdminUserDetail {
     plan_expires_at: string | null;
     email_verified: boolean;
     created_at: string;
+    last_active_at: string | null;
+    birth_date: string | null;
+    is_profile_completed: boolean;
     organization: string | null;
     phone: string | null;
   };

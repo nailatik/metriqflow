@@ -28,6 +28,10 @@ export const adminService = {
     api.get<AdminUserDetail>(`/admin/users/${id}`),
   patchUserPlan: (id: number, data: PatchUserPlanPayload) =>
     api.patch(`/admin/users/${id}/plan`, data),
+  verifyUserEmail: (id: number) =>
+    api.post(`/admin/users/${id}/verify-email`),
+  deleteUser: (id: number) =>
+    api.delete(`/admin/users/${id}`),
 
   getBillingEvents: (params: { page?: number; limit?: number }) =>
     api.get<{ events: BillingEvent[]; total: number; page: number; limit: number }>(

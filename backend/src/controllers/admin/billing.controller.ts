@@ -37,7 +37,9 @@ export const getBillingEvents = async (req: Request, res: Response): Promise<voi
            aal.meta->>'plan_expires_at' AS detail,
            NULL::text           AS amount
          FROM admin_audit_log aal
-         JOIN users u ON u.id = aal.target_id::int
+         -- Join on text to avoid casting a non-numeric target_id to int; the
+         -- target_id::int in SELECT is safe because it runs after the regex WHERE filter.
+         JOIN users u ON u.id::text = aal.target_id
          WHERE aal.action = 'user.plan_change'
            AND aal.target_id ~ '^\d+$'
 

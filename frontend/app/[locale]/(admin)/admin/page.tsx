@@ -3,13 +3,10 @@
 import { useEffect, useState } from "react";
 import {
   AreaChart, Area,
-  BarChart, Bar,
   PieChart, Pie, Cell,
   XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from "recharts";
-import { Badge } from "@/shared/ui/Badge/Badge";
 import { Skeleton } from "@/shared/ui/Skeleton/Skeleton";
-import { adminService } from "@/features/admin/api/adminService";
 
 // ─── types ───────────────────────────────────────────────────────────────────
 
@@ -21,6 +18,7 @@ interface Stats {
   paid_users: string;
   active_promos: string;
   redemptions_30d: string;
+  mrr: number;
 }
 
 interface PlanRow   { plan: string; count: string }
@@ -34,22 +32,57 @@ interface OverviewData {
   integrations:      IntStats;
 }
 
-// ─── helpers ─────────────────────────────────────────────────────────────────
+// ─── design tokens at runtime ────────────────────────────────────────────────
+// CSS vars hold literal hex (e.g. #D97706), so recharts SVG attributes need the
+// resolved values — read them from the document so charts respect theme + dark mode.
 
-const PLAN_COLORS: Record<string, string> = {
-  free:     "hsl(var(--color-textSecondary) / 0.4)",
-  pro:      "hsl(var(--color-primary))",
-  agency:   "hsl(38 92% 50%)",
-  ultimate: "hsl(var(--color-success))",
+interface Tokens {
+  primary: string; success: string; border: string; textSecondary: string;
+  textMain: string; surface: string; chart1: string; chart2: string; chart3: string;
+}
+
+const FALLBACK: Tokens = {
+  primary: "#D97706", success: "#15803D", border: "#E7E1D6", textSecondary: "#78716C",
+  textMain: "#1C1917", surface: "#FFFFFF", chart1: "#D97706", chart2: "#0D9488", chart3: "#A16207",
 };
+
+function useTokens(): Tokens {
+  const [tokens, setTokens] = useState<Tokens>(FALLBACK);
+  useEffect(() => {
+    const cs = getComputedStyle(document.documentElement);
+    const v = (name: string, fb: string) => cs.getPropertyValue(name).trim() || fb;
+    setTokens({
+      primary:       v("--color-primary", FALLBACK.primary),
+      success:       v("--color-success", FALLBACK.success),
+      border:        v("--color-border", FALLBACK.border),
+      textSecondary: v("--color-text-secondary", FALLBACK.textSecondary),
+      textMain:      v("--color-text-main", FALLBACK.textMain),
+      surface:       v("--color-surface", FALLBACK.surface),
+      chart1:        v("--color-chart-1", FALLBACK.chart1),
+      chart2:        v("--color-chart-2", FALLBACK.chart2),
+      chart3:        v("--color-chart-3", FALLBACK.chart3),
+    });
+  }, []);
+  return tokens;
+}
+
+// ─── helpers ─────────────────────────────────────────────────────────────────
 
 const PLAN_LABELS: Record<string, string> = {
   free: "Free", pro: "Pro", agency: "Agency", ultimate: "Ultimate",
 };
 
+function planColor(plan: string, t: Tokens): string {
+  switch (plan) {
+    case "pro":      return t.chart1;
+    case "agency":   return t.chart2;
+    case "ultimate": return t.success;
+    default:         return t.textSecondary; // free
+  }
+}
+
 function fmtDay(iso: string) {
-  const d = new Date(iso);
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
 // ─── sub-components ──────────────────────────────────────────────────────────
@@ -73,28 +106,20 @@ function ChartCard({ title, children }: { title: string; children: React.ReactNo
   );
 }
 
-const TooltipStyle = {
-  contentStyle: {
-    background: "var(--color-surface)",
-    border: "1px solid var(--color-border)",
-    borderRadius: 12,
-    fontSize: 12,
-    color: "var(--color-textMain)",
-  },
-  cursor: { stroke: "var(--color-border)" },
-};
-
 // ─── page ─────────────────────────────────────────────────────────────────────
 
 export default function AdminOverviewPage() {
+  const t = useTokens();
   const [data, setData]     = useState<OverviewData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    adminService.getOverview()
-      .then(r => setData(r.data as OverviewData))
-      .catch(() => setData(null))
-      .finally(() => setLoading(false));
+    import("@/features/admin/api/adminService").then(({ adminService }) =>
+      adminService.getOverview()
+        .then(r => setData(r.data as OverviewData))
+        .catch(() => setData(null))
+        .finally(() => setLoading(false))
+    );
   }, []);
 
   const s = data?.stats;
@@ -104,10 +129,20 @@ export default function AdminOverviewPage() {
   }));
   const planDist = (data?.plan_distribution ?? []).map(r => ({
     plan:  PLAN_LABELS[r.plan] ?? r.plan,
-    color: PLAN_COLORS[r.plan] ?? "#888",
+    color: planColor(r.plan, t),
     value: parseInt(r.count),
   }));
   const intg = data?.integrations;
+
+  const tooltipStyle = {
+    background: t.surface,
+    border: `1px solid ${t.border}`,
+    borderRadius: 12,
+    fontSize: 12,
+    color: t.textMain,
+  };
+
+  const totalUsers = s ? Math.max(1, parseInt(s.total_users)) : 1;
 
   return (
     <>
@@ -128,18 +163,20 @@ export default function AdminOverviewPage() {
         ) : s ? (
           <>
             <StatCard label="Total users"      value={parseInt(s.total_users).toLocaleString()} />
-            <StatCard label="Paid users"       value={parseInt(s.paid_users).toLocaleString()} sub={`${Math.round(parseInt(s.paid_users) / Math.max(1, parseInt(s.total_users)) * 100)}% conversion`} />
+            <StatCard
+              label="Paid users"
+              value={parseInt(s.paid_users).toLocaleString()}
+              sub={`${Math.round(parseInt(s.paid_users) / totalUsers * 100)}% conversion`}
+            />
+            <StatCard label="Est. MRR" value={`₽${(s.mrr ?? 0).toLocaleString("ru-RU")}`} sub="pro + agency" />
             <StatCard label="Active 7d"        value={parseInt(s.active_7d).toLocaleString()} />
             <StatCard label="Active 30d"       value={parseInt(s.active_30d).toLocaleString()} />
             <StatCard label="New 7d"           value={parseInt(s.new_7d).toLocaleString()} />
             <StatCard label="Active promos"    value={parseInt(s.active_promos).toLocaleString()} />
             <StatCard label="Redemptions 30d"  value={parseInt(s.redemptions_30d).toLocaleString()} />
-            {intg && (
-              <StatCard label="TG linked"      value={parseInt(intg.tg_linked).toLocaleString()} sub={`${intg.vk_communities} VK · ${intg.with_schedules} sched`} />
-            )}
           </>
         ) : (
-          <p className="col-span-4 text-sm text-textSecondary">Failed to load stats.</p>
+          <p className="col-span-full text-sm text-textSecondary">Failed to load stats.</p>
         )}
       </div>
 
@@ -157,36 +194,36 @@ export default function AdminOverviewPage() {
                 <AreaChart data={signups} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="sgGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%"   stopColor="hsl(var(--color-primary))" stopOpacity={0.25} />
-                      <stop offset="100%" stopColor="hsl(var(--color-primary))" stopOpacity={0} />
+                      <stop offset="0%"   stopColor={t.primary} stopOpacity={0.25} />
+                      <stop offset="100%" stopColor={t.primary} stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <XAxis
                     dataKey="day"
-                    tick={{ fontSize: 10, fill: "var(--color-textSecondary)" }}
+                    tick={{ fontSize: 10, fill: t.textSecondary }}
                     tickLine={false}
                     axisLine={false}
                     interval="preserveStartEnd"
                   />
                   <YAxis
-                    tick={{ fontSize: 10, fill: "var(--color-textSecondary)" }}
+                    tick={{ fontSize: 10, fill: t.textSecondary }}
                     tickLine={false}
                     axisLine={false}
                     allowDecimals={false}
                   />
                   <Tooltip
-                    contentStyle={TooltipStyle.contentStyle}
-                    cursor={{ stroke: "var(--color-border)" }}
-                    formatter={(v: number) => [v, "signups"]}
+                    contentStyle={tooltipStyle}
+                    cursor={{ stroke: t.border }}
+                    formatter={(v) => [v as number, "signups"]}
                   />
                   <Area
                     type="monotone"
                     dataKey="count"
-                    stroke="hsl(var(--color-primary))"
+                    stroke={t.primary}
                     strokeWidth={2}
                     fill="url(#sgGrad)"
                     dot={false}
-                    activeDot={{ r: 4, fill: "hsl(var(--color-primary))" }}
+                    activeDot={{ r: 4, fill: t.primary }}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -220,8 +257,8 @@ export default function AdminOverviewPage() {
                     ))}
                   </Pie>
                   <Tooltip
-                    contentStyle={TooltipStyle.contentStyle}
-                    formatter={(v: number, name: string) => [v, name]}
+                    contentStyle={tooltipStyle}
+                    formatter={(v, name) => [v as number, name as string]}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -239,7 +276,7 @@ export default function AdminOverviewPage() {
       </div>
 
       {/* Integrations bar */}
-      {!loading && intg && (
+      {!loading && intg && s && (
         <ChartCard title="Integrations connected">
           <div className="flex gap-6">
             {[
@@ -250,19 +287,15 @@ export default function AdminOverviewPage() {
               <div key={item.label} className="flex-1">
                 <p className="text-xs text-textSecondary mb-1">{item.label}</p>
                 <p className="text-xl font-mono font-bold text-textMain tabular-nums">{item.value.toLocaleString()}</p>
-                {data && (
-                  <div className="mt-1.5 h-1.5 bg-surfaceMuted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary rounded-full"
-                      style={{ width: `${Math.round(item.value / Math.max(1, parseInt(s!.total_users)) * 100)}%` }}
-                    />
-                  </div>
-                )}
-                {data && (
-                  <p className="text-[10px] text-textSecondary mt-0.5">
-                    {Math.round(item.value / Math.max(1, parseInt(s!.total_users)) * 100)}% of users
-                  </p>
-                )}
+                <div className="mt-1.5 h-1.5 bg-surfaceMuted rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-primary rounded-full"
+                    style={{ width: `${Math.min(100, Math.round(item.value / totalUsers * 100))}%` }}
+                  />
+                </div>
+                <p className="text-[10px] text-textSecondary mt-0.5">
+                  {Math.round(item.value / totalUsers * 100)}% of users
+                </p>
               </div>
             ))}
           </div>

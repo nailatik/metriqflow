@@ -13,6 +13,8 @@ import {
   listUsers,
   getUser,
   patchUserPlan,
+  verifyUserEmail,
+  deleteUser,
 } from "../controllers/admin/users.controller";
 import { getBillingEvents } from "../controllers/admin/billing.controller";
 import { getAuditLog }      from "../controllers/admin/audit.controller";
@@ -29,9 +31,11 @@ router.patch("/promos/:code",           patchPromo);
 router.delete("/promos/:code",          deletePromo);
 router.get("/promos/:code/redemptions", getRedemptions);
 
-router.get("/users",              listUsers);
-router.get("/users/:id",          getUser);
-router.patch("/users/:id/plan",   patchUserPlan);
+router.get("/users",                  listUsers);
+router.get("/users/:id",              getUser);
+router.patch("/users/:id/plan",       patchUserPlan);
+router.post("/users/:id/verify-email", verifyUserEmail);
+router.delete("/users/:id",           deleteUser);
 
 router.get("/billing/events",     getBillingEvents);
 

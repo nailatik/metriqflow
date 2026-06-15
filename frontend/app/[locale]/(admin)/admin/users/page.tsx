@@ -134,12 +134,16 @@ interface UserDrawerProps {
   userId: number | null;
   onClose: () => void;
   onPlanSaved: () => void;
+  onDeleted: () => void;
 }
 
-function UserDrawer({ userId, onClose, onPlanSaved }: UserDrawerProps) {
+function UserDrawer({ userId, onClose, onPlanSaved, onDeleted }: UserDrawerProps) {
   const [detail, setDetail] = useState<AdminUserDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [planKey, setPlanKey] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [actionErr, setActionErr] = useState<string | null>(null);
 
   useEffect(() => {
     if (!userId) { setDetail(null); return; }
@@ -150,9 +154,42 @@ function UserDrawer({ userId, onClose, onPlanSaved }: UserDrawerProps) {
       .finally(() => setLoading(false));
   }, [userId, planKey]);
 
+  // Reset transient action state whenever a different user opens.
+  useEffect(() => { setConfirmText(""); setActionErr(null); }, [userId]);
+
   const handlePlanSaved = () => {
     setPlanKey(k => k + 1);
     onPlanSaved();
+  };
+
+  const handleVerify = async () => {
+    if (!detail) return;
+    setBusy(true);
+    setActionErr(null);
+    try {
+      await adminService.verifyUserEmail(detail.user.id);
+      setPlanKey(k => k + 1);
+      onPlanSaved();
+    } catch {
+      setActionErr("Failed to verify email");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!detail) return;
+    setBusy(true);
+    setActionErr(null);
+    try {
+      await adminService.deleteUser(detail.user.id);
+      onDeleted();
+      onClose();
+    } catch {
+      setActionErr("Failed to delete user");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -176,8 +213,27 @@ function UserDrawer({ userId, onClose, onPlanSaved }: UserDrawerProps) {
             <Row label="Email"    value={detail.user.email} />
             <Row label="Name"     value={detail.user.full_name ?? "—"} />
             <Row label="Org"      value={detail.user.organization ?? "—"} />
-            <Row label="Verified" value={detail.user.email_verified ? "✓ yes" : "✗ no"} />
-            <Row label="Joined"   value={fmtDate(detail.user.created_at)} />
+            <Row label="Phone"    value={detail.user.phone ?? "—"} />
+            <Row label="Profile"  value={detail.user.is_profile_completed ? "complete" : "incomplete"} />
+            <Row
+              label="Verified"
+              value={
+                detail.user.email_verified ? (
+                  "✓ yes"
+                ) : (
+                  <button
+                    onClick={handleVerify}
+                    disabled={busy}
+                    className="text-primary hover:underline disabled:opacity-50"
+                  >
+                    ✗ no — verify now
+                  </button>
+                )
+              }
+            />
+            <Row label="Joined"      value={fmtDate(detail.user.created_at)} />
+            <Row label="Last active" value={detail.user.last_active_at ? relDate(detail.user.last_active_at) : "never"} />
+            {actionErr && <p className="text-xs text-error mt-2">{actionErr}</p>}
           </Section>
 
           <Section title="Plan">
@@ -268,6 +324,29 @@ function UserDrawer({ userId, onClose, onPlanSaved }: UserDrawerProps) {
               </div>
             ))}
           </Section>
+
+          {/* Danger zone — soft-delete (tombstone + anonymize). Confirm by typing email. */}
+          <div className="mt-8 border border-error/30 rounded-xl p-4 bg-error/5">
+            <p className="text-xs font-semibold text-error uppercase tracking-widest mb-1">Danger zone</p>
+            <p className="text-xs text-textSecondary mb-3">
+              Soft-delete this account: anonymizes PII, revokes sessions, preserves history.
+              Type the email <span className="font-mono text-textMain">{detail.user.email}</span> to confirm.
+            </p>
+            <input
+              type="text"
+              value={confirmText}
+              onChange={e => setConfirmText(e.target.value)}
+              placeholder="Type email to confirm"
+              className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-sm text-textMain placeholder:text-textSecondary focus:outline-none focus:ring-2 focus:ring-error/40 mb-2"
+            />
+            <button
+              onClick={handleDelete}
+              disabled={busy || confirmText !== detail.user.email}
+              className="w-full py-2 rounded-lg bg-error text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {busy ? "Deleting…" : "Delete account"}
+            </button>
+          </div>
         </>
       )}
     </Drawer>
@@ -465,6 +544,7 @@ export default function AdminUsersPage() {
         userId={selectedId}
         onClose={() => setSelectedId(null)}
         onPlanSaved={() => void load(page, debouncedSearch, plan)}
+        onDeleted={() => void load(page, debouncedSearch, plan)}
       />
     </>
   );
