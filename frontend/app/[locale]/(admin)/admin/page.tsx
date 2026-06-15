@@ -190,7 +190,7 @@ export default function AdminOverviewPage() {
             ) : signups.length === 0 ? (
               <p className="text-xs text-textSecondary text-center py-16">No signup data yet.</p>
             ) : (
-              <ResponsiveContainer width="100%" height={180}>
+              <ResponsiveContainer width="100%" height={180} initialDimension={{ width: 600, height: 180 }}>
                 <AreaChart data={signups} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="sgGrad" x1="0" y1="0" x2="0" y2="1">
@@ -239,7 +239,7 @@ export default function AdminOverviewPage() {
             <p className="text-xs text-textSecondary text-center py-16">No data.</p>
           ) : (
             <div className="flex flex-col items-center gap-3">
-              <ResponsiveContainer width="100%" height={140}>
+              <ResponsiveContainer width="100%" height={140} initialDimension={{ width: 600, height: 140 }}>
                 <PieChart>
                   <Pie
                     data={planDist}
