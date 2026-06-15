@@ -123,3 +123,24 @@ export interface PatchUserPlanPayload {
   plan: Plan;
   plan_expires_at?: string | null;
 }
+
+export interface BillingEvent {
+  event_type: "promo" | "plan_change" | "payment";
+  created_at: string;
+  user_id: number;
+  user_email: string;
+  reference: string | null;
+  plan: string | null;
+  detail: string | null;
+  amount: string | null;
+}
+
+export interface AuditEvent {
+  id: number;
+  action: string;
+  target_type: string | null;
+  target_id: string | null;
+  meta: Record<string, unknown> | null;
+  created_at: string;
+  admin_email: string;
+}

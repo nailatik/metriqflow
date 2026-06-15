@@ -14,6 +14,8 @@ import {
   getUser,
   patchUserPlan,
 } from "../controllers/admin/users.controller";
+import { getBillingEvents } from "../controllers/admin/billing.controller";
+import { getAuditLog }      from "../controllers/admin/audit.controller";
 
 const router = Router();
 
@@ -30,5 +32,9 @@ router.get("/promos/:code/redemptions", getRedemptions);
 router.get("/users",              listUsers);
 router.get("/users/:id",          getUser);
 router.patch("/users/:id/plan",   patchUserPlan);
+
+router.get("/billing/events",     getBillingEvents);
+
+router.get("/audit",              getAuditLog);
 
 export default router;

@@ -7,6 +7,8 @@ import type {
   UsersListResponse,
   AdminUserDetail,
   PatchUserPlanPayload,
+  BillingEvent,
+  AuditEvent,
 } from "../types";
 
 export const adminService = {
@@ -26,4 +28,14 @@ export const adminService = {
     api.get<AdminUserDetail>(`/admin/users/${id}`),
   patchUserPlan: (id: number, data: PatchUserPlanPayload) =>
     api.patch(`/admin/users/${id}/plan`, data),
+
+  getBillingEvents: (params: { page?: number; limit?: number }) =>
+    api.get<{ events: BillingEvent[]; total: number; page: number; limit: number }>(
+      "/admin/billing/events", { params }
+    ),
+
+  getAuditLog: (params: { page?: number; limit?: number; action?: string }) =>
+    api.get<{ events: AuditEvent[]; total: number; page: number; limit: number }>(
+      "/admin/audit", { params }
+    ),
 };
