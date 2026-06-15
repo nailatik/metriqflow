@@ -1,3 +1,4 @@
+import "./config/env";
 import "./lib/sentry";
 import app from "./app";
 import { logger } from "./lib/logger";

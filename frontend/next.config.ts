@@ -38,7 +38,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/vk/:path*",
-        destination: "http://localhost:8000/vk/:path*",
+        destination: `${apiUrl}/vk/:path*`,
       },
     ];
   },

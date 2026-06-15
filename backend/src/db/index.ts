@@ -13,6 +13,10 @@ export const pool = new Pool({
   max:                20,
   idleTimeoutMillis:  30_000,
   connectionTimeoutMillis: 5_000,
+  // Managed Postgres usually requires SSL. rejectUnauthorized:false accepts the
+  // provider's chain without bundling a CA — fine for hosted PG over a trusted
+  // network. Off by default so local dev (no SSL) keeps working.
+  ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : undefined,
 });
 
 pool.on("error", (err) => {
