@@ -1,0 +1,16 @@
+# Auto-HTTPS via Let's Encrypt. Domains + ACME email come from compose env
+# (./.env on the host). Caddy obtains + renews certs automatically.
+
+{
+	email {$ACME_EMAIL}
+}
+
+# Frontend (Next.js)
+{$SITE_DOMAIN} {
+	reverse_proxy frontend:3000
+}
+
+# Backend API
+{$API_DOMAIN} {
+	reverse_proxy backend:8000
+}

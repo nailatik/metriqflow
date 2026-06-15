@@ -1,0 +1,50 @@
+name: deploy
+
+# Push to main = build gate, then auto-deploy to the VPS.
+# Pull requests run the build gate only (no deploy).
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── Gate: both apps must compile before anything reaches prod ──────────────
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+      - name: backend — install & build
+        working-directory: backend
+        run: npm ci && npm run build
+      - name: frontend — install & build
+        working-directory: frontend
+        run: npm ci && npm run build
+
+  # ── Deploy: only on push to main, only if the gate passed ─────────────────
+  deploy:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: ssh → pull, rebuild, migrate
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            set -e
+            cd ${{ secrets.DEPLOY_PATH }}
+            git pull --ff-only
+            docker compose up -d --build
+            docker compose exec -T backend npm run migrate
+            docker image prune -f
