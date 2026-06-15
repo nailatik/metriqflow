@@ -147,7 +147,15 @@ export const patchPromo = async (req: Request, res: Response): Promise<void> => 
   params.push(code);
   try {
     const result = await query(
-      `UPDATE promo_codes SET ${sets.join(", ")} WHERE code = $${idx} RETURNING *`,
+      `UPDATE promo_codes SET ${sets.join(", ")} WHERE code = $${idx}
+       RETURNING *,
+         max_uses - used_count AS remaining,
+         CASE
+           WHEN NOT active                                     THEN 'disabled'
+           WHEN used_count >= max_uses                         THEN 'exhausted'
+           WHEN expires_at IS NOT NULL AND expires_at <= NOW() THEN 'expired'
+           ELSE 'active'
+         END                   AS status`,
       params
     );
     if (result.rowCount === 0) {
