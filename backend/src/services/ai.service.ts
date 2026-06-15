@@ -16,7 +16,12 @@ export type AlertCopy = {
   bodyHtml: string;
 };
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  // Optional egress relay (e.g. Cloudflare Worker) for hosts where
+  // api.anthropic.com is unreachable (RU). Empty = direct call.
+  baseURL: process.env.ANTHROPIC_BASE_URL || undefined,
+});
 
 const SYSTEM_PROMPT_RU = `Ты — опытный SMM-аналитик с глубоким знанием продвижения в Telegram и ВКонтакте.
 

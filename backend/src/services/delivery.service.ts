@@ -7,6 +7,9 @@ import nodemailer from "nodemailer";
 import { logger } from "../lib/logger";
 
 const BOT_TOKEN = process.env.BOT_TOKEN ?? "";
+// Optional egress relay base (e.g. Cloudflare Worker) for hosts where
+// api.telegram.org is unreachable (RU). Empty = direct. No trailing slash.
+const TG_BASE = (process.env.TELEGRAM_API_BASE || "https://api.telegram.org").replace(/\/+$/, "");
 
 // ─── Telegram ─────────────────────────────────────────────────────────────────
 
@@ -26,7 +29,7 @@ export async function sendReportViaTelegram(
   form.append("document", fs.createReadStream(filePath), { filename });
 
   await new Promise<void>((resolve, reject) => {
-    const url = new URL(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`);
+    const url = new URL(`${TG_BASE}/bot${BOT_TOKEN}/sendDocument`);
     const req = https.request(
       {
         hostname: url.hostname,
@@ -55,7 +58,7 @@ async function tgApiJson<T>(method: string, payload: unknown): Promise<T> {
   if (!BOT_TOKEN) throw new Error("BOT_TOKEN not configured");
   const body = JSON.stringify(payload);
   return new Promise<T>((resolve, reject) => {
-    const url = new URL(`https://api.telegram.org/bot${BOT_TOKEN}/${method}`);
+    const url = new URL(`${TG_BASE}/bot${BOT_TOKEN}/${method}`);
     const req = https.request(
       {
         hostname: url.hostname,
@@ -163,7 +166,7 @@ export async function sendTelegramMessage(telegramId: number, html: string): Pro
   const body = JSON.stringify({ chat_id: String(telegramId), text: html, parse_mode: "HTML" });
 
   await new Promise<void>((resolve, reject) => {
-    const url = new URL(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`);
+    const url = new URL(`${TG_BASE}/bot${BOT_TOKEN}/sendMessage`);
     const req = https.request(
       {
         hostname: url.hostname,
