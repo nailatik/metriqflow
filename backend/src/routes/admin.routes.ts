@@ -9,6 +9,11 @@ import {
   deletePromo,
   getRedemptions,
 } from "../controllers/admin/promos.controller";
+import {
+  listUsers,
+  getUser,
+  patchUserPlan,
+} from "../controllers/admin/users.controller";
 
 const router = Router();
 
@@ -21,5 +26,9 @@ router.post("/promos",                  createPromo);
 router.patch("/promos/:code",           patchPromo);
 router.delete("/promos/:code",          deletePromo);
 router.get("/promos/:code/redemptions", getRedemptions);
+
+router.get("/users",              listUsers);
+router.get("/users/:id",          getUser);
+router.patch("/users/:id/plan",   patchUserPlan);
 
 export default router;

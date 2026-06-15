@@ -4,6 +4,9 @@ import type {
   PromoRedemption,
   CreatePromoPayload,
   PatchPromoPayload,
+  UsersListResponse,
+  AdminUserDetail,
+  PatchUserPlanPayload,
 } from "../types";
 
 export const adminService = {
@@ -16,4 +19,11 @@ export const adminService = {
   deletePromo: (code: string) => api.delete(`/admin/promos/${code}`),
   getRedemptions: (code: string) =>
     api.get<PromoRedemption[]>(`/admin/promos/${code}/redemptions`),
+
+  listUsers: (params: { page?: number; limit?: number; search?: string; plan?: string }) =>
+    api.get<UsersListResponse>("/admin/users", { params }),
+  getUser: (id: number) =>
+    api.get<AdminUserDetail>(`/admin/users/${id}`),
+  patchUserPlan: (id: number, data: PatchUserPlanPayload) =>
+    api.patch(`/admin/users/${id}/plan`, data),
 };
