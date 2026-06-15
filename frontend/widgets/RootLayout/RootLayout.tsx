@@ -61,7 +61,7 @@ export const RootLayout = observer(({ children }: RootLayoutProps) => {
   useLockBodyScroll(drawerOpen);
 
   return (
-    <div className="flex min-h-dvh overflow-hidden bg-bg">
+    <div className="flex h-dvh overflow-hidden bg-bg">
       <Sidebar
         collapsed={collapsed}
         onToggle={toggle}
