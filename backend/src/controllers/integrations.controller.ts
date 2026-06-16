@@ -8,7 +8,7 @@ export const generateTelegramToken = async (req: Request, res: Response) => {
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
-    // Block if this MetriqFlow profile is already linked to a Telegram account
+    // Block if this Metriq Flow profile is already linked to a Telegram account
     const linked = await query(
       "SELECT 1 FROM telegram_users WHERE user_id = $1",
       [userId]

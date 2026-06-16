@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     openGraph: {
       url: `${siteUrl}/${locale}`,
-      title: `MetriqFlow — ${t("titleHighlight")}`,
+      title: `Metriq Flow — ${t("titleHighlight")}`,
       description: t("subtitle"),
     },
   };
@@ -49,7 +49,7 @@ export default async function LandingPage({ params }: Props) {
         "@type": "WebSite",
         "@id": `${siteUrl}/#website`,
         url: siteUrl,
-        name: "MetriqFlow",
+        name: "Metriq Flow",
         inLanguage: ["en", "ru"],
         potentialAction: {
           "@type": "SearchAction",
@@ -60,7 +60,7 @@ export default async function LandingPage({ params }: Props) {
       {
         "@type": "SoftwareApplication",
         "@id": `${siteUrl}/#app`,
-        name: "MetriqFlow",
+        name: "Metriq Flow",
         applicationCategory: "BusinessApplication",
         operatingSystem: "Web",
         url: siteUrl,
@@ -82,7 +82,7 @@ export default async function LandingPage({ params }: Props) {
       {
         "@type": "Organization",
         "@id": `${siteUrl}/#org`,
-        name: "MetriqFlow",
+        name: "Metriq Flow",
         url: siteUrl,
         logo: {
           "@type": "ImageObject",

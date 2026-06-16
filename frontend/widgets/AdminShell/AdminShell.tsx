@@ -33,7 +33,7 @@ export function AdminShell({ children }: AdminShellProps) {
       <aside className="hidden md:flex flex-col w-56 shrink-0 border-r border-border bg-surface px-3 py-5 gap-0.5">
         <div className="px-2 mb-4">
           <p className="text-[10px] font-mono text-textSecondary uppercase tracking-widest">
-            MetriqFlow
+            Metriq Flow
           </p>
           <p className="text-sm font-semibold text-textMain">Admin</p>
         </div>

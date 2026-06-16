@@ -220,11 +220,11 @@ async function processSchedule(sched: ScheduleRow): Promise<void> {
         delivered++;
       } else if (ch.channel === "email") {
         const emailTo = ch.email ?? user.email;
-        const subject = isRu ? `MetriqFlow: ${sched.title}` : `MetriqFlow report: ${sched.title}`;
+        const subject = isRu ? `Metriq Flow: ${sched.title}` : `Metriq Flow report: ${sched.title}`;
         const body = isRu
-          ? `<p>Ваш авторепорт готов: <b>${sched.title}</b></p><p>Период: последние ${sched.frequency_days} дней.</p>`
-          : `<p>Your scheduled report is ready: <b>${sched.title}</b></p><p>Period: last ${sched.frequency_days} days.</p>`;
-        await sendReportViaEmail(emailTo, filePath, filename, subject, body);
+          ? `<p style="margin:0 0 12px">Ваш авторепорт <b>«${sched.title}»</b> готов.</p><p style="margin:0">Период: последние <b>${sched.frequency_days}</b> дней. Полные данные — в&nbsp;прикреплённом файле.</p>`
+          : `<p style="margin:0 0 12px">Your scheduled report <b>"${sched.title}"</b> is ready.</p><p style="margin:0">Period: last <b>${sched.frequency_days}</b> days. Full data is in the attached file.</p>`;
+        await sendReportViaEmail(emailTo, filePath, filename, subject, body, isRu ? "ru" : "en");
         delivered++;
       }
     } catch (err) {

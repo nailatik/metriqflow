@@ -1,6 +1,6 @@
 <div align="center">
 
-# MetriqFlow
+# Metriq Flow
 
 **Telegram + VK analytics, automated reports — one clean dashboard.**
 
@@ -12,7 +12,7 @@
 
 ---
 
-MetriqFlow tracks your Telegram channels and VK communities in a single dashboard, generates reports on demand, and delivers them automatically on a schedule — daily, weekly, or monthly.
+Metriq Flow tracks your Telegram channels and VK communities in a single dashboard, generates reports on demand, and delivers them automatically on a schedule — daily, weekly, or monthly.
 
 Built for content teams and community managers who are tired of stitching together spreadsheets.
 
@@ -21,7 +21,7 @@ Built for content teams and community managers who are tired of stitching togeth
 ## What you get
 
 ### Telegram analytics
-Connect any Telegram channel by adding the bot as an admin. MetriqFlow collects:
+Connect any Telegram channel by adding the bot as an admin. Metriq Flow collects:
 
 - **Views, reactions, forwards, comments** per post — with growth badges vs. the previous period
 - **Engagement rate** across 24h / 7d / 30d / all time
@@ -39,7 +39,7 @@ Connect any public VK community by pasting its URL or screen name:
 - **Top posts**, **heatmap**, and **reach-over-time chart**
 - Periods: 24h / 7d / 30d / all time
 
-> VK's internal audience stats (demographics, traffic sources) are closed to external apps — MetriqFlow shows only what VK's public API exposes.
+> VK's internal audience stats (demographics, traffic sources) are closed to external apps — Metriq Flow shows only what VK's public API exposes.
 
 ### Unified dashboard
 The **All** tab merges Telegram and VK into a single summary: total followers, combined views and posts, per-platform breakdowns. One screen to start your Monday.
@@ -67,7 +67,7 @@ Set a schedule once, get reports delivered forever.
 Schedules can be paused, edited, or toggled from the web app — or managed directly from the Telegram bot.
 
 ### Telegram bot
-Link your MetriqFlow account to the bot with a one-time token. From Telegram you can:
+Link your Metriq Flow account to the bot with a one-time token. From Telegram you can:
 
 - **Generate a CSV report** — pick channel → pick period → receive file in seconds
 - **Manage auto-reports** — view all schedules, enable/disable, toggle Telegram delivery
@@ -81,7 +81,7 @@ Link your MetriqFlow account to the bot with a one-time token. From Telegram you
 Go to **Integrations**. For Telegram: add the bot as an admin to your channel and paste the link token. For VK: enter the community URL or screen name.
 
 **Step 2 — Analytics appear automatically**
-MetriqFlow starts collecting data immediately. Telegram stats refresh every 10 minutes; historical VK posts are imported on first connect.
+Metriq Flow starts collecting data immediately. Telegram stats refresh every 10 minutes; historical VK posts are imported on first connect.
 
 **Step 3 — Get insights, generate reports**
 Browse the Analytics tab for charts and heatmaps. Hit **Create report** for a one-off export. Set up a schedule in **Reports → Automatic reports** to receive data on autopilot.
@@ -121,7 +121,7 @@ No credit card required to start.
 
 ## Self-hosting
 
-MetriqFlow is open source. You can run the full stack yourself — backend, frontend, and Telegram bot — against your own database and Telegram bot token. Self-hosting documentation is coming soon.
+Metriq Flow is open source. You can run the full stack yourself — backend, frontend, and Telegram bot — against your own database and Telegram bot token. Self-hosting documentation is coming soon.
 
 ---
 

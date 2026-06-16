@@ -9,11 +9,12 @@
     "signIn": "Sign in"
   },
   "Landing": {
+    "metaTitle": "Save your time",
     "hero": {
       "badge": "Analytics for Telegram, VK & more",
       "title": "Stop collecting data by hand.",
       "titleHighlight": "Focus on your content.",
-      "subtitle": "MetriqFlow turns your Telegram and VK numbers into clear insights, competitor benchmarks and ready-to-send reports — so you spend your time creating, not counting.",
+      "subtitle": "Metriq Flow turns your Telegram and VK numbers into clear insights, competitor benchmarks and ready-to-send reports — so you spend your time creating, not counting.",
       "startFree": "Start free",
       "seeInAction": "See it in action"
     },
@@ -26,7 +27,7 @@
     "showcase": {
       "eyebrow": "Metriq Flow",
       "title": "Everything you need to grow, in one place",
-      "subtitle": "MetriqFlow connects your numbers to the strategy that grows your business.",
+      "subtitle": "Metriq Flow connects your numbers to the strategy that grows your business.",
       "analytics": {
         "eyebrow": "Analytics",
         "title": "See every metric that matters",
@@ -40,7 +41,7 @@
       "insights": {
         "eyebrow": "AI Insights",
         "title": "Helps you decide what to do next",
-        "desc": "MetriqFlow reads your data and surfaces plain-language recommendations: when to post, what's working, and where you're quietly losing reach.",
+        "desc": "Metriq Flow reads your data and surfaces plain-language recommendations: when to post, what's working, and where you're quietly losing reach.",
         "points": [
           "Plain-language recommendations",
           "Best time to post, backed by your data",
@@ -88,7 +89,7 @@
       },
       "analyze": {
         "title": "We crunch the numbers",
-        "desc": "MetriqFlow pulls your history and keeps everything in sync automatically."
+        "desc": "Metriq Flow pulls your history and keeps everything in sync automatically."
       },
       "grow": {
         "title": "Act on clear insights",

@@ -52,7 +52,7 @@ type I18nDict = {
 
 const I18N: Record<Locale, I18nDict> = {
   en: {
-    reportTitle: "MetriqFlow Report",
+    reportTitle: "Metriq Flow Report",
     period: "Period",
     generated: "Generated",
     noData: "No data for the selected period.",
@@ -65,7 +65,7 @@ const I18N: Record<Locale, I18nDict> = {
     lastDays: (n) => n === 1 ? "Last 24h" : `Last ${n} days`,
   },
   ru: {
-    reportTitle: "Отчёт MetriqFlow",
+    reportTitle: "Отчёт Metriq Flow",
     period: "Период",
     generated: "Сформирован",
     noData: "Нет данных за выбранный период.",

@@ -38,8 +38,8 @@ async def validate_and_use_token(
     Validates linking token and creates telegram_users entry.
     Returns user_id (int) on success, or one of:
       "invalid_token"  — token not found / expired / already used
-      "telegram_taken" — this Telegram account is linked to a different MetriqFlow profile
-      "user_taken"     — this MetriqFlow profile already has a Telegram account linked
+      "telegram_taken" — this Telegram account is linked to a different Metriq Flow profile
+      "user_taken"     — this Metriq Flow profile already has a Telegram account linked
     """
     async with pool.acquire() as conn:
         async with conn.transaction():
@@ -70,7 +70,7 @@ async def validate_and_use_token(
                     return user_id
                 return "telegram_taken"
 
-            # 3. Check if this MetriqFlow profile already has a Telegram linked
+            # 3. Check if this Metriq Flow profile already has a Telegram linked
             existing_user = await conn.fetchrow(
                 "SELECT telegram_id FROM telegram_users WHERE user_id = $1",
                 user_id,

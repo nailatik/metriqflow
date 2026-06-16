@@ -112,7 +112,7 @@ function clampPriority(v: unknown, fallback: number): number {
   return Number.isFinite(n) && n >= 1 && n <= 3 ? n : fallback;
 }
 
-const ALERT_SYSTEM_RU = `Ты — SMM-аналитик MetriqFlow. Пишешь короткое email-уведомление об изменении вовлечённости Telegram-канала.
+const ALERT_SYSTEM_RU = `Ты — SMM-аналитик Metriq Flow. Пишешь короткое email-уведомление об изменении вовлечённости Telegram-канала.
 
 Формат вывода — СТРОГО JSON без текста вне объекта:
 {"subject":"...","bodyHtml":"..."}
@@ -122,10 +122,11 @@ const ALERT_SYSTEM_RU = `Ты — SMM-аналитик MetriqFlow. Пишешь 
 - bodyHtml: HTML, max 200 слов. Стиль: дружелюбный, конкретный. 2-3 абзаца.
 - kind="drop": одна гипотеза причины + 1 конкретный совет.
 - kind="ok": похвали результат + 1 совет для дальнейшего роста.
-- В конце добавь: <p style="color:#888;font-size:13px">— MetriqFlow</p>
+- Каждый абзац — <p style="margin:0 0 14px">...</p>. Ссылки на аналитику НЕ добавляй.
+- В конце добавь: <p style="color:#888;font-size:13px">— Metriq Flow</p>
 - Только JSON, без markdown.`;
 
-const ALERT_SYSTEM_EN = `You are an SMM analyst for MetriqFlow. Write a short email notification about a Telegram channel's engagement change.
+const ALERT_SYSTEM_EN = `You are an SMM analyst for Metriq Flow. Write a short email notification about a Telegram channel's engagement change.
 
 Output format — STRICT JSON, nothing outside the object:
 {"subject":"...","bodyHtml":"..."}
@@ -135,7 +136,8 @@ Rules:
 - bodyHtml: HTML, max 200 words. Tone: friendly, concrete. 2-3 paragraphs.
 - kind="drop": one hypothesis for the cause + 1 concrete tip.
 - kind="ok": praise the result + 1 tip to push further.
-- End with: <p style="color:#888;font-size:13px">— MetriqFlow</p>
+- Each paragraph as <p style="margin:0 0 14px">...</p>. Do NOT add analytics links.
+- End with: <p style="color:#888;font-size:13px">— Metriq Flow</p>
 - JSON only, no markdown.`;
 
 export async function generateAlertCopy(input: AlertCopyInput): Promise<AlertCopy> {

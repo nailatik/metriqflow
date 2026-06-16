@@ -1,4 +1,4 @@
-# MetriqFlow — Admin Panel (design spec / source of truth)
+# Metriq Flow — Admin Panel (design spec / source of truth)
 
 **Author:** Opus (design). **Implementer:** Sonnet (build against this doc + `frontend/DESIGN.md` + `RESPONSIVE.md`).
 **Branch:** `admin-panel`. **Entry:** `/admin` (locale-prefixed: `/{ru|en}/admin`).
@@ -105,7 +105,7 @@ and conditionally show an "Admin" entry — but the server is the real boundary 
 
 ## 2. Feature scope (researched against typical SaaS admin panels)
 
-Standard operator-console sections, trimmed to what MetriqFlow actually needs. MVP = **Overview, Users,
+Standard operator-console sections, trimmed to what Metriq Flow actually needs. MVP = **Overview, Users,
 Promo codes, Billing/Subscription history, Audit log.** Each maps to the founder's explicit asks.
 
 | Section | Founder ask it satisfies | Phase |

@@ -2,7 +2,7 @@ import cron from "node-cron";
 import { query } from "../db";
 import { logger } from "../lib/logger";
 import { generateAlertCopy } from "./ai.service";
-import { sendTelegramMessage, sendAlertEmail } from "./delivery.service";
+import { sendTelegramMessage, sendAlertEmail, brandedEmail } from "./delivery.service";
 
 const DEAD_AFTER_DAYS = 60;
 const ALERT_COOLDOWN_DAYS = 7;
@@ -93,7 +93,7 @@ async function handleDeadUser(user: AlertUser): Promise<void> {
 
   const isRu = user.locale !== "en";
   const subject = isRu
-    ? "Вы давно не заглядывали в MetriqFlow"
+    ? "Вы давно не заглядывали в Metriq Flow"
     : "It's been a while — your channels miss you";
   const bodyHtml = isRu ? reengagementHtmlRu(user.email) : reengagementHtmlEn(user.email);
 
@@ -209,9 +209,16 @@ async function processChannel(user: AlertUser, ch: ChannelRow, force = false): P
 
 async function deliver(user: AlertUser, subject: string, bodyHtml: string): Promise<void> {
   if (user.telegram_id) {
+    // Telegram gets the raw content (no shell) — stripToTg flattens it to text.
     await sendTelegramMessage(user.telegram_id, `<b>${subject}</b>\n\n${stripToTg(bodyHtml)}`);
   } else {
-    await sendAlertEmail(user.email, subject, bodyHtml);
+    // Email gets the branded Warm Amber shell wrapped around the same content.
+    const html = brandedEmail({
+      preheader: subject,
+      lang: user.locale === "en" ? "en" : "ru",
+      contentHtml: bodyHtml,
+    });
+    await sendAlertEmail(user.email, subject, html);
   }
 }
 
@@ -219,9 +226,9 @@ function appendAnalyticsLink(bodyHtml: string, locale: string): string {
   const isRu = locale !== "en";
   const href = `${FRONTEND_URL}/${isRu ? "ru" : "en"}/app/analytics`;
   const linkHtml = isRu
-    ? `<p><a href="${href}" style="color:#6366f1">Открыть аналитику →</a></p>`
-    : `<p><a href="${href}" style="color:#6366f1">Open analytics →</a></p>`;
-  return bodyHtml.replace(/(<p style="color:#888[^"]*">— MetriqFlow<\/p>)/, `${linkHtml}$1`);
+    ? `<p style="margin:0 0 16px"><a href="${href}" style="color:#B45309;font-weight:600">Открыть аналитику →</a></p>`
+    : `<p style="margin:0 0 16px"><a href="${href}" style="color:#B45309;font-weight:600">Open analytics →</a></p>`;
+  return bodyHtml.replace(/(<p style="color:#888[^"]*">— Metriq Flow<\/p>)/, `${linkHtml}$1`);
 }
 
 function stripToTg(html: string): string {
@@ -237,6 +244,10 @@ function stripToTg(html: string): string {
 
 // ── Templates ──────────────────────────────────────────────────────────────────
 
+// Templates below return CLEAN inner content only (no <html>/font wrapper, no
+// footer) — deliver() wraps it in the branded Warm Amber shell for email, and
+// stripToTg() flattens it for Telegram. Keep links amber (#B45309), no emoji in
+// the body (DESIGN.md: no emoji as icons); subject-line emoji are fine.
 function fallbackDropTemplate(
   title: string, curER: number, prevER: number, dropPct: number, isRu: boolean
 ): { subject: string; bodyHtml: string } {
@@ -245,26 +256,18 @@ function fallbackDropTemplate(
   if (isRu) {
     return {
       subject: `⚠️ Вовлечённость «${title}» упала на ${Math.round(dropPct)}%`,
-      bodyHtml: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto">
-        <h2 style="color:#f59e0b">⚠️ Снижение вовлечённости</h2>
-        <p>За последние 7 дней вовлечённость канала <b>${title}</b> снизилась с
-          <b>${prevER.toFixed(1)}%</b> до <b>${curER.toFixed(1)}%</b> (−${Math.round(dropPct)}%).</p>
-        <p>Проверьте частоту и формат публикаций — именно там чаще всего кроется причина.</p>
-        <p><a href="${href}" style="color:#6366f1">Открыть аналитику →</a></p>
-        <p style="color:#888;font-size:13px">— MetriqFlow</p>
-      </div>`,
+      bodyHtml: `<h2 style="margin:0 0 14px;font-size:20px;font-weight:700;color:#B45309">Снижение вовлечённости</h2>
+        <p style="margin:0 0 14px">За последние 7 дней вовлечённость канала <b>${title}</b> снизилась с <b>${prevER.toFixed(1)}%</b> до <b>${curER.toFixed(1)}%</b> (−${Math.round(dropPct)}%).</p>
+        <p style="margin:0 0 16px">Проверьте частоту и формат публикаций — именно там чаще всего кроется причина.</p>
+        <p style="margin:0"><a href="${href}" style="color:#B45309;font-weight:600">Открыть аналитику →</a></p>`,
     };
   }
   return {
     subject: `⚠️ Engagement for «${title}» dropped ${Math.round(dropPct)}%`,
-    bodyHtml: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto">
-      <h2 style="color:#f59e0b">⚠️ Engagement drop detected</h2>
-      <p>Over the last 7 days, engagement for <b>${title}</b> fell from
-        <b>${prevER.toFixed(1)}%</b> to <b>${curER.toFixed(1)}%</b> (−${Math.round(dropPct)}%).</p>
-      <p>Review posting frequency and content format — that's usually where the answer is.</p>
-      <p><a href="${href}" style="color:#6366f1">Open analytics →</a></p>
-      <p style="color:#888;font-size:13px">— MetriqFlow</p>
-    </div>`,
+    bodyHtml: `<h2 style="margin:0 0 14px;font-size:20px;font-weight:700;color:#B45309">Engagement drop detected</h2>
+      <p style="margin:0 0 14px">Over the last 7 days, engagement for <b>${title}</b> fell from <b>${prevER.toFixed(1)}%</b> to <b>${curER.toFixed(1)}%</b> (−${Math.round(dropPct)}%).</p>
+      <p style="margin:0 0 16px">Review posting frequency and content format — that's usually where the answer is.</p>
+      <p style="margin:0"><a href="${href}" style="color:#B45309;font-weight:600">Open analytics →</a></p>`,
   };
 }
 
@@ -276,51 +279,45 @@ function fallbackOkTemplate(
   if (isRu) {
     return {
       subject: `✅ «${title}» — вовлечённость в норме`,
-      bodyHtml: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto">
-        <h2 style="color:#22c55e">✅ Отличные результаты!</h2>
-        <p>Вовлечённость канала <b>${title}</b> за последние 7 дней — <b>${curER.toFixed(1)}%</b>.</p>
-        <p>Значительного падения нет. Продолжайте в том же духе!</p>
-        <p><a href="${href}" style="color:#6366f1">Открыть аналитику →</a></p>
-        <p style="color:#888;font-size:13px">— MetriqFlow</p>
-      </div>`,
+      bodyHtml: `<h2 style="margin:0 0 14px;font-size:20px;font-weight:700;color:#15803D">Отличные результаты</h2>
+        <p style="margin:0 0 14px">Вовлечённость канала <b>${title}</b> за последние 7 дней — <b>${curER.toFixed(1)}%</b>.</p>
+        <p style="margin:0 0 16px">Значительного падения нет. Продолжайте в том же духе!</p>
+        <p style="margin:0"><a href="${href}" style="color:#B45309;font-weight:600">Открыть аналитику →</a></p>`,
     };
   }
   return {
     subject: `✅ «${title}» — engagement is looking good`,
-    bodyHtml: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto">
-      <h2 style="color:#22c55e">✅ Great results!</h2>
-      <p>Engagement for <b>${title}</b> over the last 7 days: <b>${curER.toFixed(1)}%</b>.</p>
-      <p>No significant drop detected. Keep it up!</p>
-      <p><a href="${href}" style="color:#6366f1">Open analytics →</a></p>
-      <p style="color:#888;font-size:13px">— MetriqFlow</p>
-    </div>`,
+    bodyHtml: `<h2 style="margin:0 0 14px;font-size:20px;font-weight:700;color:#15803D">Great results</h2>
+      <p style="margin:0 0 14px">Engagement for <b>${title}</b> over the last 7 days: <b>${curER.toFixed(1)}%</b>.</p>
+      <p style="margin:0 0 16px">No significant drop detected. Keep it up!</p>
+      <p style="margin:0"><a href="${href}" style="color:#B45309;font-weight:600">Open analytics →</a></p>`,
   };
 }
 
 function reengagementHtmlRu(email: string): string {
   const href = `${FRONTEND_URL}/ru/app/analytics`;
   const settingsHref = `${FRONTEND_URL}/ru/app/settings`;
-  return `<div style="font-family:sans-serif;max-width:520px;margin:0 auto">
-    <h2 style="color:#6366f1">Ваши каналы скучают по вам!</h2>
-    <p>Кажется, вы давно не заглядывали в MetriqFlow. А между тем, ваши социальные сети продолжают работать — и там накопилось немало интересного.</p>
-    <p>Загляните в аналитику — возможно, именно сейчас подходящий момент для нового рывка.</p>
-    <a href="${href}" style="display:inline-block;margin:16px 0;padding:12px 24px;background:#6366f1;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">
-      Посмотреть аналитику
-    </a>
-    <p style="color:#888;font-size:13px">Вы получаете это письмо как пользователь MetriqFlow (${email}). Отключить уведомления — в <a href="${settingsHref}" style="color:#6366f1">настройках</a>.</p>
-  </div>`;
+  return `<h2 style="margin:0 0 14px;font-size:20px;font-weight:700;color:#1C1917">Ваши каналы скучают по вам</h2>
+    <p style="margin:0 0 14px">Кажется, вы давно не заглядывали в Metriq&nbsp;Flow. А между тем ваши соцсети продолжают работать — и там накопилось немало интересного.</p>
+    <p style="margin:0 0 4px">Загляните в аналитику — возможно, именно сейчас подходящий момент для нового рывка.</p>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:18px 0">
+      <tr><td align="center" bgcolor="#D97706" style="border-radius:10px">
+        <a href="${href}" target="_blank" style="display:inline-block;padding:13px 28px;font-weight:600;color:#1C1917;border-radius:10px">Посмотреть аналитику</a>
+      </td></tr>
+    </table>
+    <p style="margin:8px 0 0;font-size:13px;color:#78716C">Вы получаете это письмо как пользователь Metriq&nbsp;Flow (${email}). Отключить уведомления — в <a href="${settingsHref}" style="color:#B45309;font-weight:600">настройках</a>.</p>`;
 }
 
 function reengagementHtmlEn(email: string): string {
   const href = `${FRONTEND_URL}/en/app/analytics`;
   const settingsHref = `${FRONTEND_URL}/en/app/settings`;
-  return `<div style="font-family:sans-serif;max-width:520px;margin:0 auto">
-    <h2 style="color:#6366f1">Your channels miss you!</h2>
-    <p>It looks like you haven't checked MetriqFlow in a while. Your social channels have been active — there's plenty to catch up on.</p>
-    <p>Take a look at your analytics — this might be the perfect moment for a fresh push.</p>
-    <a href="${href}" style="display:inline-block;margin:16px 0;padding:12px 24px;background:#6366f1;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">
-      View analytics
-    </a>
-    <p style="color:#888;font-size:13px">You're receiving this as a MetriqFlow user (${email}). Manage alerts in your <a href="${settingsHref}" style="color:#6366f1">settings</a>.</p>
-  </div>`;
+  return `<h2 style="margin:0 0 14px;font-size:20px;font-weight:700;color:#1C1917">Your channels miss you</h2>
+    <p style="margin:0 0 14px">It looks like you haven't checked Metriq&nbsp;Flow in a while. Your social channels have been active — there's plenty to catch up on.</p>
+    <p style="margin:0 0 4px">Take a look at your analytics — this might be the perfect moment for a fresh push.</p>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:18px 0">
+      <tr><td align="center" bgcolor="#D97706" style="border-radius:10px">
+        <a href="${href}" target="_blank" style="display:inline-block;padding:13px 28px;font-weight:600;color:#1C1917;border-radius:10px">View analytics</a>
+      </td></tr>
+    </table>
+    <p style="margin:8px 0 0;font-size:13px;color:#78716C">You're receiving this as a Metriq&nbsp;Flow user (${email}). Manage alerts in your <a href="${settingsHref}" style="color:#B45309;font-weight:600">settings</a>.</p>`;
 }

@@ -63,19 +63,19 @@ export async function generateMetadata({
   const isRu = locale === "ru";
 
   const keywords = isRu
-    ? ["аналитика соцсетей", "SMM", "аналитика Telegram", "аналитика ВКонтакте", "отчёты", "дашборд", "маркетинг", "MetriqFlow"]
-    : ["social analytics", "SMM", "Telegram analytics", "VK analytics", "reports", "dashboard", "marketing", "MetriqFlow"];
+    ? ["аналитика соцсетей", "SMM", "аналитика Telegram", "аналитика ВКонтакте", "отчёты", "дашборд", "маркетинг", "Metriq Flow"]
+    : ["social analytics", "SMM", "Telegram analytics", "VK analytics", "reports", "dashboard", "marketing", "Metriq Flow"];
 
   return {
     metadataBase: new URL(siteUrl),
     title: {
-      default: "MetriqFlow — " + t("hero.titleHighlight"),
-      template: "%s | MetriqFlow",
+      default: "Metriq Flow - " + t("metaTitle"),
+      template: "%s | Metriq Flow",
     },
     description: t("hero.subtitle"),
     keywords,
-    authors: [{ name: "MetriqFlow" }],
-    creator: "MetriqFlow",
+    authors: [{ name: "Metriq Flow" }],
+    creator: "Metriq Flow",
     robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
     icons: {
       icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
@@ -88,14 +88,14 @@ export async function generateMetadata({
       locale: isRu ? "ru_RU" : "en_US",
       alternateLocale: isRu ? "en_US" : "ru_RU",
       url: `${siteUrl}/${locale}`,
-      siteName: "MetriqFlow",
-      title: "MetriqFlow — " + t("hero.titleHighlight"),
+      siteName: "Metriq Flow",
+      title: "Metriq Flow — " + t("hero.titleHighlight"),
       description: t("hero.subtitle"),
-      images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "MetriqFlow" }],
+      images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Metriq Flow" }],
     },
     twitter: {
       card: "summary_large_image",
-      title: "MetriqFlow — " + t("hero.titleHighlight"),
+      title: "Metriq Flow — " + t("hero.titleHighlight"),
       description: t("hero.subtitle"),
       images: ["/og-image.png"],
     },

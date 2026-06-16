@@ -148,7 +148,7 @@ export default function AdminOverviewPage() {
     <>
       <div className="mb-6">
         <h1 className="text-2xl font-bold tracking-tight text-textMain mb-1">Overview</h1>
-        <p className="text-sm text-textSecondary">MetriqFlow admin console</p>
+        <p className="text-sm text-textSecondary">Metriq Flow admin console</p>
       </div>
 
       {/* KPI cards */}
