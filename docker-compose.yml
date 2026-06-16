@@ -40,6 +40,12 @@ services:
     environment:
       ALLOWED_SENDER_DOMAINS: ${SITE_DOMAIN}
       DKIM_AUTOGENERATE: "true"
+      # Postfix only relays for clients in mynetworks; by default that's just
+      # localhost, so the backend container gets "Recipient address rejected:
+      # Access denied". Trust the private (RFC1918) ranges the compose network
+      # lives in. Safe because mailer publishes no host port — only compose
+      # peers can reach :25, so this is not an open relay to the internet.
+      MYNETWORKS: "127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
     volumes:
       - dkim_keys:/etc/opendkim/keys
 
