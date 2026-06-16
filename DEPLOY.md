@@ -99,6 +99,70 @@ Done. From now on `git push origin main` deploys automatically.
 
 ---
 
+## Email / SMTP (self-hosted MTA)
+
+Email verification + alerts send through the **`mailer`** service in
+`docker-compose.yml` — Postfix + OpenDKIM. The backend talks to `mailer:25`
+over the private compose network with **no auth** (see `backend/.env`); the
+self-signed STARTTLS cert on that internal hop is intentionally not verified.
+`mailer` is **not** published to the host (internal-only, to avoid an open relay).
+
+`backend/.env` for the own-MTA path:
+```
+SMTP_HOST=mailer
+SMTP_PORT=25
+SMTP_SECURE=false
+SMTP_FROM=noreply@<domain>     # USER/PASS empty
+```
+
+The hard part is **deliverability**, not the code. Setup, in order:
+
+1. **Port 25 outbound** must be open on the VPS (many hosts block it). Test from
+   the box: `nc -zv gmail-smtp-in.l.google.com 25`. Blocked → open a ticket with
+   the server host, or fall back to a hosted relay (below).
+
+2. **Deploy.** On first boot `mailer` auto-generates a DKIM keypair into the
+   `dkim_keys` volume (persists across restarts, so the published record stays
+   valid). Read the public key to publish:
+   ```bash
+   docker compose exec mailer sh -c \
+     'grep -o "\"[^\"]*\"" /etc/opendkim/keys/<domain>.txt | tr -d "\"\n"; echo'
+   ```
+
+3. **DNS** — at the domain's **authoritative nameserver** (here: Cloudflare, not
+   the registrar). `mail` must be **DNS-only / un-proxied** (an orange-cloud
+   proxy breaks SMTP and hides the real IP, so SPF/PTR stop aligning):
+
+   | Type | Name | Value |
+   |------|------|-------|
+   | A    | `mail`            | `<VPS_IP>` (proxy OFF) |
+   | TXT  | `@`               | `v=spf1 a:mail.<domain> ip4:<VPS_IP> include:... ~all` |
+   | TXT  | `mail._domainkey` | (the DKIM string from step 2) |
+   | TXT  | `_dmarc`          | `v=DMARC1; p=none; rua=mailto:postmaster@<domain>` |
+
+   > Only **one** SPF record per domain — if one already exists, **merge** the
+   > `a:`/`ip4:` into it, don't add a second.
+
+4. **PTR / reverse DNS** — set at the **IP owner** (the server host's panel or a
+   support ticket), **not** in the DNS provider: `<VPS_IP>` → `mail.<domain>`.
+   Gmail/Yandex do a forward-confirmed reverse-DNS check; a missing/mismatched
+   PTR → spam or reject. Verify: `dig +short -x <VPS_IP>` → `mail.<domain>.`
+
+5. **Test** with a fresh address from **mail-tester.com** (target ≥ 8):
+   ```bash
+   docker compose exec backend node -e "require('nodemailer').createTransport({host:'mailer',port:25,secure:false,tls:{rejectUnauthorized:false}}).sendMail({from:'noreply@<domain>',to:process.argv[1],subject:'test',text:'ping'}).then(()=>console.log('SENT')).catch(e=>console.error(e.message))" test-XXXX@srv1.mail-tester.com
+   ```
+
+**Swapping to a hosted relay later** needs no code change — just edit
+`backend/.env` and `docker compose up -d backend`:
+- Yandex: `SMTP_HOST=smtp.yandex.ru PORT=465 SECURE=true USER/PASS=<app pw>`
+- Resend: `SMTP_HOST=smtp.resend.com PORT=465 SECURE=true USER=resend PASS=<api key>`
+
+With `SMTP_USER` set, auth is sent and strict TLS cert validation is restored
+automatically (the relaxed cert check only applies to the auth-less own MTA).
+
+---
+
 ## Day-to-day
 
 - **Deploy** = `git push origin main`. Watch the run in the Actions tab.

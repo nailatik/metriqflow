@@ -142,6 +142,10 @@ function createTransport() {
     // Auth omitted for own-MTA relay (compose Postfix). Set SMTP_USER/PASS
     // only when pointing at an authenticated provider (Yandex/Resend/etc).
     ...(user ? { auth: { user, pass } } : {}),
+    // Own MTA presents a self-signed STARTTLS cert over the private compose
+    // network — don't verify it (no MITM surface, traffic stays on the host).
+    // Authenticated providers keep strict cert validation.
+    ...(user ? {} : { tls: { rejectUnauthorized: false } }),
   });
 }
 
