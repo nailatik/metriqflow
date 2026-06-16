@@ -53,16 +53,31 @@ Frontend and backend live on **subdomains of the same registrable domain**
      `ANTHROPIC_API_KEY`, `SENTRY_DSN`, `ADMIN_EMAILS`
    - leave `DB_*` blank/ignored here — compose injects them from `./.env`.
 
-5. **First boot + migrate** (fresh compose Postgres is empty → applies all 20):
+5. **First boot + bootstrap schema.** The numbered migrations in
+   `backend/migrations/` only `ALTER`/extend a base schema (`users`, `reports`,
+   `refresh_tokens`, …) that was created by hand on dev and never captured as a
+   migration. On a fresh Postgres, `001` fails immediately (`relation "users"
+   does not exist`). So load the full schema dump first, then **baseline** (mark
+   every migration as applied without re-running its DDL):
    ```bash
+   docker compose up -d --build postgres
+   # load the committed dump (deploy/schema.sql == pg_dump of the dev schema)
+   docker compose exec -T postgres \
+     psql -U "$DB_USER" -d "$DB_NAME" < deploy/schema.sql
    docker compose up -d --build
-   docker compose exec -T backend npm run migrate
+   docker compose exec -T backend npm run migrate:baseline
+   docker compose exec -T backend npm run migrate   # "Already up to date"
    ```
 
-   > **Pointing at an EXISTING already-migrated DB instead?** Run the baseline
-   > ONCE before the first `migrate`, or the runner will re-run all 20 and fail:
+   > **Fresh DB with NO base schema and you skip the dump?** `migrate` will run
+   > `001` and fail on the missing `users` table. Always load `deploy/schema.sql`
+   > first on a brand-new database.
+   >
+   > To refresh the dump after schema changes on dev:
    > ```bash
-   > docker compose exec -T backend npm run migrate:baseline
+   > pg_dump --schema-only --no-owner --no-privileges \
+   >   --exclude-table=schema_migrations \
+   >   -h localhost -p 5432 -U postgres -d metriq > deploy/schema.sql
    > ```
 
 6. **GitHub Actions secrets** (repo → Settings → Secrets → Actions):
