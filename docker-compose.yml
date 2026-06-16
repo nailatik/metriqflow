@@ -26,6 +26,23 @@ services:
       timeout: 5s
       retries: 5
 
+  # Own outbound MTA (Postfix + OpenDKIM). Backend sends mail to mailer:25 with
+  # NO auth — see backend/.env SMTP_*. Requires port 25 OUTBOUND open on the VPS
+  # (test before deploy: `nc -zv gmail-smtp-in.l.google.com 25`). NOT published
+  # to the host — internal compose network only, to avoid running an open relay.
+  # DKIM keypair is auto-generated on first boot and persisted in the dkim volume
+  # (so the published DNS record stays valid across restarts). Read the public
+  # record to publish with: `docker compose logs mailer | grep -A2 DKIM`.
+  mailer:
+    image: boky/postfix:latest
+    restart: unless-stopped
+    hostname: mail.${SITE_DOMAIN}
+    environment:
+      ALLOWED_SENDER_DOMAINS: ${SITE_DOMAIN}
+      DKIM_AUTOGENERATE: "true"
+    volumes:
+      - dkim_keys:/etc/opendkim/keys
+
   backend:
     build: ./backend
     restart: unless-stopped
@@ -43,6 +60,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      mailer:
+        condition: service_started
 
   frontend:
     build:
@@ -77,5 +96,6 @@ services:
 volumes:
   pgdata:
   reports:
+  dkim_keys:
   caddy_data:
   caddy_config:

@@ -121,15 +121,27 @@ export async function sendPostToChannel(
 
 // ─── Email ────────────────────────────────────────────────────────────────────
 
+// Mail is "configured" as soon as a host is set. With an own MTA (the compose
+// Postfix relay at mailer:25) there are no credentials, so we gate on
+// SMTP_HOST rather than SMTP_USER.
+function mailConfigured(): boolean {
+  return Boolean(process.env.SMTP_HOST);
+}
+
+function smtpFrom(): string {
+  return process.env.SMTP_FROM || process.env.SMTP_USER || "noreply@metriqflow.com";
+}
+
 function createTransport() {
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
   return nodemailer.createTransport({
-    host:   process.env.SMTP_HOST ?? "smtp.gmail.com",
+    host:   process.env.SMTP_HOST,
     port:   Number(process.env.SMTP_PORT ?? 587),
     secure: process.env.SMTP_SECURE === "true",
-    auth: {
-      user: process.env.SMTP_USER ?? "",
-      pass: process.env.SMTP_PASS ?? "",
-    },
+    // Auth omitted for own-MTA relay (compose Postfix). Set SMTP_USER/PASS
+    // only when pointing at an authenticated provider (Yandex/Resend/etc).
+    ...(user ? { auth: { user, pass } } : {}),
   });
 }
 
@@ -140,13 +152,13 @@ export async function sendReportViaEmail(
   subject: string,
   bodyHtml: string
 ): Promise<void> {
-  if (!process.env.SMTP_USER) throw new Error("SMTP not configured");
+  if (!mailConfigured()) throw new Error("SMTP not configured");
   if (!fs.existsSync(filePath)) throw new Error("File not found: " + filePath);
 
   const transport = createTransport();
 
   await transport.sendMail({
-    from:    `"MetriqFlow" <${process.env.SMTP_FROM ?? process.env.SMTP_USER}>`,
+    from:    `"MetriqFlow" <${smtpFrom()}>`,
     to:      toEmail,
     subject,
     html:    bodyHtml,
@@ -191,14 +203,13 @@ export async function sendTelegramMessage(telegramId: number, html: string): Pro
 }
 
 async function sendSimpleEmail(to: string, subject: string, html: string): Promise<void> {
-  const smtpUser = process.env.SMTP_USER;
-  if (!smtpUser) {
+  if (!mailConfigured()) {
     logger.debug({ to, subject, html }, "[DEV] Email");
     return;
   }
   const transport = createTransport();
   await transport.sendMail({
-    from: `"MetriqFlow" <${process.env.SMTP_FROM ?? smtpUser}>`,
+    from: `"MetriqFlow" <${smtpFrom()}>`,
     to,
     subject,
     html,
@@ -208,7 +219,7 @@ async function sendSimpleEmail(to: string, subject: string, html: string): Promi
 export async function sendVerificationEmail(toEmail: string, token: string, locale = "ru"): Promise<void> {
   const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:3000";
   const link = `${frontendUrl}/${locale}/verify-email?token=${token}`;
-  if (!process.env.SMTP_USER) {
+  if (!mailConfigured()) {
     // eslint-disable-next-line no-console
     console.log("\n[DEV] Verify link:", link, "\n");
   }
