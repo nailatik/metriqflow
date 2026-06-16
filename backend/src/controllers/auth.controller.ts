@@ -10,6 +10,7 @@ import { UserDB, UserRow } from "../types/express";
 import jwt from "jsonwebtoken";
 import { sendVerificationEmail, sendDeleteConfirmationEmail } from "../services/delivery.service";
 import { logger } from "../lib/logger";
+import { LEGAL_VERSIONS, ConsentType } from "../config/legal";
 
 type AuthBody = {
   email: string;
@@ -19,6 +20,8 @@ type AuthBody = {
   organization: string;
   phone: string;
   agreedToProcessing: boolean;
+  agreedToTerms: boolean;
+  agreedToMarketing: boolean;
   locale?: string;
 };
 
@@ -28,6 +31,24 @@ const generateToken = () => crypto.randomBytes(32).toString("hex");
 
 const BCRYPT_ROUNDS = 12;
 
+const getClientIp = (req: Request) =>
+  req.headers["x-forwarded-for"]?.toString().split(",")[0]?.trim() || req.socket.remoteAddress || null;
+
+async function recordConsents(
+  userId: number,
+  consents: { type: ConsentType; version: string; granted: boolean }[],
+  ip: string | null,
+  userAgent: string | null
+) {
+  for (const c of consents) {
+    await query(
+      `INSERT INTO user_consents (user_id, consent_type, doc_version, granted, ip, user_agent)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [userId, c.type, c.version, c.granted, ip, userAgent]
+    );
+  }
+}
+
 /* ---------------- ME ---------------- */
 
 export const me = async (req: Request, res: Response) => {
@@ -36,7 +57,7 @@ export const me = async (req: Request, res: Response) => {
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
     const result = await query(
-      "SELECT id, email, full_name, birth_date, organization, phone, email_verified, password_length, plan, plan_expires_at, is_admin FROM users WHERE id = $1 AND deleted_at IS NULL",
+      "SELECT id, email, full_name, birth_date, organization, phone, email_verified, password_length, plan, plan_expires_at, is_admin, agreed_to_marketing FROM users WHERE id = $1 AND deleted_at IS NULL",
       [userId]
     );
 
@@ -55,7 +76,7 @@ export const me = async (req: Request, res: Response) => {
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { email, password, fullName, birthDate, organization, phone, agreedToProcessing, locale = "ru" } = req.body as AuthBody;
+    const { email, password, fullName, birthDate, organization, phone, agreedToProcessing, agreedToTerms, agreedToMarketing, locale = "ru" } = req.body as AuthBody;
 
     const normalizedEmail = normalizeEmail(email);
 
@@ -85,6 +106,10 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Consent to data processing is required" });
     }
 
+    if (!agreedToTerms) {
+      return res.status(400).json({ message: "Acceptance of terms is required" });
+    }
+
     const existingUser = await query(
       "SELECT id FROM users WHERE email = $1",
       [normalizedEmail]
@@ -98,11 +123,12 @@ export const register = async (req: Request, res: Response) => {
     const verificationToken = generateToken();
 
     const result = await query(
-      `INSERT INTO users (email, password, full_name, birth_date, organization, phone, agreed_to_processing, is_profile_completed,
+      `INSERT INTO users (email, password, full_name, birth_date, organization, phone, agreed_to_processing,
+                          agreed_to_terms, agreed_to_marketing, is_profile_completed,
                           email_verified, email_verification_token, email_verification_expires_at, password_length)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, true, false, $8, NOW() + interval '24 hours', $9)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, false, $10, NOW() + interval '24 hours', $11)
        RETURNING id, email, full_name, birth_date, organization, phone, is_profile_completed, email_verified`,
-      [normalizedEmail, hashed, fullName, birthDate, organization || null, phone, agreedToProcessing, verificationToken, password.length]
+      [normalizedEmail, hashed, fullName, birthDate, organization || null, phone, agreedToProcessing, agreedToTerms, !!agreedToMarketing, verificationToken, password.length]
     );
 
     const user = result.rows[0] as UserRow | undefined;
@@ -110,6 +136,19 @@ export const register = async (req: Request, res: Response) => {
     if (!user) {
       return res.status(500).json({ message: "User creation failed" });
     }
+
+    const ip = getClientIp(req);
+    const userAgent = req.headers["user-agent"] || null;
+    await recordConsents(
+      user.id,
+      [
+        { type: "pdn", version: LEGAL_VERSIONS.consent, granted: true },
+        { type: "terms", version: LEGAL_VERSIONS.terms, granted: true },
+        ...(agreedToMarketing ? [{ type: "marketing" as ConsentType, version: LEGAL_VERSIONS.consent, granted: true }] : []),
+      ],
+      ip,
+      userAgent
+    );
 
     // revoke old sessions (safety)
     await query(
@@ -406,6 +445,7 @@ type ProfileBody = {
   organization: string | null;
   phone: string | null;
   agreedToProcessing: boolean;
+  agreedToTerms: boolean;
 };
 
 export const updateProfile = async (req: Request, res: Response) => {
@@ -416,7 +456,7 @@ export const updateProfile = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const { fullName, birthDate, organization, phone, agreedToProcessing } = req.body as ProfileBody;
+    const { fullName, birthDate, organization, phone, agreedToProcessing, agreedToTerms } = req.body as ProfileBody;
 
     if (!fullName) {
       return res.status(400).json({ message: "Full name is required" });
@@ -434,13 +474,17 @@ export const updateProfile = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Consent to data processing is required" });
     }
 
+    if (!agreedToTerms) {
+      return res.status(400).json({ message: "Acceptance of terms is required" });
+    }
+
     const result = await query(
       `UPDATE users
        SET full_name = $1, birth_date = $2, organization = $3, phone = $4,
-           agreed_to_processing = $5, is_profile_completed = true
-       WHERE id = $6
+           agreed_to_processing = $5, agreed_to_terms = $6, is_profile_completed = true
+       WHERE id = $7
        RETURNING id, email, full_name, birth_date, organization, phone, is_profile_completed`,
-      [fullName, birthDate, organization, phone, agreedToProcessing, userId]
+      [fullName, birthDate, organization, phone, agreedToProcessing, agreedToTerms, userId]
     );
 
     const user = result.rows[0];
@@ -448,6 +492,34 @@ export const updateProfile = async (req: Request, res: Response) => {
     return res.json(user);
   } catch (err) {
     logger.error({ err }, "UPDATE PROFILE ERROR:");
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+/* ---------------- MARKETING CONSENT (38-FZ opt-out) ---------------- */
+
+export const updateMarketingConsent = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+    const { enabled } = req.body as { enabled?: unknown };
+    if (typeof enabled !== "boolean") {
+      return res.status(400).json({ message: "enabled must be boolean" });
+    }
+
+    await query("UPDATE users SET agreed_to_marketing = $1 WHERE id = $2", [enabled, userId]);
+
+    await recordConsents(
+      userId,
+      [{ type: "marketing", version: LEGAL_VERSIONS.consent, granted: enabled }],
+      getClientIp(req),
+      req.headers["user-agent"] || null
+    );
+
+    return res.json({ agreed_to_marketing: enabled });
+  } catch (err) {
+    logger.error({ err }, "MARKETING CONSENT ERROR:");
     return res.status(500).json({ message: "Internal server error" });
   }
 };

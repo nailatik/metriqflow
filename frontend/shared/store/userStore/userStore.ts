@@ -25,6 +25,7 @@ export class UserStore {
     requestDeleteAccount: (locale: string) => userAsync.requestDeleteAccount(this, locale),
     deleteAccount: (token: string) => userAsync.deleteAccount(this, token),
     updateAlertsEnabled: (enabled: boolean) => userAsync.updateAlertsEnabled(this, enabled),
+    updateMarketingConsent: (enabled: boolean) => userAsync.updateMarketingConsent(this, enabled),
   };
 
   constructor(public root: RootStore) {
@@ -55,6 +56,9 @@ export class UserStore {
   }
   updateAlertsEnabled(enabled: boolean) {
     return this.async.updateAlertsEnabled(enabled);
+  }
+  updateMarketingConsent(enabled: boolean) {
+    return this.async.updateMarketingConsent(enabled);
   }
   logout(): void {
     userSync.logout(this);

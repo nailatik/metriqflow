@@ -74,9 +74,17 @@ export const SettingsView = observer(() => {
   const [alertsEnabled, setAlertsEnabled] = useState<boolean>(user?.alerts_enabled ?? true);
   const [alertsStatus, setAlertsStatus] = useState<"idle" | "saving" | "error">("idle");
 
+  // ── Marketing consent toggle ───────────────────────────────────────────────
+  const [marketingEnabled, setMarketingEnabled] = useState<boolean>(user?.agreed_to_marketing ?? false);
+  const [marketingStatus, setMarketingStatus] = useState<"idle" | "saving" | "error">("idle");
+
   useEffect(() => {
     if (user?.alerts_enabled !== undefined) setAlertsEnabled(user.alerts_enabled);
   }, [user?.alerts_enabled]);
+
+  useEffect(() => {
+    if (user?.agreed_to_marketing !== undefined) setMarketingEnabled(user.agreed_to_marketing);
+  }, [user?.agreed_to_marketing]);
 
   const handleToggleAlerts = async () => {
     const next = !alertsEnabled;
@@ -88,6 +96,19 @@ export const SettingsView = observer(() => {
     } else {
       setAlertsEnabled(!next);
       setAlertsStatus("error");
+    }
+  };
+
+  const handleToggleMarketing = async () => {
+    const next = !marketingEnabled;
+    setMarketingEnabled(next);
+    setMarketingStatus("saving");
+    const result = await userStore.updateMarketingConsent(next);
+    if (result.success) {
+      setMarketingStatus("idle");
+    } else {
+      setMarketingEnabled(!next);
+      setMarketingStatus("error");
     }
   };
 
@@ -302,35 +323,68 @@ export const SettingsView = observer(() => {
         <h2 className="text-lg font-semibold text-textMain mb-1">{t("notifications.title")}</h2>
         <p className="text-sm text-textSecondary mb-4">{t("notifications.description")}</p>
 
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-textMain">{t("notifications.alertsLabel")}</p>
-            <p className="text-xs text-textSecondary mt-0.5">
-              {alertsStatus === "saving"
-                ? t("notifications.saving")
-                : alertsEnabled
-                  ? t("notifications.alertsOn")
-                  : t("notifications.alertsOff")}
-            </p>
-            {alertsStatus === "error" && (
-              <p className="text-xs text-error mt-0.5">{t("notifications.saveError")}</p>
-            )}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-textMain">{t("notifications.alertsLabel")}</p>
+              <p className="text-xs text-textSecondary mt-0.5">
+                {alertsStatus === "saving"
+                  ? t("notifications.saving")
+                  : alertsEnabled
+                    ? t("notifications.alertsOn")
+                    : t("notifications.alertsOff")}
+              </p>
+              {alertsStatus === "error" && (
+                <p className="text-xs text-error mt-0.5">{t("notifications.saveError")}</p>
+              )}
+            </div>
+
+            <button
+              onClick={handleToggleAlerts}
+              disabled={alertsStatus === "saving"}
+              aria-label={t("notifications.alertsLabel")}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 disabled:opacity-50 ${
+                alertsEnabled ? "bg-primary" : "bg-border"
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                  alertsEnabled ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
           </div>
 
-          <button
-            onClick={handleToggleAlerts}
-            disabled={alertsStatus === "saving"}
-            aria-label={t("notifications.alertsLabel")}
-            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 disabled:opacity-50 ${
-              alertsEnabled ? "bg-primary" : "bg-border"
-            }`}
-          >
-            <span
-              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                alertsEnabled ? "translate-x-5" : "translate-x-0"
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-textMain">{t("notifications.marketingLabel")}</p>
+              <p className="text-xs text-textSecondary mt-0.5">
+                {marketingStatus === "saving"
+                  ? t("notifications.saving")
+                  : marketingEnabled
+                    ? t("notifications.marketingOn")
+                    : t("notifications.marketingOff")}
+              </p>
+              {marketingStatus === "error" && (
+                <p className="text-xs text-error mt-0.5">{t("notifications.saveError")}</p>
+              )}
+            </div>
+
+            <button
+              onClick={handleToggleMarketing}
+              disabled={marketingStatus === "saving"}
+              aria-label={t("notifications.marketingLabel")}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 disabled:opacity-50 ${
+                marketingEnabled ? "bg-primary" : "bg-border"
               }`}
-            />
-          </button>
+            >
+              <span
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                  marketingEnabled ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
         </div>
       </div>
 

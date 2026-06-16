@@ -10,13 +10,14 @@ import { useRouter, Link } from "@/i18n/navigation";
 import { useUserStore, useUiStore } from "@/shared/store/StoreProvider";
 import { Button } from "@/shared/ui/Button/Button";
 import { Input } from "@/shared/ui/Input/Input";
+import { Checkbox } from "@/shared/ui/Checkbox/Checkbox";
 import {
   validateEmail,
   validatePassword,
   getPasswordChecks,
 } from "@/shared/lib/validation";
 
-type Errors = Partial<Record<"email" | "password" | "fullName" | "birthDate" | "phone" | "agreement", string>>;
+type Errors = Partial<Record<"email" | "password" | "fullName" | "birthDate" | "phone" | "agreement" | "terms", string>>;
 
 export const RegisterForm = observer(() => {
   const t = useTranslations("Register");
@@ -37,6 +38,8 @@ export const RegisterForm = observer(() => {
     organization: "",
     phone: "",
     agreedToProcessing: false,
+    agreedToTerms: false,
+    agreedToMarketing: false,
   });
 
   const handleChange = (field: keyof typeof formData, value: string | boolean) => {
@@ -73,6 +76,7 @@ export const RegisterForm = observer(() => {
     if (!formData.birthDate) newErrors.birthDate = t("errors.birthDate");
     if (!formData.phone) newErrors.phone = t("errors.phone");
     if (!formData.agreedToProcessing) newErrors.agreement = t("errors.agreement");
+    if (!formData.agreedToTerms) newErrors.terms = t("errors.terms");
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -89,6 +93,8 @@ export const RegisterForm = observer(() => {
       organization: formData.organization || undefined,
       phone: formData.phone,
       agreedToProcessing: formData.agreedToProcessing,
+      agreedToTerms: formData.agreedToTerms,
+      agreedToMarketing: formData.agreedToMarketing,
     });
 
     if (ok) {
@@ -153,19 +159,41 @@ export const RegisterForm = observer(() => {
             {errors.phone && <p className="text-error text-sm mt-1">{errors.phone}</p>}
           </div>
 
-          <div className="flex items-start gap-3">
-            <input
-              type="checkbox"
-              id="agreed"
-              checked={formData.agreedToProcessing}
-              onChange={(e) => handleChange("agreedToProcessing", e.target.checked)}
-              className="mt-1"
-            />
-            <label htmlFor="agreed" className="text-sm text-textSecondary">
-              {t("step2.agreement")} *
-            </label>
-          </div>
-          {errors.agreement && <p className="text-error text-sm">{errors.agreement}</p>}
+          <Checkbox
+            checked={formData.agreedToProcessing}
+            onChange={(e) => handleChange("agreedToProcessing", e.target.checked)}
+            error={errors.agreement}
+            label={
+              <>
+                {t("step2.consentPdnPrefix")}{" "}
+                <Link href="/legal/consent" target="_blank" className="text-primary hover:underline">
+                  {t("step2.consentPdnLinkText")}
+                </Link>{" "}
+                *
+              </>
+            }
+          />
+
+          <Checkbox
+            checked={formData.agreedToTerms}
+            onChange={(e) => handleChange("agreedToTerms", e.target.checked)}
+            error={errors.terms}
+            label={
+              <>
+                {t("step2.consentTermsPrefix")}{" "}
+                <Link href="/legal/terms" target="_blank" className="text-primary hover:underline">
+                  {t("step2.consentTermsLinkText")}
+                </Link>{" "}
+                *
+              </>
+            }
+          />
+
+          <Checkbox
+            checked={formData.agreedToMarketing}
+            onChange={(e) => handleChange("agreedToMarketing", e.target.checked)}
+            label={t("step2.consentMarketing")}
+          />
 
           <Button variant="primary" disabled={uiStore.state.loading} onClick={handleStep2} className="w-full">
             {uiStore.state.loading ? t("step2.loading") : t("step2.submit")}

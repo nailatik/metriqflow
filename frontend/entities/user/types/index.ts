@@ -13,6 +13,7 @@ export interface User {
   plan?: Plan;
   plan_expires_at?: string | null;
   alerts_enabled?: boolean;
+  agreed_to_marketing?: boolean;
   is_admin?: boolean;
 }
 
@@ -29,5 +30,7 @@ export interface RegisterData {
   organization?: string;
   phone: string;
   agreedToProcessing: boolean;
+  agreedToTerms: boolean;
+  agreedToMarketing: boolean;
   locale?: string;
 }

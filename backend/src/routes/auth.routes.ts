@@ -10,6 +10,7 @@ import {
   resendVerification,
   changePassword,
   requestDeleteAccount,
+  updateMarketingConsent,
   me,
 } from "../controllers/auth.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
@@ -33,6 +34,7 @@ router.post("/resend-verification", authMiddleware, resendVerification);
 router.get("/me", authMiddleware, me);
 
 router.patch("/profile", authMiddleware, updateProfile);
+router.patch("/marketing-consent", authMiddleware, updateMarketingConsent);
 router.patch("/password", authMiddleware, validate(passwordChangeSchema), changePassword);
 router.post("/delete-request", authMiddleware, requestDeleteAccount);
 router.delete("/account", authMiddleware, deleteUser);

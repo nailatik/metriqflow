@@ -12,7 +12,7 @@ export const authService = {
 
   refresh: () => http.post<{ accessToken: string }>("/auth/refresh"),
 
-  updateProfile: (data: { fullName: string; birthDate: string; organization: string | null; phone: string; agreedToProcessing: boolean }) =>
+  updateProfile: (data: { fullName: string; birthDate: string; organization: string | null; phone: string; agreedToProcessing: boolean; agreedToTerms: boolean }) =>
     http.patch<User>("/auth/profile", data),
 
   changePassword: (currentPassword: string, newPassword: string) =>
@@ -26,6 +26,9 @@ export const authService = {
 
   updateAlerts: (enabled: boolean) =>
     http.patch<{ alerts_enabled: boolean }>("/settings/alerts", { enabled }),
+
+  updateMarketingConsent: (enabled: boolean) =>
+    http.patch<{ agreed_to_marketing: boolean }>("/auth/marketing-consent", { enabled }),
 
   verifyEmail: (token: string) =>
     http.get<{ message: string }>(`/auth/verify-email?token=${token}`),

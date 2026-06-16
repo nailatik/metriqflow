@@ -8,7 +8,7 @@ export async function Footer({ locale }: { locale: string }) {
   return (
     <footer className="border-t border-border bg-surfaceMuted/40">
       <div className="max-w-6xl mx-auto px-6 py-12">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-8">
           <div className="lg:col-span-2 max-w-xs">
             <div className="flex items-center gap-2">
               <span className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-primaryHover flex items-center justify-center text-onAccent font-bold text-sm">M</span>
@@ -33,10 +33,22 @@ export async function Footer({ locale }: { locale: string }) {
               <li><Link href="/register" className="text-textMain hover:text-primary transition-colors">{t("register")}</Link></li>
             </ul>
           </div>
+
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-textSecondary">{t("legal")}</h3>
+            <ul className="mt-3 space-y-2 text-sm">
+              <li><Link href="/legal/privacy" className="text-textMain hover:text-primary transition-colors">{t("privacy")}</Link></li>
+              <li><Link href="/legal/consent" className="text-textMain hover:text-primary transition-colors">{t("consent")}</Link></li>
+              <li><Link href="/legal/terms" className="text-textMain hover:text-primary transition-colors">{t("terms")}</Link></li>
+            </ul>
+          </div>
         </div>
 
         <div className="mt-10 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-textSecondary">© {year} Metriq Flow. {t("rights")}</p>
+          <div className="text-xs text-textSecondary text-center sm:text-left">
+            <p>© {year} Metriq Flow. {t("rights")}</p>
+            <p className="mt-1">{"{{OPERATOR_NAME}}"}, ИНН {"{{INN}}"}</p>
+          </div>
           <p className="text-xs text-textSecondary font-mono">{locale.toUpperCase()}</p>
         </div>
       </div>

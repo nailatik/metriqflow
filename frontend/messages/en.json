@@ -130,7 +130,11 @@
       "birthDate": "Date of Birth",
       "organization": "Organization",
       "phone": "Phone",
-      "agreement": "I agree to the processing of my personal data",
+      "consentPdnPrefix": "I give",
+      "consentPdnLinkText": "consent to the processing of my personal data",
+      "consentTermsPrefix": "I accept the",
+      "consentTermsLinkText": "Terms of Service",
+      "consentMarketing": "I want to receive news and promotional emails (optional)",
       "submit": "Complete Registration",
       "loading": "Creating account..."
     },
@@ -143,7 +147,8 @@
       "fullName": "Full name is required",
       "birthDate": "Date of birth is required",
       "phone": "Phone is required",
-      "agreement": "Agreement is required",
+      "agreement": "Consent to data processing is required",
+      "terms": "You must accept the Terms of Service",
       "emailRequired": "Email is required",
       "emailInvalid": "Invalid email format",
       "passwordRequired": "Password is required",
@@ -504,7 +509,10 @@
       "alertsOn": "Enabled",
       "alertsOff": "Disabled",
       "saving": "Saving...",
-      "saveError": "Failed to save"
+      "saveError": "Failed to save",
+      "marketingLabel": "Marketing emails",
+      "marketingOn": "Subscribed",
+      "marketingOff": "Unsubscribed"
     }
   },
   "VerifyEmail": {
@@ -762,6 +770,10 @@
     "account": "Account",
     "login": "Sign in",
     "register": "Create account",
+    "legal": "Legal",
+    "privacy": "Privacy Policy",
+    "consent": "Data Processing Consent",
+    "terms": "Terms of Service",
     "rights": "All rights reserved.",
     "builtFor": "Built for creators, marketers and teams."
   }

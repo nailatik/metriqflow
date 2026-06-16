@@ -22,6 +22,8 @@ export const registerSchema = z.object({
   birthDate: z.string().min(1, "Date of birth is required"),
   phone: z.string().trim().min(1, "Phone is required").max(32, "Phone too long"),
   agreedToProcessing: z.literal(true, "Consent to data processing is required"),
+  agreedToTerms: z.literal(true, "Acceptance of terms is required"),
+  agreedToMarketing: z.boolean().optional().default(false),
   organization: z.string().trim().max(200, "Organization too long").optional(),
   locale: z.string().optional(),
 });
