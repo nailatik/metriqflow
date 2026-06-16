@@ -83,19 +83,24 @@ interface OnboardingStep {
   href: string;
 }
 
-function OnboardingCard({ steps, onDismiss }: { steps: OnboardingStep[]; onDismiss: () => void }) {
+function OnboardingCard({ steps, onDismiss, celebrating, fading }: { steps: OnboardingStep[]; onDismiss: () => void; celebrating: boolean; fading: boolean }) {
   const t = useTranslations("Dashboard.onboarding");
   const doneCount = steps.filter((s) => s.done).length;
   const allDone = doneCount === steps.length;
   const pct = Math.round((doneCount / steps.length) * 100);
 
   return (
-    <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-card">
+    <div
+      className={`relative bg-surface border rounded-2xl overflow-hidden shadow-card transition-all duration-500 ${
+        fading ? "opacity-0 translate-y-2 scale-[0.99]" : "opacity-100"
+      } ${celebrating ? "border-success/50 ring-1 ring-success/30" : "border-border"}`}
+    >
       {/* header strip */}
       <div className="px-4 pt-5 pb-4 sm:px-7 sm:pt-6 sm:pb-5 border-b border-border">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${allDone ? "bg-success/10" : "bg-primary/10"}`}>
+            <div className={`relative w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${allDone ? "bg-success/10" : "bg-primary/10"}`}>
+              {celebrating && <span className="absolute inset-0 rounded-xl bg-success/25 animate-ping" />}
               {allDone ? (
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-success">
                   <polyline points="20 6 9 17 4 12"/>
@@ -114,6 +119,9 @@ function OnboardingCard({ steps, onDismiss }: { steps: OnboardingStep[]; onDismi
               <p className="text-xs text-textSecondary mt-0.5">
                 {allDone ? t("allDoneDesc") : t("progress", { done: doneCount, total: steps.length })}
               </p>
+              {celebrating && (
+                <p className="text-[11px] font-medium text-success mt-0.5 animate-pulse">{t("autoHide")}</p>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-4 flex-shrink-0">
@@ -202,14 +210,20 @@ export default observer(function ProfilePage() {
   const communitiesStore = useCommunitiesStore();
   const user = userStore.state.user;
 
-  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+  const [onboardingHidden, setOnboardingHidden] = useState(false);
+  const [onboardingCelebrating, setOnboardingCelebrating] = useState(false);
+  const [onboardingFading, setOnboardingFading] = useState(false);
 
-  // load dismissed flag per-user (after user is known)
+  // load hide flags per-user (after user is known)
+  // localStorage = permanent (all steps done), sessionStorage = this session only
   useEffect(() => {
     if (!user?.id) return;
-    const key = `onboarding_v1_dismissed_${user.id}`;
-    if (localStorage.getItem(key) === "1") {
-      setOnboardingDismissed(true);
+    if (localStorage.getItem(`onboarding_v1_dismissed_${user.id}`) === "1") {
+      setOnboardingHidden(true);
+      return;
+    }
+    if (sessionStorage.getItem(`onboarding_v1_hidden_session_${user.id}`) === "1") {
+      setOnboardingHidden(true);
     }
   }, [user?.id]);
 
@@ -225,18 +239,44 @@ export default observer(function ProfilePage() {
   const tgChannelsCount = integrationsStore.state.channelsLoaded ? integrationsStore.state.tgChannels.length : null;
   const vkCount = communitiesStore.state.loaded ? communitiesStore.state.list.length : null;
 
-  const handleDismiss = () => {
-    if (!user?.id) return;
-    localStorage.setItem(`onboarding_v1_dismissed_${user.id}`, "1");
-    setOnboardingDismissed(true);
-  };
-
   const onboardingSteps: OnboardingStep[] = [
     { done: (tgChannelsCount ?? 0) > 0, titleKey: "step1Title", descKey: "step1Desc", href: "/app/integrations" },
     { done: (vkCount ?? 0) > 0,         titleKey: "step2Title", descKey: "step2Desc", href: "/app/integrations" },
     { done: reportsStore.state.list.length > 0,   titleKey: "step3Title", descKey: "step3Desc", href: "/app/reports" },
     { done: schedulesStore.state.list.length > 0, titleKey: "step4Title", descKey: "step4Desc", href: "/app/reports" },
   ];
+  const onboardingAllDone = onboardingSteps.every((s) => s.done);
+
+  const handleDismiss = () => {
+    if (!user?.id) return;
+    if (onboardingAllDone) {
+      // everything set up → hide permanently
+      localStorage.setItem(`onboarding_v1_dismissed_${user.id}`, "1");
+    } else {
+      // requirements not met → hide for this session only, returns next session
+      sessionStorage.setItem(`onboarding_v1_hidden_session_${user.id}`, "1");
+    }
+    setOnboardingHidden(true);
+  };
+
+  // all steps done while on dashboard → play celebration, then auto-hide permanently
+  useEffect(() => {
+    if (!user?.id || onboardingHidden || onboardingCelebrating || !onboardingAllDone) return;
+    setOnboardingCelebrating(true);
+  }, [onboardingAllDone, onboardingHidden, onboardingCelebrating, user?.id]);
+
+  useEffect(() => {
+    if (!onboardingCelebrating || !user?.id) return;
+    const fadeT = setTimeout(() => setOnboardingFading(true), 3000);
+    const removeT = setTimeout(() => {
+      localStorage.setItem(`onboarding_v1_dismissed_${user.id}`, "1");
+      setOnboardingHidden(true);
+    }, 3600);
+    return () => {
+      clearTimeout(fadeT);
+      clearTimeout(removeT);
+    };
+  }, [onboardingCelebrating, user?.id]);
 
   const initials =
     user?.full_name
@@ -343,8 +383,13 @@ export default observer(function ProfilePage() {
       </div>
 
       {/* Onboarding checklist — bottom */}
-      {!onboardingDismissed && (
-        <OnboardingCard steps={onboardingSteps} onDismiss={handleDismiss} />
+      {!onboardingHidden && (
+        <OnboardingCard
+          steps={onboardingSteps}
+          onDismiss={handleDismiss}
+          celebrating={onboardingCelebrating}
+          fading={onboardingFading}
+        />
       )}
 
     </div>

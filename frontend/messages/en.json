@@ -179,6 +179,7 @@
       "progress": "{done} of {total} done",
       "allDone": "All set!",
       "allDoneDesc": "Your account is fully configured and ready to go.",
+      "autoHide": "Hiding automatically…",
       "dismiss": "Dismiss",
       "go": "Set up →",
       "step1Title": "Connect a Telegram channel",
