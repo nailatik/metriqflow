@@ -9,7 +9,7 @@ import {
 import { http } from "@/shared/lib/axios";
 import { UpgradeBanner } from "@/features/billing/ui/UpgradeBanner/UpgradeBanner";
 import { AiInsightsCard } from "@/features/analytics/ui/AiInsightsCard";
-import { useCommunitiesStore } from "@/shared/store/StoreProvider";
+import { useCommunitiesStore, useBillingStore } from "@/shared/store/StoreProvider";
 import type { Community } from "@/entities/community/types";
 
 type Summary = {
@@ -189,6 +189,11 @@ function Heatmap({ data, hint }: { data: HeatCell[]; hint: string }) {
 export const VKAnalyticsView = observer(function VKAnalyticsView() {
   const t = useTranslations("VKAnalytics");
   const communitiesStore = useCommunitiesStore();
+  const billingStore     = useBillingStore();
+
+  // Free plan caps history to 30d (backend silently downgrades "all" → "30d").
+  // Lock the "All" button so the limit is visible instead of silent.
+  const historyLocked = billingStore.limits.history_days !== null;
 
   const [selectedId,         setSelectedId]         = useState<number | null>(null);
   const [period,             setPeriod]             = useState<"24h" | "7d" | "30d" | "all">("7d");
@@ -309,19 +314,26 @@ export const VKAnalyticsView = observer(function VKAnalyticsView() {
             {t("refresh")}
           </button>
           <div className="flex gap-1 bg-surface border border-border rounded-lg p-1">
-            {PERIODS.map((p) => (
-              <button
-                key={p.value}
-                onClick={() => setPeriod(p.value)}
-                className={`px-3 py-1 rounded-md text-sm font-medium transition ${
-                  period === p.value
-                    ? "bg-primary text-onAccent"
-                    : "text-textSecondary hover:text-textMain"
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
+            {PERIODS.map((p) => {
+              const locked = p.value === "all" && historyLocked;
+              return (
+                <button
+                  key={p.value}
+                  onClick={() => { if (!locked) setPeriod(p.value); }}
+                  disabled={locked}
+                  title={locked ? t("allLocked") : undefined}
+                  className={`px-3 py-1 rounded-md text-sm font-medium transition ${
+                    locked
+                      ? "text-textSecondary/40 cursor-not-allowed"
+                      : period === p.value
+                        ? "bg-primary text-onAccent"
+                        : "text-textSecondary hover:text-textMain"
+                  }`}
+                >
+                  {locked ? `🔒 ${p.label}` : p.label}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>

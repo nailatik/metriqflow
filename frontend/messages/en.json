@@ -359,7 +359,8 @@
     "comments": "Comments",
     "loadError": "Failed to load analytics",
     "loadChannelsError": "Failed to load channels",
-    "historyCapped": "Free plan: history limited to 30 days"
+    "historyCapped": "Free plan: history limited to 30 days",
+    "allLocked": "All-time history is a Pro feature"
   },
   "aiInsights": {
     "title": "AI Insights",
@@ -416,6 +417,7 @@
     "noHeatmapData": "Not enough data yet.",
     "heatmapHint": "Colour = avg views. Darker = better time to post.",
     "historyCapped": "Free plan: history limited to 30 days",
+    "allLocked": "All-time history is a Pro feature",
     "loadError": "Could not load analytics",
     "tokenInvalid": "The saved token no longer works. Remove the community in Integrations and add it again with a new user token."
   },
