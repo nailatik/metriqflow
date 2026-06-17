@@ -21,6 +21,10 @@ const client = new Anthropic({
   // Optional egress relay (e.g. Cloudflare Worker) for hosts where
   // api.anthropic.com is unreachable (RU). Empty = direct call.
   baseURL: process.env.ANTHROPIC_BASE_URL || undefined,
+  // The relay's Cloudflare zone blocks the default "Anthropic/JS" SDK
+  // User-Agent (Bot Fight / WAF) with a 403 "Your request was blocked".
+  // Override with a benign UA so requests pass through the relay.
+  defaultHeaders: { "User-Agent": "metriqflow-backend" },
 });
 
 const SYSTEM_PROMPT_RU = `Ты — опытный SMM-аналитик с глубоким знанием продвижения в Telegram и ВКонтакте.
