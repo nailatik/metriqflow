@@ -65,7 +65,7 @@ export const VKCard = observer(function VKCard() {
     const msg = result.message ?? "";
     const code = result.code;
     if (msg.includes("limit")) {
-      setError(t("vkLimitReached"));
+      setError(t("vkLimitReached", { count: limits.vk_communities ?? 0 }));
     } else if (code === 15) {
       setError(t("vkErrPrivate"));
     } else if (code === 100 || code === 113 || msg.includes("not found") || msg.includes("parse")) {
@@ -106,7 +106,7 @@ export const VKCard = observer(function VKCard() {
       </div>
 
       {/* Error / upgrade */}
-      {planLimit && <UpgradeBanner compact reason={t("vkLimitReached")} />}
+      {planLimit && <UpgradeBanner compact reason={t("vkLimitReached", { count: limits.vk_communities ?? 0 })} />}
       {error && !planLimit && <p className="text-xs text-error">{error}</p>}
 
       {/* Loading */}
@@ -165,7 +165,7 @@ export const VKCard = observer(function VKCard() {
             {t("vkAddCommunity")}
           </Button>
         ) : (
-          <p className="text-xs text-textSecondary">{t("vkLimitReached")}</p>
+          <p className="text-xs text-textSecondary">{t("vkLimitReached", { count: limits.vk_communities ?? 0 })}</p>
         )
       )}
 

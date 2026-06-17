@@ -235,9 +235,13 @@ export default observer(function ProfilePage() {
     communitiesStore.fetch();
   }, [reportsStore, schedulesStore, integrationsStore, communitiesStore]);
 
-  const integrationsCount = integrationsStore.state.statusLoaded ? (integrationsStore.state.tgLinked ? 1 : 0) : null;
   const tgChannelsCount = integrationsStore.state.channelsLoaded ? integrationsStore.state.tgChannels.length : null;
   const vkCount = communitiesStore.state.loaded ? communitiesStore.state.list.length : null;
+  // Count connected platforms: Telegram (if linked) + VK (if any community added).
+  const integrationsCount =
+    integrationsStore.state.statusLoaded && communitiesStore.state.loaded
+      ? (integrationsStore.state.tgLinked ? 1 : 0) + ((vkCount ?? 0) > 0 ? 1 : 0)
+      : null;
 
   const onboardingSteps: OnboardingStep[] = [
     { done: (tgChannelsCount ?? 0) > 0, titleKey: "step1Title", descKey: "step1Desc", href: "/app/integrations" },

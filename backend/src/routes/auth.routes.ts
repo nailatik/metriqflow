@@ -14,6 +14,7 @@ import {
   me,
 } from "../controllers/auth.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
+import { resendLimiter } from "../middleware/rateLimit.middleware";
 import { validate } from "../middleware/validate.middleware";
 import {
   registerSchema,
@@ -29,7 +30,7 @@ router.post("/refresh", refresh);
 router.post("/logout", logout);
 
 router.get("/verify-email", verifyEmail);
-router.post("/resend-verification", authMiddleware, resendVerification);
+router.post("/resend-verification", authMiddleware, resendLimiter, resendVerification);
 
 router.get("/me", authMiddleware, me);
 
