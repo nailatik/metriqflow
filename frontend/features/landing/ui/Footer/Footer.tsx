@@ -47,7 +47,6 @@ export async function Footer({ locale }: { locale: string }) {
         <div className="mt-10 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="text-xs text-textSecondary text-center sm:text-left">
             <p>© {year} Metriq Flow. {t("rights")}</p>
-            <p className="mt-1">{"{{OPERATOR_NAME}}"}, ИНН {"{{INN}}"}</p>
           </div>
           <p className="text-xs text-textSecondary font-mono">{locale.toUpperCase()}</p>
         </div>
