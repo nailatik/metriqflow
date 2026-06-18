@@ -10,7 +10,15 @@ push main ─► GitHub Actions
               └─ deploy (push only): ssh VPS → git pull → compose up --build → migrate
 VPS: Caddy(TLS) ─► frontend:3000  (SITE_DOMAIN)
                 └► backend:8000   (API_DOMAIN)  ─► postgres
+     bot (telegram polling, no host port)       ─► postgres
 ```
+
+The **bot** is a separate compose service (aiogram long-polling + a telethon
+MTProto scheduler). It needs no inbound port — it polls Telegram outbound — so
+it sits behind no domain. It shares the same Postgres; the bot tables are
+already in `deploy/schema.sql`. `docker compose up -d --build` builds it like
+any other service, so the existing push-to-deploy flow ships it with no CI
+change.
 
 Frontend and backend live on **subdomains of the same registrable domain**
 (`metriqflow.com` + `api.metriqflow.com`). That keeps cookies *same-site*, so
@@ -52,6 +60,16 @@ Frontend and backend live on **subdomains of the same registrable domain**
    - integration keys you use: `VK_SERVICE_TOKEN`, `BOT_TOKEN`, SMTP\_\*,
      `ANTHROPIC_API_KEY`, `SENTRY_DSN`, `ADMIN_EMAILS`
    - leave `DB_*` blank/ignored here — compose injects them from `./.env`.
+
+   `./telegram_bot/.env` (bot runtime secrets — copy from
+   `telegram_bot/.env.example`):
+   ```bash
+   cp telegram_bot/.env.example telegram_bot/.env && nano telegram_bot/.env
+   ```
+   Set `BOT_TOKEN`, `BOT_USERNAME`, and `TELEGRAM_API_ID` / `TELEGRAM_API_HASH`
+   (from https://my.telegram.org → API development tools — needed for the
+   telethon stats scheduler). Leave `DB_*` blank — the `bot` service injects
+   them from `./.env`, same as backend.
 
 5. **First boot + bootstrap schema.** The numbered migrations in
    `backend/migrations/` only `ALTER`/extend a base schema (`users`, `reports`,
@@ -171,7 +189,8 @@ automatically (the relaxed cert check only applies to the auth-less own MTA).
   cd /srv/metriqflow && git pull && docker compose up -d --build \
     && docker compose exec -T backend npm run migrate
   ```
-- **Logs**: `docker compose logs -f backend` (or `frontend`, `caddy`).
+- **Logs**: `docker compose logs -f backend` (or `frontend`, `caddy`, `bot`).
+  Bot healthy = log line `Starting @<username> (id=…)` on boot.
 - **New migration**: drop `0NN_*.sql` in `backend/migrations/`, push — the
   deploy step's `migrate` applies it inside a transaction.
 

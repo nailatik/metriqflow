@@ -69,6 +69,28 @@ services:
       mailer:
         condition: service_started
 
+  # Telegram bot (aiogram polling + telethon MTProto scheduler). Shares the
+  # compose Postgres. Bot tables already live in deploy/schema.sql, so no extra
+  # migration step. Runtime secrets (BOT_TOKEN, TELEGRAM_API_ID/HASH) go in
+  # ./telegram_bot/.env (gitignored, created by hand on the host). DB_* are
+  # injected here from ./.env so they stay in one place, same as backend.
+  bot:
+    build: ./telegram_bot
+    restart: unless-stopped
+    env_file: ./telegram_bot/.env
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      SESSION_DIR: /app/sessions # telethon .session persisted via the volume below
+    volumes:
+      - bot_sessions:/app/sessions
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   frontend:
     build:
       context: ./frontend
@@ -102,6 +124,7 @@ services:
 volumes:
   pgdata:
   reports:
+  bot_sessions:
   dkim_keys:
   caddy_data:
   caddy_config:

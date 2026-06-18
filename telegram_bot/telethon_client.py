@@ -30,7 +30,7 @@ async def get_client() -> TelegramClient | None:
 
     if _client is None:
         _client = TelegramClient(
-            "bot_session",
+            f"{settings.SESSION_DIR}/bot_session",
             settings.TELEGRAM_API_ID,
             settings.TELEGRAM_API_HASH,
         )
