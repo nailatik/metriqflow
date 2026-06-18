@@ -672,6 +672,18 @@ ALTER SEQUENCE public.telegram_users_id_seq OWNED BY public.telegram_users.id;
 
 
 --
+-- Name: telegram_bot_prefs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.telegram_bot_prefs (
+    telegram_id bigint NOT NULL,
+    language character varying(8) DEFAULT 'ru'::character varying NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: users; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1179,6 +1191,14 @@ ALTER TABLE ONLY public.telegram_users
 
 ALTER TABLE ONLY public.telegram_users
     ADD CONSTRAINT telegram_users_user_id_unique UNIQUE (user_id);
+
+
+--
+-- Name: telegram_bot_prefs telegram_bot_prefs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.telegram_bot_prefs
+    ADD CONSTRAINT telegram_bot_prefs_pkey PRIMARY KEY (telegram_id);
 
 
 --
