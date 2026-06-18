@@ -6,76 +6,88 @@ from datetime import datetime, timezone
 
 import asyncpg
 from aiogram import Bot, Router, F
-from aiogram.types import BufferedInputFile, CallbackQuery
+from aiogram.types import BufferedInputFile, CallbackQuery, Message
 
 from db import queries
+from i18n import t
 from keyboards.inline import report_channels_kb, report_period_kb
 from utils.fmt import fmt_number
 
 router = Router()
 
-_PERIOD_LABELS = {
-    "24h": "Last 24 h",
-    "7d":  "Last 7 days",
-    "30d": "Last 30 days",
-    "all": "All time",
-}
+
+def _period_label(lang: str, period: str) -> str:
+    return t(lang, f"period.{period}")
+
+
+async def render_report(message: Message, db: asyncpg.Pool, lang: str) -> None:
+    """Top-level entry from the reply keyboard — channel picker (fresh message)."""
+    user = await queries.get_linked_user(db, message.from_user.id)
+    if not user:
+        await message.answer(t(lang, "not_linked"))
+        return
+    channels = await queries.get_user_channels(db, user["id"])
+    if not channels:
+        await message.answer(t(lang, "report.no_channels"))
+        return
+    await message.answer(
+        f"{t(lang, 'report.title')}\n\n{t(lang, 'report.pick_channel')}",
+        reply_markup=report_channels_kb(channels, lang),
+    )
 
 
 @router.callback_query(F.data == "report:start")
-async def report_start(call: CallbackQuery, db: asyncpg.Pool) -> None:
+async def report_start(call: CallbackQuery, db: asyncpg.Pool, lang: str) -> None:
     user = await queries.get_linked_user(db, call.from_user.id)
     if not user:
-        await call.answer("Account not linked. Use /start to link.", show_alert=True)
+        await call.answer(t(lang, "not_linked"), show_alert=True)
         return
-
     channels = await queries.get_user_channels(db, user["id"])
     if not channels:
-        await call.answer("No channels yet. Add bot as admin to a channel first.", show_alert=True)
+        await call.answer(t(lang, "report.no_channels"), show_alert=True)
         return
-
     await call.message.edit_text(
-        "📊 <b>Report</b>\n\nSelect channel:",
-        reply_markup=report_channels_kb(channels),
+        f"{t(lang, 'report.title')}\n\n{t(lang, 'report.pick_channel')}",
+        reply_markup=report_channels_kb(channels, lang),
     )
     await call.answer()
 
 
 @router.callback_query(F.data.startswith("report:channel:"))
-async def report_pick_period(call: CallbackQuery) -> None:
+async def report_pick_period(call: CallbackQuery, lang: str) -> None:
     channel_id = int(call.data.split(":")[2])
     await call.message.edit_text(
-        "📊 <b>Report</b>\n\nSelect period:",
-        reply_markup=report_period_kb(channel_id),
+        f"{t(lang, 'report.title')}\n\n{t(lang, 'report.pick_period')}",
+        reply_markup=report_period_kb(channel_id, lang),
     )
     await call.answer()
 
 
 @router.callback_query(F.data.startswith("report:period:"))
-async def report_generate(call: CallbackQuery, db: asyncpg.Pool, bot: Bot) -> None:
+async def report_generate(call: CallbackQuery, db: asyncpg.Pool, bot: Bot, lang: str) -> None:
     parts = call.data.split(":")
     channel_id = int(parts[2])
     period = parts[3]
 
     user = await queries.get_linked_user(db, call.from_user.id)
     if not user:
-        await call.answer("Account not linked.", show_alert=True)
+        await call.answer(t(lang, "not_linked"), show_alert=True)
         return
 
     channel_row = await queries.get_channel_by_id(db, channel_id)
     if not channel_row or channel_row["user_id"] != user["id"]:
-        await call.answer("Channel not found.", show_alert=True)
+        await call.answer(t(lang, "channels.not_found"), show_alert=True)
         return
 
-    await call.answer("Generating report…")
-    await call.message.edit_text("⏳ Generating CSV report…")
+    await call.answer(t(lang, "report.generating_short"))
+    await call.message.edit_text(t(lang, "report.generating"))
 
     posts = await queries.get_posts_for_report(db, channel_id, period)
 
     if not posts:
         await call.message.edit_text(
-            f"No posts found for <b>{_PERIOD_LABELS.get(period, period)}</b>.",
-            reply_markup=report_period_kb(channel_id),
+            t(lang, "report.empty", period=_period_label(lang, period)),
+            reply_markup=report_period_kb(channel_id, lang),
         )
         return
 
@@ -105,10 +117,8 @@ async def report_generate(call: CallbackQuery, db: asyncpg.Pool, bot: Bot) -> No
     avg_er = sum(float(p["engagement_rate"] or 0) for p in posts) / len(posts)
 
     caption = (
-        f"📊 <b>Report ready</b>  ·  {_PERIOD_LABELS.get(period, period)}\n"
-        f"Posts: <b>{len(posts)}</b>  ·  "
-        f"Total views: <b>{fmt_number(total_views)}</b>  ·  "
-        f"Avg ER: <b>{avg_er:.1f}%</b>"
+        f"{t(lang, 'report.ready', period=_period_label(lang, period))}\n"
+        f"{t(lang, 'report.summary', posts=len(posts), views=fmt_number(total_views), er=f'{avg_er:.1f}')}"
     )
 
     await bot.send_document(
@@ -118,6 +128,6 @@ async def report_generate(call: CallbackQuery, db: asyncpg.Pool, bot: Bot) -> No
     )
 
     await call.message.edit_text(
-        "✅ Report sent above.\n\nGenerate another?",
-        reply_markup=report_period_kb(channel_id),
+        t(lang, "report.sent"),
+        reply_markup=report_period_kb(channel_id, lang),
     )

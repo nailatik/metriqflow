@@ -6,6 +6,30 @@ from typing import Optional
 import asyncpg
 
 
+# ─── Language preference ─────────────────────────────────────────────────────
+
+async def get_language(pool: asyncpg.Pool, telegram_id: int) -> Optional[str]:
+    """Return the stored language for a Telegram user, or None if never set."""
+    async with pool.acquire() as conn:
+        return await conn.fetchval(
+            "SELECT language FROM telegram_bot_prefs WHERE telegram_id = $1",
+            telegram_id,
+        )
+
+
+async def set_language(pool: asyncpg.Pool, telegram_id: int, language: str) -> None:
+    async with pool.acquire() as conn:
+        await conn.execute(
+            """
+            INSERT INTO telegram_bot_prefs (telegram_id, language)
+            VALUES ($1, $2)
+            ON CONFLICT (telegram_id) DO UPDATE
+                SET language = EXCLUDED.language, updated_at = NOW()
+            """,
+            telegram_id, language,
+        )
+
+
 # ─── User / Linking ──────────────────────────────────────────────────────────
 
 async def get_linked_user(pool: asyncpg.Pool, telegram_id: int) -> Optional[asyncpg.Record]:
