@@ -3,6 +3,8 @@ import logging
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
+from aiogram.client.session.aiohttp import AiohttpSession
+from aiogram.client.telegram import TelegramAPIServer
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 
@@ -20,9 +22,30 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+class _RelaySession(AiohttpSession):
+    """AiohttpSession that routes the Bot API through a relay and sends a plain
+    User-Agent. The relay's Cloudflare zone runs Bot Fight Mode that 403s
+    library UAs (it blocks "Anthropic/JS" the same way), so override it."""
+
+    async def create_session(self):
+        session = await super().create_session()
+        session.headers["User-Agent"] = "metriqflow-bot"
+        return session
+
+
+def _build_session() -> AiohttpSession | None:
+    base = settings.TELEGRAM_API_BASE.rstrip("/")
+    if not base:
+        return None  # direct api.telegram.org (aiogram default)
+    api = TelegramAPIServer.from_base(base)
+    logger.info("Bot API via relay: %s", base)
+    return _RelaySession(api=api)
+
+
 async def main() -> None:
     bot = Bot(
         token=settings.BOT_TOKEN,
+        session=_build_session(),
         default=DefaultBotProperties(parse_mode=ParseMode.HTML),
     )
     dp = Dispatcher(storage=MemoryStorage())

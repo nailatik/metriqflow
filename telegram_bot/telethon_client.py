@@ -36,7 +36,14 @@ async def get_client() -> TelegramClient | None:
         )
 
     if not _client.is_connected():
-        await _client.start(bot_token=settings.BOT_TOKEN)
+        try:
+            await _client.start(bot_token=settings.BOT_TOKEN)
+        except Exception as e:
+            # MTProto DCs are direct (no HTTP relay), so on hosts where Telegram
+            # is blocked this fails. Degrade: post stats stop updating, but the
+            # aiogram bot keeps running.
+            logger.warning("Telethon connect failed (%s) — post stats disabled", e)
+            return None
         logger.info("Telethon MTProto client connected")
 
     return _client

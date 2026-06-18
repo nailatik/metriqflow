@@ -8,6 +8,12 @@ class Settings(BaseSettings):
     TELEGRAM_API_ID: int = 0
     TELEGRAM_API_HASH: str = ""
 
+    # Optional egress relay for the Bot API (e.g. Cloudflare Worker) on hosts
+    # where api.telegram.org is unreachable (RU/RKN). Same relay the backend
+    # uses: https://relay.metriqflow.ru/telegram → api.telegram.org. Empty =
+    # talk to api.telegram.org directly. No trailing slash.
+    TELEGRAM_API_BASE: str = ""
+
     # Where the telethon .session file lives ("." = cwd on dev; a mounted
     # volume path like /app/sessions in prod so it survives container rebuilds).
     SESSION_DIR: str = "."
